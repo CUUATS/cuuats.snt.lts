@@ -1,9 +1,8 @@
 import arcpy
 import os
-from cuuats.datamodel import feature_class_factory as factory
 
-GDB_PATH = 'C:\Users\kml42638\Desktop\TestDB.gdb'
-FC_NAME = 'Test_CL'
+GDB_PATH = 'G:\CUUATS\Sustainable Neighborhoods Toolkit\Data\SustainableNeighborhoodsToolkit.gdb'
+FC_NAME = 'streetCL'
 FULL_PATH = os.path.join(GDB_PATH, FC_NAME)
 
 
@@ -18,7 +17,16 @@ class BLTS_Analysis(object):
                               "sharrow",
                               "rtl",
                               "ltl"]
+
         self.mixTrafficField = ["SPEED", "lpd", self.analysisField[2]]
+        self.combBikePkWidthField = ["lpd", "SPEED",
+                                  "Comb_ParkBike_width", "HasParkingLane",
+                                  self.analysisField[0]]
+        self.blWithoutPkField = ["lpd", "SPEED",
+                                 "Width", "HasParkLane",
+                                 self.analysisField[1]]
+
+
         arcpy.env.workspace = GDB_PATH
 
     def getName(self):
@@ -114,6 +122,154 @@ class BLTS_Analysis(object):
                 cursor.updateRow(row)
 
 
+    def setPkLaneField(self, lpd, speed, comb_pkbi_width, has_parking):
+        self.combBikePkWidthField = [lpd, speed, comb_pkbi_width,
+                                     has_parking, self.analysisField[0]]
+        print(self.combBikePkWidthField)
+
+    def assignBLwithPkLane(self):
+        print("run assign bl with parking")
+        with arcpy.da.UpdateCursor(self.FC_NAME,
+                                   self.combBikePkWidthField) as cursor:
+            for row in cursor:
+                ## Has adjacent Parking Lane
+                if row[3] == 50:
+
+                    # 1 LPD
+                    if row[0] == 1 or row[0] == 0:
+
+                        ## Speed 25
+                        if row[1] <= 25:
+                            if row[2] >= 15:
+                                row[4] = 1
+                            elif row[2] < 15 and row[2] > 13:
+                                row[4] = 2
+                            else:
+                                row[4] = 3
+
+
+                        ## Speed 30
+                        elif row[1] == 30:
+                            if row[2] >= 15:
+                                row[4] = 1
+                            elif row[2] < 15 and row[2] > 13:
+                                row[4] = 2
+                            else:
+                                row[4] = 3
+
+                        ## Speed 35
+                        elif row[1] == 35:
+                            if row[2] >= 15:
+                                row[4] = 2
+                            elif row[2] < 15 and row[2] > 13:
+                                row[4] = 3
+                            else:
+                                row[4] = 3
+
+                        ## Speed >= 40
+                        else:
+                            if row[2] >= 15:
+                                row[4] = 2
+                            elif row[2] < 15 and row[2] > 13:
+                                row[4] = 4
+                            else:
+                                row[4] = 4
+
+                    ## >= 2 LPD
+                    if row[0] >= 2:
+                        if row[1] <= 25:
+                            if row[2] >= 15:
+                                row[4] = 2
+                            else:
+                                row[4] = 3
+
+                        elif row[1] == 30:
+                            if row[2] >= 15:
+                                row[4] = 2
+                            else:
+                                row[4] = 3
+
+                        elif row[1] == 35:
+                            if row[2] >= 15:
+                                row[4] = 3
+                            else:
+                                row[4] = 3
+
+                        else:
+                            if row[2] >= 15:
+                                row[4] = 3
+                            else:
+                                row[4] = 4
+
+                cursor.updateRow(row)
+
+
+    def setNoPkLaneField(self, lpd, speed, bl_width, has_parking):
+        self.blWithoutPkField = [lpd, speed,
+                                 bl_width, has_parking,
+                                 self.analysisField[1]]
+
+    def assignBLwithoutPkLane(self):
+        print(self.blWithoutPkField)
+        with arcpy.da.UpdateCursor(self.FC_NAME,
+                                   self.blWithoutPkField) as cursor:
+            for row in cursor:
+                ## Does not have adjacent Parking Lane
+                if row[3] != 50 and row[2] >= 0:
+                    ## 1 LPD
+                    if row[0] == 1 or row[0] == 0:
+                        ## Speed <= 30
+                        if row[1] <= 30:
+                            if row[2] >= 7:
+                                row[4] = 1
+                            elif row[2] < 7 and row[2] > 5.5:
+                                row[4] = 1
+                            else:
+                                row[4] = 2
+
+                        ## Speed 35
+                        elif row[1] == 35:
+                            if row[2] >= 7:
+                                row[4] = 2
+                            elif row[2] < 7 and row[2] > 5.5:
+                                row[4] = 3
+                            else:
+                                row[4] = 3
+                        ## Speed >= 40
+                        else:
+                            if row[2] >= 7:
+                                row[4] = 3
+                            elif row[2] < 7 and row[2] > 5.5:
+                                row[4] = 4
+                            else:
+                                row[4] = 4
+
+                    ## >= 2 LPD
+                    if row[0] >= 2:
+                        ## Speed <= 30
+                        if row[1] <= 30:
+                            if row[2] >= 7:
+                                row[4] = 1
+                            else:
+                                row[4] = 3
+                        ## Speed 35
+                        elif row[1] == 35:
+                            if row[2] >= 7:
+                                row[4] = 2
+                            else:
+                                row[4] = 3
+                        ## Speed >= 40
+                        else:
+                            if row[2] >= 7:
+                                row[4] = 3
+                            else:
+                                row[4] = 4
+
+
+                cursor.updateRow(row)
+
+
+
 
 if __name__ == '__main__':
     a = BLTS_Analysis(GDB_PATH, FC_NAME)
@@ -121,6 +277,11 @@ if __name__ == '__main__':
     a.addField()
     a.setMixTrafficField("SPEED","lpd")
     a.assignMixTrafficScore()
+    a.setPkLaneField("lpd", "SPEED", "Comb_ParkBike_width", "HasParkingLane")
+    a.assignBLwithPkLane()
+    a.setNoPkLaneField("lpd", "SPEED", "Width", "HasParkingLane")
+    a.assignBLwithoutPkLane()
+
 
 
 
