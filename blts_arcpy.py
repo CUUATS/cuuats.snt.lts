@@ -2,7 +2,7 @@ import arcpy
 import os
 
 GDB_PATH = 'G:\CUUATS\Sustainable Neighborhoods Toolkit\Data\SustainableNeighborhoodsToolkit.gdb'
-FC_NAME = 'streetCL'
+FC_NAME = 'streetCL_cropped'
 FULL_PATH = os.path.join(GDB_PATH, FC_NAME)
 
 
@@ -17,6 +17,8 @@ class BLTS_Analysis(object):
                               "sharrow",
                               "rtl",
                               "ltl"]
+        self.scoreField = ["segmentScore"]
+
 
         self.mixTrafficField = ["SPEED", "lpd", self.analysisField[2]]
         self.combBikePkWidthField = ["lpd", "SPEED",
@@ -25,6 +27,7 @@ class BLTS_Analysis(object):
         self.blWithoutPkField = ["lpd", "SPEED",
                                  "Width", "HasParkLane",
                                  self.analysisField[1]]
+        self.rtlField = [""]
 
 
         arcpy.env.workspace = GDB_PATH
@@ -53,6 +56,8 @@ class BLTS_Analysis(object):
         '''
         for field in self.analysisField:
             arcpy.AddField_management(self.FC_NAME, field, "SHORT")
+        for field in self.scoreField:
+            arcpy.AddField_management(self.FC_NAME, field, "SHORT")
         print("Complete Adding Analysis Fields....")
 
 
@@ -63,6 +68,8 @@ class BLTS_Analysis(object):
         :return: 
         '''
         for field in self.analysisField:
+            arcpy.DeleteField_management(self.FC_NAME, field)
+        for field in self.scoreField:
             arcpy.DeleteField_management(self.FC_NAME, field)
         print("Complete Delete Analysis Fields....")
 
@@ -121,14 +128,15 @@ class BLTS_Analysis(object):
 
                 cursor.updateRow(row)
 
+        print("Finish Mix Traffic Scoring")
+
 
     def setPkLaneField(self, lpd, speed, comb_pkbi_width, has_parking):
         self.combBikePkWidthField = [lpd, speed, comb_pkbi_width,
                                      has_parking, self.analysisField[0]]
-        print(self.combBikePkWidthField)
+
 
     def assignBLwithPkLane(self):
-        print("run assign bl with parking")
         with arcpy.da.UpdateCursor(self.FC_NAME,
                                    self.combBikePkWidthField) as cursor:
             for row in cursor:
@@ -203,6 +211,8 @@ class BLTS_Analysis(object):
 
                 cursor.updateRow(row)
 
+        print("Finish BL with Parking Scoring")
+
 
     def setNoPkLaneField(self, lpd, speed, bl_width, has_parking):
         self.blWithoutPkField = [lpd, speed,
@@ -210,7 +220,6 @@ class BLTS_Analysis(object):
                                  self.analysisField[1]]
 
     def assignBLwithoutPkLane(self):
-        print(self.blWithoutPkField)
         with arcpy.da.UpdateCursor(self.FC_NAME,
                                    self.blWithoutPkField) as cursor:
             for row in cursor:
@@ -268,10 +277,49 @@ class BLTS_Analysis(object):
 
                 cursor.updateRow(row)
 
+        print("Finish BL without Parking Scoring")
 
+    def aggregateSegmentScore(self):
+        updateScoreField = [self.analysisField[0],
+                            self.analysisField[1],
+                            self.analysisField[2],
+                            self.scoreField[0]]
+        with arcpy.da.UpdateCursor(self.FC_NAME,
+                                   updateScoreField) as cursor:
+            for row in cursor:
+                if row[0] == None:
+                    row[0] = 99
+                if row[1] == None:
+                    row[1] = 99
+                if row[2] == None:
+                    row[2] = 99
+
+                row[3] = min(row[:3])
+
+                cursor.updateRow(row)
+
+
+        print("Finish Aggregating Road Segment Score")
+
+
+
+def crop(in_feature, clip_feature, out_feature = None):
+    if out_feature == None:
+        out_feature == in_feature + "_cropped"
+
+    arcpy.Clip_analysis(in_feature, clip_feature, out_feature)
+
+    print("Finish clipping...")
+    return(out_feature)
 
 
 if __name__ == '__main__':
+
+    #FC_NAME = crop(os.path.join(GDB_PATH, FC_NAME),
+    #               "G:\Resources\Data\Boundary.gdb\UAB2013",
+    #              os.path.join(GDB_PATH, "streetCL_cropped")
+    #              )
+
     a = BLTS_Analysis(GDB_PATH, FC_NAME)
     a.deleteField()
     a.addField()
@@ -281,6 +329,7 @@ if __name__ == '__main__':
     a.assignBLwithPkLane()
     a.setNoPkLaneField("lpd", "SPEED", "Width", "HasParkingLane")
     a.assignBLwithoutPkLane()
+    a.aggregateSegmentScore()
 
 
 
