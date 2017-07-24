@@ -15,10 +15,12 @@ class BLTS_Analysis(object):
                               "noPkLane",
                               "mixTraffic",
                               "sharrow"]
+
         self.scoreField = ["segmentScore",
                            "rtlScore",
                            "ltlScore",
-                           "unsignalized_crossing",
+                           "unsignalized_NoMedian",
+                           "unsignalized_Median",
                            "overallScore"]
 
 
@@ -33,6 +35,11 @@ class BLTS_Analysis(object):
                          "bike_AA_", self.scoreField[1]]
         self.ltlField = ["SPEED", "LTL_Conf_", "LTL_lanescrossed_",
                          self.scoreField[2]]
+        self.unsignalized_NoMedianField = ["med_present", "SPEED",
+                                           "TotalLanes_EW1", "TotalLanes_NS",
+                                           "Control_Type",
+                                           self.scoreField[3]]
+
 
 
         arcpy.env.workspace = GDB_PATH
@@ -456,11 +463,69 @@ class BLTS_Analysis(object):
     def aggregate_OverallScore(self):
         with arcpy.da.UpdateCursor(FC_NAME, self.scoreField) as cursor:
             for row in cursor:
-                row[4] = max(row[:4])
+                row[5] = max(row[:6])
 
                 cursor.updateRow(row)
 
         print("Finish aggregating the overall score")
+
+
+
+    def setUnsignalizedNoMedianField(self, med_present, speed,
+                                     total_lanes_EW,
+                                     total_lanes_NS,
+                                     control_type):
+
+        self.unsignalized_NoMedianField = [med_present, speed,
+                                           total_lanes_EW,
+                                           total_lanes_NS,
+                                           control_type,
+                                           self.scoreField[3]]
+
+
+    def assignUnsignalized_NoMedian(self):
+        with arcpy.da.UpdateCursor(FC_NAME,
+                                   self.unsignalized_NoMedianField)as cursor:
+            for row in cursor:
+                maxLane = max(row[2:4])
+                if row[4] != "Signal":
+                    if row[0] == "No":
+                        if row[1] <= 25:
+                            if maxLane <= 3:
+                                row[5] = 1
+                            elif maxLane == 4 or 5:
+                                row[5] = 2
+                            else:
+                                row[5] = 4
+
+                        elif row[1] == 30:
+                            if maxLane <= 3:
+                                row[5] = 1
+                            elif maxLane == 4 or 5:
+                                row[5] = 2
+                            else:
+                                row[5] = 4
+
+                        elif row[1] == 35:
+                            if maxLane <= 3:
+                                row[5] = 2
+                            elif maxLane == 4 or 5:
+                                row[5] = 3
+                            else:
+                                row[5] = 4
+
+                        else:
+                            if maxLane <= 3:
+                                row[5] = 3
+                            elif maxLane == 4 or 5:
+                                row[5] = 4
+                            else:
+                                row[5] = 4
+
+                cursor.updateRow(row)
+
+        print("Finish calculating unsginalized crossing with no median...")
+
 
 
     def calculate_AllScore(self):
@@ -478,7 +543,9 @@ class BLTS_Analysis(object):
         self.aggregateSegmentScore()
         self.assignRTL()
         self.assignLTL()
+        self.assignUnsignalized_NoMedian()
         self.aggregate_OverallScore()
+
 
 
 def crop(in_feature, clip_feature, out_feature = None):
@@ -507,7 +574,10 @@ if __name__ == '__main__':
     a.setNoPkLaneField("lpd", "SPEED", "Width", "HasParkingLane")
     a.setRTLFiled("RTL_Conf_", "RTL_len_", "bike_AA_")
     a.setLTLField("SPEED", "LTL_Conf_", "LTL_lanescrossed_")
+    a.setUnsignalizedNoMedianField("med_present", "SPEED", "TotalLanes_EW_12",
+                                   "TotalLanes_NS", "Control_Type")
     a.calculate_AllScore()
+
 
 
 
