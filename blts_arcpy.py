@@ -1,3 +1,7 @@
+# blts_arcpy.py
+# This script uses the uses the arcpy library to calculate the BLTS score for
+# each road segment and write the result in ArcGIS feature class
+
 import arcpy
 import os
 
@@ -23,13 +27,12 @@ class BLTS_Analysis(object):
                            "unsignalized_Median",
                            "overallScore"]
 
-
         self.mixTrafficField = ["SPEED", "lpd", self.analysisField[2]]
         self.combBikePkWidthField = ["lpd", "SPEED",
-                                  "Comb_ParkBike_width", "HasParkingLane",
-                                  self.analysisField[0]]
+                                     "Comb_ParkBike_width", "HasParkingLane",
+                                     self.analysisField[0]]
         self.blWithoutPkField = ["lpd", "SPEED",
-                                 "Width", "HasParkLane",
+                                 "Width", "HasParkingLane",
                                  self.analysisField[1]]
         self.rtlField = ["RTL_Conf_", "RTL_Len_",
                          "bike_AA_", self.scoreField[1]]
@@ -39,6 +42,10 @@ class BLTS_Analysis(object):
                                            "TotalLanes_EW1", "TotalLanes_NS",
                                            "Control_Type",
                                            self.scoreField[3]]
+        self.unsignalized_MedianField = ["med_present", "SPEED",
+                                         "through_lane_EW", "through_lane_NS",
+                                         "Control_Type",
+                                         self.scoreField[4]]
 
 
 
@@ -383,16 +390,24 @@ class BLTS_Analysis(object):
             field_list.append(self.scoreField[1])
             with arcpy.da.UpdateCursor(self.FC_NAME, field_list) as cursor:
                 for row in cursor:
-                    ## looking for any right turn lane configuration
+                    # looking for any right turn lane configuration
                     if row[0] != 0:
-                        ## single rtl conf
+                        ## Check for first row
                         if row[0] == 1 and row[1] <= 150 and row[2] == 1:
-                            row[3] = 2
-                        if row[0] == 1 and row[1] > 150 and row[2] == 1:
-                            row[3] = 3
-                        if row[0] == 1 and row[2] == 2:
-                            row[3] = 3
-                        if row[0] == 2:
+                            if row[3] == None or row[3] < 2:
+                                row [3] = 2
+
+                        ## Check for second row
+                        elif row[0] == 1 and row[1] >= 150 and row[2] == 1:
+                            if row[3] == None or row[3] < 3:
+                                row [3] = 3
+
+                        ## Check for third row
+                        elif row[0] == 1 and row[2] == 4:
+                            if row[3] == None or row[3] < 3:
+                                row [3] = 3
+
+                        else:
                             row[3] = 4
 
                     cursor.updateRow(row)
@@ -527,6 +542,61 @@ class BLTS_Analysis(object):
         print("Finish calculating unsginalized crossing with no median...")
 
 
+    def setUnsignalizedMedianField(self, med_present, speed,
+                                   through_lanes_EW,
+                                   through_lanes_NS,
+                                   control_type):
+        self.unsignalized_MedianField = [med_present, speed,
+                                         through_lanes_EW,
+                                         through_lanes_NS,
+                                         control_type,
+                                         self.scoreField[4]]
+
+
+    def assignUnsignalizedMedian(self):
+        with arcpy.da.UpdateCursor(FC_NAME,
+                                   self.unsignalized_MedianField) as cursor:
+            for row in cursor:
+                maxLane = max(row[2:4])
+                if row[4] != "Signal":
+                    if row[0] == "Yes":
+                        if row[1] <= 25:
+                            if maxLane == 1 or 2:
+                                row[5] = 1
+                            elif maxLane == 3 or 4:
+                                row[5] = 1
+                            else:
+                                row[5] = 2
+
+                        elif row[1] == 30:
+                            if maxLane == 1 or 2:
+                                row[5] = 1
+                            elif maxLane == 3 or 4:
+                                row[5] = 2
+                            else:
+                                row[5] = 3
+
+                        elif row[1] == 35:
+                            if maxLane == 1 or 2:
+                                row[5] = 2
+                            elif maxLane == 3 or 4:
+                                row[5] = 3
+                            else:
+                                row[5] = 4
+
+                        else:
+                            if maxLane == 1 or 2:
+                                row[5] = 3
+                            elif maxLane == 3 or 4:
+                                row[5] = 4
+                            else:
+                                row[5] = 4
+
+                cursor.updateRow(row)
+
+        print("Finish calculating unsginalized crossing with median...")
+
+
 
     def calculate_AllScore(self):
         """
@@ -577,7 +647,6 @@ if __name__ == '__main__':
     a.setUnsignalizedNoMedianField("med_present", "SPEED", "TotalLanes_EW_12",
                                    "TotalLanes_NS", "Control_Type")
     a.calculate_AllScore()
-
 
 
 
