@@ -407,6 +407,7 @@ class BLTS_Analysis(object):
                             if row[3] == None or row[3] < 3:
                                 row [3] = 3
 
+                        ## Check for fourth row
                         else:
                             row[3] = 4
 
@@ -437,37 +438,61 @@ class BLTS_Analysis(object):
             #code here
             with arcpy.da.UpdateCursor(self.FC_NAME, field_list) as cursor:
                 for row in cursor:
-                    if row[1] and row[2] != 0:
-                        # Dual Exclusive
-                        if row[1] != 0:
+
+                    # All types of left turn lane configuration
+                    if row[1] != 0:
+                        if row[3] == None or row[3] < 4:
                             row[3] = 4
 
-                        # Speed less than 25
-                        elif row[0] <= 25:
+                    # No left turn lane
+                    else:
+                        ## Speed less than 25
+                        if row[0] <= 25:
+                            ### no lanes crossed
                             if row[2] == 0:
-                                row[3] = 2
-                            elif row[2] == 1:
-                                row[3] = 2
-                            elif row[2] >= 2:
-                                row[3] = 3
+                                if row[3] < 2:
+                                    row[3] = 2
+                            ### 1 lane crossed
+                            if row[2] == 1:
+                                if row[3] < 2:
+                                    row[3] = 2
 
-                        # Speed 30
-                        elif row[0] <= 25:
-                            if row[2] == 0:
-                                row[3] = 2
-                            elif row[2] == 1:
-                                row[3] = 3
-                            elif row[2] >= 2:
-                                row[3] = 4
+                            ### 2+ lanes crossed
+                            if row[2] >= 2:
+                                if row[3] < 3:
+                                    row[3] = 3
 
-                        # Speed greater than 35
-                        elif row[0] <= 25:
+                        ## Speed 30
+                        elif row[0] == 30:
+                            ### no lanes crossed
                             if row[2] == 0:
-                                row[3] = 3
-                            elif row[2] == 1:
-                                row[3] = 4
-                            elif row[2] >= 2:
-                                row[3] = 4
+                                if row[3] < 2:
+                                    row[3] = 2
+                            ### 1 lane crossed
+                            if row[2] == 1:
+                                if row[3] < 3:
+                                    row[3] = 3
+
+                            ### 2+ lanes crossed
+                            if row[2] >= 2:
+                                if row[3] < 4:
+                                    row[3] = 4
+
+                        ## Speed >= 35
+                        else:
+                            ### no lanes crossed
+                            if row[2] == 0:
+                                if row[3] < 3:
+                                    row[3] = 3
+                            ### 1 lane crossed
+                            if row[2] == 1:
+                                if row[3] < 3:
+                                    row[3] = 4
+
+                            ### 2+ lanes crossed
+                            if row[2] >= 2:
+                                if row[3] < 4:
+                                    row[3] = 4
 
                     cursor.updateRow(row)
 

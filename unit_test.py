@@ -249,6 +249,7 @@ class testingModule(object):
             print("Direction is incorrect")
 
 
+
     @classmethod
     def rightTurnLaneScoringLogicVerify(cls):
         field = ('RTL_Conf_N', 'RTL_Len_N', 'bike_AA_N',
@@ -342,18 +343,87 @@ class testingModule(object):
 
 
     @classmethod
-    def leftTurnLaneVerify(cls):
-        pass
+    def leftTurnLaneDirectionVerify(cls):
+        #test direction
+        expected_list = ["LTL_Conf_N", "LTL_lanescrossed_N",
+                         "LTL_Conf_S", "LTL_lanescrossed_S",
+                         "LTL_Conf_E", "LTL_lanescrossed_E",
+                         "LTL_Conf_W", "LTL_lanescrossed_W",]
+
+        fields = ("LTL_Conf_", "LTL_lanescrossed_")
+        directions = ["N", "S", "E", "W"]
+        field_list = []
+        for d in directions:
+            for field in fields[:2]:
+                field = field + d
+                field_list.append(field)
+
+
+        if field_list == expected_list:
+            print("Direction is verified")
+        else:
+            print("Direction is incorrect")
+
+
+
+    @classmethod
+    def leftTurnLaneScoringLogicVerify(cls):
+        field = ('speed',
+                 'LTL_Conf_N', 'LTL_lanescrossed_N',
+                 'LTL_Conf_S', 'LTL_lanescrossed_S',
+                 'LTL_Conf_E', 'LTL_lanescrossed_E',
+                 'LTL_Conf_W', 'LTL_lanescrossed_W'
+                 )
+
+        # Test for logic of scoring
+        speed = [20, 25, 30, 35, 40]
+        ltl_conf = [0, 0, 1, 1]
+        ltl_lanescrossed = [0, 1, 2, 3]
+
+        data = []
+        for s in speed:
+            for c, l in zip(ltl_conf, ltl_lanescrossed):
+                data.append((s, c, l, c, l, c, l, c, l))
+
+
+        expected_score = []
+
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.addField()
+        a.setLTLField('speed', 'LTL_Conf_', 'LTL_lanescrossed_')
+        a.assignLTL()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+        for row in cursor:
+            calScore.append(row.getValue("rtlScore"))
+
+        if calScore == expected_score:
+            print("Right turn lane scoring logic is as expected...")
+        else:
+            print(
+            "Right turn lane scoring logic is incorrect")
+
+        #cls._deleteData()
+        del cursor, row, a
+
+
 
 
 def main():
         workSpaceFixture.setUpModule()
-        testingModule.mixTrafficVerify()
-        testingModule.bikeLaneWithPkVerify()
-        testingModule.bikeLaneWithoutPkVerify()
-        testingModule.rightTurnLaneDirectionVerify()
-        testingModule.rightTurnLaneScoringLogicVerify()
-        testingModule.rightTurnAssignScoreLogicVerify()
+        #testingModule.mixTrafficVerify()
+        #testingModule.bikeLaneWithPkVerify()
+        #testingModule.bikeLaneWithoutPkVerify()
+        #testingModule.rightTurnLaneDirectionVerify()
+        #testingModule.rightTurnLaneScoringLogicVerify()
+        #testingModule.rightTurnAssignScoreLogicVerify()
+        testingModule.leftTurnLaneDirectionVerify()
+        testingModule.leftTurnLaneScoringLogicVerify()
         #workSpaceFixture.tearDownModule()
 
 
