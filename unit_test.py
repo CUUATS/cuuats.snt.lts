@@ -227,11 +227,133 @@ class testingModule(object):
         del a, cursor, row
 
 
+    @classmethod
+    def rightTurnLaneDirectionVerify(cls):
+        #test direction
+        expected_list = ["RTL_Conf_N", "RTL_Len_N", "bike_AA_N",
+                         "RTL_Conf_S", "RTL_Len_S", "bike_AA_S",
+                         "RTL_Conf_E", "RTL_Len_E", "bike_AA_E",
+                         "RTL_Conf_W", "RTL_Len_W", "bike_AA_W"]
+        fields = ("RTL_Conf_", "RTL_Len_", "bike_AA_")
+        directions = ["N", "S", "E", "W"]
+        field_list = []
+        for d in directions:
+            for field in fields[:3]:
+                field = field + d
+                field_list.append(field)
+
+
+        if field_list == expected_list:
+            print("Direction is verified")
+        else:
+            print("Direction is incorrect")
+
+
+    @classmethod
+    def rightTurnLaneScoringLogicVerify(cls):
+        field = ('RTL_Conf_N', 'RTL_Len_N', 'bike_AA_N',
+                 'RTL_Conf_S', 'RTL_Len_S', 'bike_AA_S',
+                 'RTL_Conf_E', 'RTL_Len_E', 'bike_AA_E',
+                 'RTL_Conf_W', 'RTL_Len_W', 'bike_AA_W'
+                 )
+
+        # Test for logic of scoring
+        data = [[0] * 12,
+                [1, 100, 1] * 4 ,
+                [1, 150, 1] * 4 ,
+                [1, 200, 1] * 4 ,
+                [1, 150, 4] * 4 ,
+                [1, 150, 2] * 4 ,
+                [1, 150, 3] * 4 ,
+                [2, 150, 4] * 4]
+
+        expected_score = [None, 2, 2, 3, 3, 4, 4, 4]
+
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.setRTLFiled('RTL_Conf_', 'RTL_Len_', 'bike_AA_')
+        a.assignRTL()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+        for row in cursor:
+            calScore.append(row.getValue("rtlScore"))
+
+        if calScore == expected_score:
+            print("Right turn lane scoring logic is as expected...")
+        else:
+            print(
+            "Right turn lane scoring logic is incorrect")
+
+        cls._deleteData()
+        del cursor, row, a
+
+
+
+    @classmethod
+    def rightTurnAssignScoreLogicVerify(cls):
+        field = ('RTL_Conf_N', 'RTL_Len_N', 'bike_AA_N',
+                 'RTL_Conf_S', 'RTL_Len_S', 'bike_AA_S',
+                 'RTL_Conf_E', 'RTL_Len_E', 'bike_AA_E',
+                 'RTL_Conf_W', 'RTL_Len_W', 'bike_AA_W'
+                 )
+
+        # Test for assigning score logic
+        data = [[1, 100, 1,
+                 1, 100, 1,
+                 1, 150, 1,
+                 1, 50, 1],
+                [0, 0, 0,
+                1, 200, 1,
+                1, 100, 1,
+                1, 150, 1],
+                [1, 150, 4,
+                 1, 100, 2,
+                 1, 150, 3,
+                 1, 150, 1]]
+
+
+        expected_score = [2, 3, 4]
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.addField()
+        a.setRTLFiled('RTL_Conf_', 'RTL_Len_', 'bike_AA_')
+        a.assignRTL()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+        for row in cursor:
+            calScore.append(row.getValue("rtlScore"))
+
+        if calScore == expected_score:
+            print("Right turn lane assign score logic is as expected...")
+        else:
+            print(
+                "Right turn lane assign scoring logic is incorrect")
+
+        cls._deleteData()
+        del cursor, row, a
+
+
+    @classmethod
+    def leftTurnLaneVerify(cls):
+        pass
+
+
 def main():
         workSpaceFixture.setUpModule()
         testingModule.mixTrafficVerify()
         testingModule.bikeLaneWithPkVerify()
         testingModule.bikeLaneWithoutPkVerify()
+        testingModule.rightTurnLaneDirectionVerify()
+        testingModule.rightTurnLaneScoringLogicVerify()
+        testingModule.rightTurnAssignScoreLogicVerify()
         #workSpaceFixture.tearDownModule()
 
 
