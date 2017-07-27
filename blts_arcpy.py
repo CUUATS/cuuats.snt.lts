@@ -501,9 +501,9 @@ class BLTS_Analysis(object):
 
 
     def aggregate_OverallScore(self):
-        with arcpy.da.UpdateCursor(FC_NAME, self.scoreField) as cursor:
+        with arcpy.da.UpdateCursor(self.FC_NAME, self.scoreField) as cursor:
             for row in cursor:
-                row[5] = max(row[:6])
+                row[5] = max(row[:5])
 
                 cursor.updateRow(row)
 

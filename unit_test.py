@@ -43,6 +43,10 @@ class workSpaceFixture(object):
         ('thruLane_EW', 'LONG', 5),
         ('thruLane_NS', 'LONG', 5)
     )
+    analysisField = ["pkLane",
+                     "noPkLane",
+                     "mixTraffic",
+                     "sharrow"]
 
 
     @classmethod
@@ -125,9 +129,9 @@ class testingModule(object):
 
 
         if calScore == expected_score:
-            print("All Mix Traffic score is as expected...")
+            print("[/] Mix Traffic score is correct...")
         else:
-            print("Calculated score and expected mix traffic score does not match")
+            print("[X] Mix Traffic score is inccorect")
 
         cls._deleteData()
         del cursor, row, a
@@ -173,9 +177,9 @@ class testingModule(object):
             calScore.append(row.getValue("pkLane"))
 
         if calScore == expected_score:
-            print("All Bike Lane with Adj Parking score is as expected...")
+            print("[/] Bike Lane with Adj Parking score is correct...")
         else:
-            print("Calculated score and BL w/ parking score does not match")
+            print("[X] Bike Lane with Adj Parking score is incorrect...")
 
         cls._deleteData()
         del a, cursor, row
@@ -219,9 +223,9 @@ class testingModule(object):
             calScore.append(row.getValue("noPkLane"))
 
         if calScore == expected_score:
-            print("All Bike Lane w/o Adj Parking score is as expected...")
+            print("[/] All Bike Lane w/o Adj Parking score is correct...")
         else:
-            print("Calculated score and BL w/o parking score does not match")
+            print("[X] All Bike Lane w/o Adj Parking score is incorrect...")
 
         cls._deleteData()
         del a, cursor, row
@@ -244,9 +248,9 @@ class testingModule(object):
 
 
         if field_list == expected_list:
-            print("Direction is verified")
+            print("[/] Direction is correct")
         else:
-            print("Direction is incorrect")
+            print("[X] Direction is incorrect")
 
 
     @classmethod
@@ -283,10 +287,9 @@ class testingModule(object):
             calScore.append(row.getValue("rtlScore"))
 
         if calScore == expected_score:
-            print("Right turn lane scoring logic is as expected...")
+            print("[/] Right turn lane scoring logic is correct...")
         else:
-            print(
-            "Right turn lane scoring logic is incorrect")
+            print("[X] Right turn lane scoring logic is incorrect")
 
         cls._deleteData()
         del cursor, row, a
@@ -331,10 +334,9 @@ class testingModule(object):
             calScore.append(row.getValue("rtlScore"))
 
         if calScore == expected_score:
-            print("Right turn lane assign score logic is as expected...")
+            print("[/] Right turn lane assign score logic is correct...")
         else:
-            print(
-                "Right turn lane assign scoring logic is incorrect")
+            print("[X] Right turn lane assign scoring logic is incorrect")
 
         cls._deleteData()
         del cursor, row, a
@@ -358,9 +360,9 @@ class testingModule(object):
 
 
         if field_list == expected_list:
-            print("Direction is verified")
+            print("[/] Direction is correct")
         else:
-            print("Direction is incorrect")
+            print("[X] Direction is incorrect")
 
 
     @classmethod
@@ -403,10 +405,10 @@ class testingModule(object):
             calScore.append(row.getValue("ltlScore"))
 
         if calScore == expected_score:
-            print("Left turn lane scoring logic (no left turn lane) "
+            print("[/] Left turn lane scoring logic (no left turn lane) "
             "is as expected...")
         else:
-            print("Left turn lane scoring logic is incorrect")
+            print("[X] Left turn lane scoring logic is incorrect")
 
         cls._deleteData()
         del cursor, row, a
@@ -446,10 +448,10 @@ class testingModule(object):
             calScore.append(row.getValue("ltlScore"))
 
         if calScore == expected_score:
-            print("Left turn lane scoring logic (has left turn lane) "
+            print("[/] Left turn lane scoring logic (has left turn lane) "
                     "is as expected...")
         else:
-            print("Left turn lane scoring (has left turn lane)"
+            print("[X] Left turn lane scoring (has left turn lane)"
                   "logic is incorrect")
 
         cls._deleteData()
@@ -493,10 +495,10 @@ class testingModule(object):
             calScore.append(row.getValue("ltlScore"))
 
         if calScore == expected_score:
-            print("Left turn lane assign score logic "
+            print("[/] Left turn lane assign score logic "
                   "is as expected...")
         else:
-            print("Left turn lane assign score logic is incorrect")
+            print("[X] Left turn lane assign score logic is incorrect")
 
         cls._deleteData()
         del cursor, row, a
@@ -545,15 +547,127 @@ class testingModule(object):
         for row in cursor:
             calScore.append(row.getValue("unsignalized_NoMedian"))
 
-        print(expected_score)
-        print(calScore)
-
         if calScore == expected_score:
             print("[/] Unsignalized no median scoring is correct")
         else:
             print("[X] Unsignalized no median scoring is incorrect")
 
 
+        cls._deleteData()
+        del cursor, row, a
+
+
+    @classmethod
+    def unsignalizedCrossingWOMedianFilter(cls):
+        field = ('med_present',
+                 'speed',
+                 'TotalLanes_EW',
+                 'TotalLanes_NS',
+                 'Control_Type')
+
+        med_present = ['Yes', 'No']
+        control_type = ['Signal', 'Yield']
+
+        data = []
+        for m in med_present:
+            for c in control_type:
+                data.append([m, 25, 2, 2, c])
+
+        expected_score = [None, None, None, 1]
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.setUnsignalizedNoMedianField('med_present',
+                                       'speed',
+                                       'TotalLanes_EW',
+                                       'TotalLanes_NS',
+                                       'Control_Type')
+        a.assignUnsignalized_NoMedian()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+
+        for row in cursor:
+            calScore.append(row.getValue("unsignalized_NoMedian"))
+
+        if calScore == expected_score:
+            print("[/] Unsignalized no median filter is correct")
+        else:
+            print("[X] Unsignalized no median filter is incorrect")
+
+
+    @classmethod
+    def aggregateSegmentScoreTest(cls):
+        field = ("pkLane",
+                 "noPkLane",
+                 "mixTraffic",
+                 )
+        data = [[1, 1, 1],
+                [1, 2, 1],
+                [2, 3, 4],
+                [2, 3, 2],
+                [4, 4, 4],
+                [4, 4, 3]]
+        expected_score = [1, 1, 2, 2, 4, 3]
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.aggregateSegmentScore()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+
+        calScore = []
+        for row in cursor:
+            calScore.append(row.getValue("segmentScore"))
+
+        print(expected_score)
+        print(calScore)
+
+        if calScore == expected_score:
+            print("[/] Segment score aggregation is correct")
+        else:
+            print("[X] Segment score aggregation is incorrect")
+
+
+    @classmethod
+    def aggregateOverallScoreTest(cls):
+        field = ("segmentScore",
+                 "rtlScore",
+                 "ltlScore",
+                 "unsignalized_NoMedian",
+                 "unsignalized_Median"
+                 )
+        data = [[1, 1, 1, 1, 1],
+                [1, 2, 1, 2, 2],
+                [2, 3, 2, 3, 3],
+                [2, 3, 2, 3, 3],
+                [4, 4, 4, 3, 3],
+                [4, 4, 3, 2, 1]]
+        expected_score = [1, 2, 3, 3, 4, 4]
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.aggregate_OverallScore()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+
+        calScore = []
+        for row in cursor:
+            calScore.append(row.getValue("overallScore"))
+
+        print(expected_score)
+        print(calScore)
+
+        if calScore == expected_score:
+            print("[/] Overall score aggregation is correct")
+        else:
+            print("[X] Overall score aggregation is incorrect")
 
 
 
