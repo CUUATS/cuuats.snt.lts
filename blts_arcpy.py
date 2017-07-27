@@ -524,8 +524,8 @@ class BLTS_Analysis(object):
 
 
     def assignUnsignalized_NoMedian(self):
-        with arcpy.da.UpdateCursor(FC_NAME,
-                                   self.unsignalized_NoMedianField)as cursor:
+        with arcpy.da.UpdateCursor(self.FC_NAME,
+                                   self.unsignalized_NoMedianField) as cursor:
             for row in cursor:
                 maxLane = max(row[2:4])
                 if row[4] != "Signal":
@@ -533,7 +533,7 @@ class BLTS_Analysis(object):
                         if row[1] <= 25:
                             if maxLane <= 3:
                                 row[5] = 1
-                            elif maxLane == 4 or 5:
+                            elif maxLane == 4 or maxLane == 5:
                                 row[5] = 2
                             else:
                                 row[5] = 4
@@ -541,7 +541,7 @@ class BLTS_Analysis(object):
                         elif row[1] == 30:
                             if maxLane <= 3:
                                 row[5] = 1
-                            elif maxLane == 4 or 5:
+                            elif maxLane == 4 or maxLane == 5:
                                 row[5] = 2
                             else:
                                 row[5] = 4
@@ -549,7 +549,7 @@ class BLTS_Analysis(object):
                         elif row[1] == 35:
                             if maxLane <= 3:
                                 row[5] = 2
-                            elif maxLane == 4 or 5:
+                            elif maxLane == 4 or maxLane == 5:
                                 row[5] = 3
                             else:
                                 row[5] = 4
@@ -557,7 +557,7 @@ class BLTS_Analysis(object):
                         else:
                             if maxLane <= 3:
                                 row[5] = 3
-                            elif maxLane == 4 or 5:
+                            elif maxLane == 4 or maxLane == 5:
                                 row[5] = 4
                             else:
                                 row[5] = 4
