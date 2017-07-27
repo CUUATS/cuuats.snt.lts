@@ -37,7 +37,7 @@ class workSpaceFixture(object):
         ('LTL_lanescrossed_E', 'LONG', 5),
         ('LTL_lanescrossed_W', 'LONG', 5),
         ('med_present', 'TEXT', 10),
-        ('TotalLanes_EW1', 'LONG', 5),
+        ('TotalLanes_EW', 'LONG', 5),
         ('TotalLanes_NS', 'LONG', 5),
         ('Control_Type', 'TEXT', 10),
         ('thruLane_EW', 'LONG', 5),
@@ -249,7 +249,6 @@ class testingModule(object):
             print("Direction is incorrect")
 
 
-
     @classmethod
     def rightTurnLaneScoringLogicVerify(cls):
         field = ('RTL_Conf_N', 'RTL_Len_N', 'bike_AA_N',
@@ -291,7 +290,6 @@ class testingModule(object):
 
         cls._deleteData()
         del cursor, row, a
-
 
 
     @classmethod
@@ -365,9 +363,8 @@ class testingModule(object):
             print("Direction is incorrect")
 
 
-
     @classmethod
-    def leftTurnLaneScoringLogicVerify(cls):
+    def leftTurnLaneNoTurnLaneVerify(cls):
         field = ('speed',
                  'LTL_Conf_N', 'LTL_lanescrossed_N',
                  'LTL_Conf_S', 'LTL_lanescrossed_S',
@@ -377,7 +374,7 @@ class testingModule(object):
 
         # Test for logic of scoring
         speed = [20, 25, 30, 35, 40]
-        ltl_conf = [0, 0, 1, 1]
+        ltl_conf = [0, 0, 0, 0]
         ltl_lanescrossed = [0, 1, 2, 3]
 
         data = []
@@ -385,10 +382,11 @@ class testingModule(object):
             for c, l in zip(ltl_conf, ltl_lanescrossed):
                 data.append((s, c, l, c, l, c, l, c, l))
 
-
-        expected_score = []
-
-
+        expected_score = [2, 2, 3, 3,
+                          2, 2, 3, 3,
+                          2, 3, 4, 4,
+                          3, 4, 4, 4,
+                          3, 4, 4, 4]
         cls._addData(field, data)
 
         a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
@@ -399,36 +397,162 @@ class testingModule(object):
 
         cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
         calScore = []
+
+
         for row in cursor:
-            calScore.append(row.getValue("rtlScore"))
+            calScore.append(row.getValue("ltlScore"))
 
         if calScore == expected_score:
-            print("Right turn lane scoring logic is as expected...")
+            print("Left turn lane scoring logic (no left turn lane) "
+            "is as expected...")
         else:
-            print(
-            "Right turn lane scoring logic is incorrect")
+            print("Left turn lane scoring logic is incorrect")
 
-        #cls._deleteData()
+        cls._deleteData()
         del cursor, row, a
 
 
+    @classmethod
+    def leftTurnLaneHasTurnLaneVerify(cls):
+        field = ('speed',
+                 'LTL_Conf_N', 'LTL_lanescrossed_N',
+                 'LTL_Conf_S', 'LTL_lanescrossed_S',
+                 'LTL_Conf_E', 'LTL_lanescrossed_E',
+                 'LTL_Conf_W', 'LTL_lanescrossed_W'
+                 )
+
+        # Test for logic of scoring
+        speed = [20, 25, 30, 35, 40]
+        ltl_conf = [1, 1, 1, 1]
+        ltl_lanescrossed = [0, 1, 2, 3]
+
+        data = []
+        for s in speed:
+            for c, l in zip(ltl_conf, ltl_lanescrossed):
+                data.append((s, c, l, c, l, c, l, c, l))
+
+        expected_score = [4] * 20
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.setLTLField('speed', 'LTL_Conf_', 'LTL_lanescrossed_')
+        a.assignLTL()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+
+        for row in cursor:
+            calScore.append(row.getValue("ltlScore"))
+
+        if calScore == expected_score:
+            print("Left turn lane scoring logic (has left turn lane) "
+                    "is as expected...")
+        else:
+            print("Left turn lane scoring (has left turn lane)"
+                  "logic is incorrect")
+
+        cls._deleteData()
+        del cursor, row, a
 
 
-def main():
-        workSpaceFixture.setUpModule()
-        #testingModule.mixTrafficVerify()
-        #testingModule.bikeLaneWithPkVerify()
-        #testingModule.bikeLaneWithoutPkVerify()
-        #testingModule.rightTurnLaneDirectionVerify()
-        #testingModule.rightTurnLaneScoringLogicVerify()
-        #testingModule.rightTurnAssignScoreLogicVerify()
-        testingModule.leftTurnLaneDirectionVerify()
-        testingModule.leftTurnLaneScoringLogicVerify()
-        #workSpaceFixture.tearDownModule()
+    @classmethod
+    def leftTurnLaneAssignScoreLogicVerify(cls):
+        field = ('speed',
+                 'LTL_Conf_N', 'LTL_lanescrossed_N',
+                 'LTL_Conf_S', 'LTL_lanescrossed_S',
+                 'LTL_Conf_E', 'LTL_lanescrossed_E',
+                 'LTL_Conf_W', 'LTL_lanescrossed_W'
+                 )
+
+        # Test for logic of scoring
+        data = [[20,
+                0, 0,
+                0, 0,
+                1, 1,
+                1, 1],
+                [30,
+                 1, 1,
+                 1, 2,
+                 0, 1,
+                 0, 2,]]
 
 
-if __name__ == ("__main__"):
-    main()
+        expected_score = [4,4]
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.setLTLField('speed', 'LTL_Conf_', 'LTL_lanescrossed_')
+        a.assignLTL()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+
+        for row in cursor:
+            calScore.append(row.getValue("ltlScore"))
+
+        if calScore == expected_score:
+            print("Left turn lane assign score logic "
+                  "is as expected...")
+        else:
+            print("Left turn lane assign score logic is incorrect")
+
+        cls._deleteData()
+        del cursor, row, a
+
+
+    @classmethod
+    def unsignalizedCrossingWOMedianScoring(cls):
+        field = ('med_present',
+                 'speed',
+                 'TotalLanes_EW',
+                 'TotalLanes_NS',
+                 'Control_Type')
+
+        speed = [20, 25, 30, 35, 40, 45]
+        totalLanes_EW = [2, 3, 4, 5, 6, 7]
+        totalLanes_NS = [2, 3, 4, 5, 6, 7]
+
+        data = []
+        for s in speed:
+            for ew, ns in zip(totalLanes_EW, totalLanes_NS):
+                data.append(['No', s, ew, ns, 'Yield'])
+
+        expected_score = [1, 1, 2, 2, 4, 4,
+                          1, 1, 2, 2, 4, 4,
+                          1, 1, 2, 2, 4, 4,
+                          2, 2, 3, 3, 4, 4,
+                          3, 3, 4, 4, 4, 4,
+                          3, 3, 4, 4, 4, 4]
+
+        cls._addData(field, data)
+
+        a = blts.BLTS_Analysis(workSpaceFixture.GDB_Path,
+                               workSpaceFixture.FC_NAME)
+        a.setUnsignalizedNoMedianField('med_present',
+                                       'speed',
+                                       'TotalLanes_EW',
+                                       'TotalLanes_NS',
+                                       'Control_Type')
+        a.assignUnsignalized_NoMedian()
+
+        cursor = arcpy.SearchCursor(workSpaceFixture.FC_Path)
+        calScore = []
+
+
+
+        for row in cursor:
+            calScore.append(row.getValue("unsignalized_NoMedian"))
+
+        print(expected_score)
+        print(calScore)
+
+        if calScore == expected_score:
+            print("[/] Unsignalized no median scoring is correct")
+        else:
+            print("[X] Unsignalized no median scoring is incorrect")
+
 
 
 
