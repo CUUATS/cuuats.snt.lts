@@ -597,6 +597,8 @@ class testingModule(object):
         else:
             print("[X] Unsignalized no median filter is incorrect")
 
+        cls._deleteData()
+        del cursor, row, a
 
     @classmethod
     def aggregateSegmentScoreTest(cls):
@@ -624,14 +626,13 @@ class testingModule(object):
         for row in cursor:
             calScore.append(row.getValue("segmentScore"))
 
-        print(expected_score)
-        print(calScore)
-
         if calScore == expected_score:
             print("[/] Segment score aggregation is correct")
         else:
             print("[X] Segment score aggregation is incorrect")
 
+        cls._deleteData()
+        del cursor, a, row
 
     @classmethod
     def aggregateOverallScoreTest(cls):
@@ -660,9 +661,6 @@ class testingModule(object):
         calScore = []
         for row in cursor:
             calScore.append(row.getValue("overallScore"))
-
-        print(expected_score)
-        print(calScore)
 
         if calScore == expected_score:
             print("[/] Overall score aggregation is correct")
