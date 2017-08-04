@@ -385,17 +385,17 @@ class BLTS_Analysis(object):
                     if row[0] != 0:
                         ## Check for first row
                         if row[0] == 1 and row[1] <= 150 and row[2] == 1:
-                            if row[3] == None or row[3] < 2:
+                            if row[3] == None or row[3] < RTL_CRIT_TABLE[0]:
                                 row[3] = RTL_CRIT_TABLE[0]
 
                         ## Check for second row
                         elif row[0] == 1 and row[1] >= 150 and row[2] == 1:
-                            if row[3] == None or row[3] < 3:
+                            if row[3] == None or row[3] < RTL_CRIT_TABLE[1]:
                                 row[3] = RTL_CRIT_TABLE[1]
 
                         ## Check for third row
                         elif row[0] == 1 and row[2] == 4:
-                            if row[3] == None or row[3] < 3:
+                            if row[3] == None or row[3] < RTL_CRIT_TABLE[2]:
                                 row[3] = RTL_CRIT_TABLE[2]
 
                         ## Check for fourth row
@@ -442,20 +442,19 @@ class BLTS_Analysis(object):
                 field_names.append(field)
             field_names.append(speed)
             field_names.append(self.scoreFields[6])
-            print(field_names)
 
             with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
                 for row in cursor:
                     # All types of left turn lane configuration
                     if row[0] != 0:
                         if row[2] <= 25:
-                            if row[3] == None or row[3] < 4:
+                            if row[3] == None or row[3] < LTL_CRIT_TABLE[0][3]:
                                 row[3] = LTL_CRIT_TABLE[0][3]
                         elif row[2] == 30:
-                            if row[3] == None or row[3] < 4:
+                            if row[3] == None or row[3] < LTL_CRIT_TABLE[1][3]:
                                 row[3] = LTL_CRIT_TABLE[1][3]
                         else:
-                            if row[3] == None or row[3] < 4:
+                            if row[3] == None or row[3] < LTL_CRIT_TABLE[2][3]:
                                 row[3] = LTL_CRIT_TABLE[2][3]
                     # No left turn lane
 
@@ -464,45 +463,45 @@ class BLTS_Analysis(object):
                         if row[2] <= 25:
                             ### no lanes crossed
                             if row[1] == 0:
-                                if row[3] < 2:
+                                if row[3] < LTL_CRIT_TABLE[0][0]:
                                     row[3] = LTL_CRIT_TABLE[0][0]
                             ### 1 lane crossed
                             if row[1] == 1:
-                                if row[3] < 2:
+                                if row[3] < LTL_CRIT_TABLE[0][1]:
                                     row[3] = LTL_CRIT_TABLE[0][1]
                             ### 2+ lanes crossed
                             if row[1] >= 2:
-                                if row[3] < 3:
+                                if row[3] < LTL_CRIT_TABLE[0][2]:
                                     row[3] = LTL_CRIT_TABLE[0][2]
                         ## Speed 30
                         elif row[2] == 30:
                             ### no lanes crossed
                             if row[1] == 0:
-                                if row[3] < 2:
+                                if row[3] < LTL_CRIT_TABLE[1][0]:
                                     row[3] = LTL_CRIT_TABLE[1][0]
                             ### 1 lane crossed
                             if row[1] == 1:
-                                if row[3] < 3:
+                                if row[3] < LTL_CRIT_TABLE[1][1]:
                                     row[3] = LTL_CRIT_TABLE[1][1]
 
                             ### 2+ lanes crossed
                             if row[1] >= 2:
-                                if row[3] < 4:
+                                if row[3] < LTL_CRIT_TABLE[1][2]:
                                     row[3] = LTL_CRIT_TABLE[1][2]
                         ## Speed >= 35
                         else:
                             ### no lanes crossed
                             if row[1] == 0:
-                                if row[3] < 3:
+                                if row[3] < LTL_CRIT_TABLE[2][0]:
                                     row[3] = LTL_CRIT_TABLE[2][0]
                             ### 1 lane crossed
                             if row[1] == 1:
-                                if row[3] < 3:
+                                if row[3] < LTL_CRIT_TABLE[2][1]:
                                     row[3] = LTL_CRIT_TABLE[2][1]
 
                             ### 2+ lanes crossed
                             if row[1] >= 2:
-                                if row[3] < 4:
+                                if row[3] < LTL_CRIT_TABLE[2][2]:
                                     row[3] = LTL_CRIT_TABLE[2][2]
 
                     cursor.updateRow(row)
