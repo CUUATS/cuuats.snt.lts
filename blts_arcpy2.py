@@ -5,6 +5,7 @@
 
 import arcpy
 import os
+import numpy as np
 from config import BL_ADJ_PK_TABLE, BL_NO_ADJ_PK_TABLE, MIXED_TRAF_TABLE, \
     RTL_CRIT_TABLE, LTL_CRIT_TABLE, CROSS_NO_MED_TABLE, CROSS_HAS_MED_TABLE
 
@@ -26,7 +27,21 @@ class BLTS_Analysis(object):
                             "overallScore"]
 
 
-    def _setupFields(self, scoreField, checklist, clearField = True):
+    def _setupFields(self, scoreField, checklist):
+        """
+        This internal method checks rather the scoreField which is used to
+        contain the score exist, if the field already exisit, it will update to
+        previous values to zero.  If the field doesn't exist, it will add a 
+        field in the future class.
+        
+        It will use the checklist parameter, which are the input fields for the
+        analysis, and check rather the fields exist in the future class.  If 
+        they do not exist, it will raise an error.
+        :param scoreField: Field that is used to contain the score for each 
+        segment
+        :param checklist: List of fields that is used for the analysis
+        :return: output score is written in the future class
+        """
         fc_fields = arcpy.ListFields(self.FC_PATH)
         fc_field_list = [field.name for field in fc_fields]
 
@@ -50,6 +65,20 @@ class BLTS_Analysis(object):
 
     def assingBLwithPkLaneScore(self, lane_Per_Dir = None, speed = None,
                            comb_PkBike_Width = None, has_Parking = None):
+        """
+        This method allows the users to assign bike lane with parking lane score
+        based on the blts method.  It takes in all the criteria as string and 
+        output and interger score in the input future class. 
+        :param lane_Per_Dir: string name for the field in the future class that 
+        contain lane per direction data
+        :param speed: string name for the field in the future class that 
+        contain speed data
+        :param comb_PkBike_Width: string name for the field in the future class 
+        that contain combine parking and bike lane width data
+        :param has_Parking: string name for the field in the future class that 
+        contain has parking data
+        :return: output score is written in the future class
+        """
         if not lane_Per_Dir or not speed \
             or not comb_PkBike_Width or not has_Parking:
             raise ValueError("Lane per direction, speed, "
@@ -138,6 +167,20 @@ class BLTS_Analysis(object):
 
     def assignBLwithoutPkLaneScore(self, lane_Per_Dir = None, speed = None,
                               bikeLane_width = None, has_Parking = None):
+        """
+        This method allows the users to assign bike lane without parking lane 
+        score based on the blts method.  It takes in all the criteria as string 
+        and output and interger score in the input future class. 
+        :param lane_Per_Dir: string name for the field in the future class that 
+        contain lane per direction data
+        :param speed: string name for the field in the future class that 
+        contain speed data
+        :param bikeLane_width: string name for the field in the future class that 
+        contain bike lane width data
+        :param has_Parking: string name for the field in the future class that 
+        contain has parking data
+        :return: output score is written in the future class
+        """
         if not lane_Per_Dir or not speed \
             or not bikeLane_width or not has_Parking:
             raise ValueError("Lane per direction, speed, "
@@ -208,6 +251,16 @@ class BLTS_Analysis(object):
 
 
     def assignMixTrafficScore(self, speed = None, lane_per_dir = None):
+        """
+        This method allows the users to assign mix traffic score based on the 
+        blts method.  It takes in all the criteria as string and output and 
+        interger score in the input future class. 
+        :param speed: string name for the field in the future class that 
+        contain speed data
+        :param lane_per_dir: string name for the field in the future class that 
+        contain lane per direction data
+        :return: output score is written in the future class
+        """
         if not speed or not lane_per_dir:
             raise ValueError("Speed and lane per direction must be entered")
         self._setupFields(self.scoreFields[2], checklist=[speed, lane_per_dir])
@@ -253,34 +306,58 @@ class BLTS_Analysis(object):
 
 
 
-    def aggregateSegmentScore(self, method = "MAX"):
-        if method == "MAX":
-            self._setupFields(self.scoreFields[4], [self.scoreFields[0],
-                                                    self.scoreFields[1],
-                                                    self.scoreFields[2]])
+    def aggregateSegmentScore(self, method = "MIN"):
+        """
+        This method allows the user to combine the score of bike Lane with
+        parking lane, bike lane without parking lane and general mix traffic 
+        score into combine score. 
+        :param method: Optional: Choosing the aggregation method, default is 
+        using the minimal of the three, other options are "AVG' and 'MAX'
+        :return: the aggregated scored is written in the future class
+        """
 
-            field_names = [self.scoreFields[0],
-                           self.scoreFields[1],
-                           self.scoreFields[2],
-                           self.scoreFields[4]]
+        self._setupFields(self.scoreFields[4], [self.scoreFields[0],
+                                                self.scoreFields[1],
+                                                self.scoreFields[2]])
 
-            with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
-                for row in cursor:
-                    if row[0] == None:
-                        row[0] = 99
-                    if row[1] == None:
-                        row[1] = 99
-                    if row[2] == None:
-                        row[2] = 99
+        field_names = [self.scoreFields[0],
+                       self.scoreFields[1],
+                       self.scoreFields[2],
+                       self.scoreFields[4]]
 
+        with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
+            for row in cursor:
+                if row[0] == None:
+                    row[0] = 99
+                if row[1] == None:
+                    row[1] = 99
+                if row[2] == None:
+                    row[2] = 99
+                if method == "MIN":
                     row[3] = min(row[:3])
+                if method == "MAX":
+                    row[3] = max(row[:3])
+                if method == "AVG":
+                    row[3] = round(np.mean(row[:3]))
 
-                    cursor.updateRow(row)
+                cursor.updateRow(row)
 
 
 
     def assignRightTurnLaneScore(self, rtl_conf = None, rtl_len = None,
                                  bike_aa = None):
+        """
+        This method allows the users to assign right turn lane score based on 
+        the blts method.  It takes in all the criteria as string and output and 
+        interger score in the input future class.
+        :param rtl_conf: string name for the field in the future class that 
+        contain right turn lane configuration data
+        :param rtl_len: string name for the field in the future class that 
+        contain right turn lane length data
+        :param bike_aa: string name for the field in the future class that 
+        contain bike lane approach alignment data
+        :return: score is written in the input future class
+        """
         if not rtl_conf or not rtl_len or not bike_aa:
             raise ValueError("Right turn lane configuration, " 
                              "right turn lane length and "
@@ -332,6 +409,18 @@ class BLTS_Analysis(object):
     def assignLeftTurnLaneScore(self, speed = None,
                                 ltl_conf = None,
                                 ltl_lanescrossed = None):
+        """
+        This method allows the users to assign left turn lane score based on 
+        the blts method.  It takes in all the criteria as string and output and 
+        interger score in the input future class.
+        :param speed: string name for the field in the future class that 
+        contain speed data
+        :param ltl_conf: string name for the field in the future class that 
+        contain left turn lane configuration data
+        :param ltl_lanescrossed: string name for the field in the future class 
+        that contain left turn lane lanes crossed data
+        :return: score is written in the input future class
+        """
         if not speed or not ltl_conf or not ltl_lanescrossed:
             raise ValueError("Speed, Left turn lane configuration, " 
                              "left turn lane lanes crossed must be entered")
@@ -353,67 +442,70 @@ class BLTS_Analysis(object):
                 field_names.append(field)
             field_names.append(speed)
             field_names.append(self.scoreFields[6])
+            print(field_names)
+
             with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
                 for row in cursor:
                     # All types of left turn lane configuration
-                    if row[1] != 0:
-                        if row[0] <= 25:
+                    if row[0] != 0:
+                        if row[2] <= 25:
                             if row[3] == None or row[3] < 4:
                                 row[3] = LTL_CRIT_TABLE[0][3]
-                        elif row[0] == 30:
+                        elif row[2] == 30:
                             if row[3] == None or row[3] < 4:
                                 row[3] = LTL_CRIT_TABLE[1][3]
                         else:
                             if row[3] == None or row[3] < 4:
                                 row[3] = LTL_CRIT_TABLE[2][3]
                     # No left turn lane
+
                     else:
                         ## Speed less than 25
-                        if row[0] <= 25:
+                        if row[2] <= 25:
                             ### no lanes crossed
-                            if row[2] == 0:
+                            if row[1] == 0:
                                 if row[3] < 2:
                                     row[3] = LTL_CRIT_TABLE[0][0]
                             ### 1 lane crossed
-                            if row[2] == 1:
+                            if row[1] == 1:
                                 if row[3] < 2:
                                     row[3] = LTL_CRIT_TABLE[0][1]
                             ### 2+ lanes crossed
-                            if row[2] >= 2:
+                            if row[1] >= 2:
                                 if row[3] < 3:
                                     row[3] = LTL_CRIT_TABLE[0][2]
                         ## Speed 30
-                        elif row[0] == 30:
+                        elif row[2] == 30:
                             ### no lanes crossed
-                            if row[2] == 0:
+                            if row[1] == 0:
                                 if row[3] < 2:
                                     row[3] = LTL_CRIT_TABLE[1][0]
                             ### 1 lane crossed
-                            if row[2] == 1:
+                            if row[1] == 1:
                                 if row[3] < 3:
                                     row[3] = LTL_CRIT_TABLE[1][1]
 
                             ### 2+ lanes crossed
-                            if row[2] >= 2:
+                            if row[1] >= 2:
                                 if row[3] < 4:
                                     row[3] = LTL_CRIT_TABLE[1][2]
                         ## Speed >= 35
                         else:
                             ### no lanes crossed
-                            if row[2] == 0:
+                            if row[1] == 0:
                                 if row[3] < 3:
                                     row[3] = LTL_CRIT_TABLE[2][0]
                             ### 1 lane crossed
-                            if row[2] == 1:
+                            if row[1] == 1:
                                 if row[3] < 3:
                                     row[3] = LTL_CRIT_TABLE[2][1]
 
                             ### 2+ lanes crossed
-                            if row[2] >= 2:
+                            if row[1] >= 2:
                                 if row[3] < 4:
                                     row[3] = LTL_CRIT_TABLE[2][2]
-                    cursor.updateRow(row)
 
+                    cursor.updateRow(row)
             field_names = []
 
 
@@ -422,6 +514,17 @@ class BLTS_Analysis(object):
                                         total_lanes_EW = None,
                                         total_lanes_NS = None,
                                         control_type = None):
+        """
+        This method allows the users to assign unsignalized with no median present crossing
+        based on the blts method.  It takes in all the criteria as string and 
+        output and interger score in the input future class.
+        :param med_present: string name for the median present field
+        :param speed: string name for the speed field
+        :param total_lanes_EW: string name for the total lanes East/West field
+        :param total_lanes_NS: string name for the total lanes North/South field
+        :param control_type: string name for the control type field
+        :return: score is written in the input future class
+        """
         if not med_present or not speed or not total_lanes_EW \
                 or not total_lanes_NS or not control_type:
             raise ValueError("Median present, speed, total lanes East/West " 
@@ -484,9 +587,9 @@ class BLTS_Analysis(object):
                              "must be entered")
 
         field_names = [med_present, speed,
-                       through_lanes_EW, through_lanes_NS, control_type,
-                       self.scoreFields[8]]
+                       through_lanes_EW, through_lanes_NS, control_type]
         self._setupFields(self.scoreFields[8], field_names)
+        field_names.append(self.scoreFields[8])
         with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
             for row in cursor:
                 maxLane = max(row[2:4])
@@ -528,14 +631,21 @@ class BLTS_Analysis(object):
 
 
 
-    def aggregateOverallScore(self, method = "MAX"):
+    def aggregateOverallScore(self, fields, method = "MAX"):
+        """
+        This method allows for aggregation of the overall score based on the
+        field of input 
+        :param fields: list of input fields where the users want the score to
+        be aggregated
+        :param method: method using Maximum of all fields
+        :return: score written in the overallScore field
+        """
+        self._setupFields(self.scoreFields[9], fields)
         if method == "MAX":
-            field_list = self.scoreFields[4:10]
-            self._setupFields(self.scoreFields[9], field_list)
-
-            with arcpy.da.UpdateCursor(self.FC_PATH, field_list) as cursor:
+            fields.append(self.scoreFields[9])
+            with arcpy.da.UpdateCursor(self.FC_PATH, fields) as cursor:
                 for row in cursor:
-                    row[5] = max(row[:5])
+                    row[-1] = max(row[:-1])
                     cursor.updateRow(row)
 
 
@@ -558,7 +668,10 @@ def main():
     #blts.assignUnsignalizedHasMedianScore("med_present", "SPEED",
     #                                     "through_lane_EW", "through_lane_NS",
     #                                    "Control_Type")
-    blts.aggregateOverallScore()
+    blts.aggregateOverallScore(["segmentScore",
+                                "rtlScore",
+                                "ltlScore",
+                                "unsignalized_NoMedian"])
 
 if __name__ == "__main__":
     main()
