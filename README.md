@@ -25,7 +25,7 @@ blts = BLTS_Analaysis(GDB_PATH, FC_NAME)
 ```
 Once the object is initialized, analysis can be perform.
 
-####  Bike Lane *with* Parking Lane Score
+###  Bike Lane *with* Parking Lane Score
 Using the following method from blts, score can be assigned to a new field in
  the feature class.
  ```python
@@ -35,7 +35,7 @@ blts.assingBLwithPkLaneScore("lpd", "SPEED", "Comb_ParkBike_width",
 The parameters are the names of the fields required to complete this part of 
 scoring
 
-####  Bike Lane *without* Parking Lane Score
+###  Bike Lane *without* Parking Lane Score
 This method assign the bike lane without parking lane score to a new field in
  the feature class.
  
@@ -45,7 +45,7 @@ blts.assignBLwithoutPkLaneScore("lpd", "SPEED", "Width", "HasParkingLane")
 The parameters are the names of the fields required to complete this part of 
 scoring
 
-#### Mix Traffic Score
+### Mix Traffic Score
 This method assign the mix traffic score to a new field in the feature class.
 
 ```python
@@ -55,7 +55,7 @@ blts.assignMixTrafficScore("SPEED", "lpd")
 The parameters are the names of the fields required to complete this part of 
 scoring
 
-#### Aggregate Segment Score
+### Aggregate Segment Score
 After calculating the bike lane with parking lane score, bike lane without 
 parking lane score, and the mix traffic score, this method should be run to 
 aggregate the above three scores and generate an overall segment score.  The 
@@ -69,7 +69,7 @@ blts.aggregateSegmentScore()
 This method does not take any input and uses the pre-determined score fields 
 to aggregate the score
 
-#### Right Turn Lane Criteria Score
+### Right Turn Lane Criteria Score
 This method assign the right turn lane score to a new field in the feature 
 class.
 ```python
@@ -81,7 +81,7 @@ feature class, this method automatically chooses the four direction and
 select the one with the highest score(more stress)and represent the whole 
 semgnet.
 
-#### Left Turn Lane Criteria Score
+### Left Turn Lane Criteria Score
 This method assign the left turn lane score to a new field in the feature class.
 
 ```python
@@ -94,7 +94,7 @@ feature class, this method automatically chooses the four direction and
 select the one with the highest score(more stress)and represent the whole 
 semgnet.
 
-#### Unsignalized Crossing with *No* Median Present Score
+### Unsignalized Crossing with *No* Median Present Score
 This method assign the unsiganalized crossing with no median present to a new 
 field in the feature class.
 ```python
@@ -104,7 +104,7 @@ blts.assignUnsignalizedNoMedianScore("med_present", "SPEED","TotalLanes_EW_12",
 The parameters are the names of the fields required to complete this part of 
 scoring.  
 
-#### Unsignalized Crossing *With* Median Present Score
+### Unsignalized Crossing *With* Median Present Score
 The parameters are the names of the fields required to complete this part of 
 scoring.
 ```python
@@ -115,7 +115,7 @@ blts.assignUnsignalizedHasMedianScore("med_present", "SPEED",
 The parameters are the names of the fields required to complete this part of 
 scoring.
 
-#### Aggregating the Overall Score
+### Aggregating the Overall Score
 After calculating all the previous individual score, this method combine all 
 the previous score by selecting the most stress of score for each segment.  
 ```python
@@ -142,7 +142,7 @@ initiated with the path to the geodatabase and the name of the feature class.
 plts = PLTS_Analysis(GDB_PATH, FC_NAME)
 ```
 
-#### Sidewalk Condition Score
+### Sidewalk Condition Score
 Once the plts object has been initiated, the side walk condition score method
  can be called to calculate the score based on the input field. 
  
@@ -153,19 +153,19 @@ plts.assignSidewalkCondScore(sw_cond = "CondScoreCat", sw_width = "Width")
 Based on the width and the condition, the score is calculated in written in a
  new field in the future class. 
  
-#### Buffer Type Score
+### Buffer Type Score
 A buffer type score can be calculated using the following method
 ```python
 plts.assignBufferTypeScore(buff_type, speed)
 ```
 
-#### Buffer Width Score
+### Buffer Width Score
 Buffer width score is also calculated using the following method
 ```python
 plts.assignBufferWidthScore(buff_width, total_lanes)
 ```
 
-#### Aggregate Overall Score
+### Aggregate Overall Score
 After the calcuation of sidewalk condition score, buffer type score, buffer 
 width score, an aggregation of these score can be calculated.
 
