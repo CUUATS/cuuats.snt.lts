@@ -29,18 +29,17 @@ class PLTS_Analysis(object):
             if field not in fc_field_list:
                 raise NameError("{} is not found".format(field))
 
-        for scoreField in self.scoreFields:
-            if scoreField in fc_field_list:
-                with arcpy.da.UpdateCursor(self.FC_PATH,
-                                           scoreField) as cursor:
-                    for row in cursor:
-                        row[0] = None
-                        cursor.updateRow(row)
+        if inField in fc_field_list:
+            with arcpy.da.UpdateCursor(self.FC_PATH,
+                                       inField) as cursor:
+                for row in cursor:
+                    row[0] = None
+                    cursor.updateRow(row)
 
-            else:
-                arcpy.AddField_management(self.FC_PATH,
-                                          scoreField,
-                                          "SHORT")
+        else:
+            arcpy.AddField_management(self.FC_PATH,
+                                      inField,
+                                      "SHORT")
 
 
     def assignSidewalkCondScore(self, sw_width = None, sw_cond = None):
@@ -113,7 +112,7 @@ class PLTS_Analysis(object):
             raise ValueError("Speed and Buffer Type must be entered")
         self._setupFields(self.scoreFields[1], checklist=[buff_type, speed])
 
-        field_names = [buff_type, speed, self.scoreFields[0]]
+        field_names = [buff_type, speed, self.scoreFields[1]]
         with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
             for row in cursor:
                 # No Buffer
@@ -157,7 +156,7 @@ class PLTS_Analysis(object):
                     else:
                         row[2] = BUFFER_TYPE_TABLE[3][3]
 
-            cursor.updateRow(row)
+                cursor.updateRow(row)
 
         del cursor, row
 
@@ -171,8 +170,11 @@ class PLTS_Analysis(object):
         field_names = [total_lanes, buff_width, self.scoreFields[2]]
         with arcpy.da.UpdateCursor(self.FC_PATH, field_names) as cursor:
             for row in cursor:
+                # if offroad
+                if row[0] is None:
+                    row[2] = 1
                 # Total 2 lanes
-                if row[0] == 2:
+                elif row[0] == 2:
                     if row[1] < 5:
                         row[2] = BUFFER_WIDTH_TABLE[0][0]
                     elif row[1] >= 5 and row[1] < 10:
@@ -220,17 +222,16 @@ class PLTS_Analysis(object):
                     else:
                         row[2] = BUFFER_WIDTH_TABLE[3][4]
 
-            cursor.updateRow(row)
+                cursor.updateRow(row)
         del cursor, row
 
 
-    def assignLaneUseScore(self, landUse = None):
+    def assignLandUseScore(self, landUse = None):
         if not landUse:
             raise ValueError("Land use must be entered")
         self._setupFields(self.scoreFields[3], checklist=[landUse])
 
         fields_name = [landUse, self.scoreFields[3]]
-
 
         with arcpy.da.UpdateCursor(self.FC_PATH, fields_name) as cursor:
             for row in cursor:
@@ -241,6 +242,8 @@ class PLTS_Analysis(object):
 
 
     def aggregateScore(self, method = "MAX"):
+        self._setupFields(self.scoreFields[-1],
+                          checklist=self.scoreFields[0:-1])
         with arcpy.da.UpdateCursor(self.FC_PATH, self.scoreFields) as cursor:
             for row in cursor:
                 if method == "MAX":
@@ -288,14 +291,20 @@ def convertScoreCategory(fc_path, inputField,
 
 def main():
     GDB_PATH = "C:\Users\kml42638\Desktop\TestDB.gdb"
-    FC_NAME = "sidewalk"
+    FC_NAME = "sidewalk_comp"
 
     convertScoreCategory(fc_path=os.path.join(GDB_PATH, FC_NAME),
                          inputField="ScoreCondition")
 
-    a = PLTS_Analysis(GDB_PATH, FC_NAME)
-    a.assignSidewalkCondScore(sw_cond = "CondScoreCat",
+    plts = PLTS_Analysis(GDB_PATH, FC_NAME)
+    plts.assignSidewalkCondScore(sw_cond = "CondScoreCat",
                               sw_width = "Width")
+    plts.assignBufferTypeScore(buff_type="buffer_type",
+                               speed="SPEED")
+    plts.assignBufferWidthScore(buff_width="buffer_width",
+                                total_lanes="totalLane")
+    plts.assignLandUseScore(landUse="landuse")
+    plts.aggregateScore()
 
 
 if __name__ == "__main__":
