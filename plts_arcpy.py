@@ -290,8 +290,7 @@ def convertScoreCategory(fc_path, inputField,
 
 
 def main():
-    GDB_PATH = r'G:\CUUATS\Sustainable Neighborhoods Toolkit\Data' \
-    '\SustainableNeighborhoodsToolkit.gdb'
+    GDB_PATH = "C:\Users\kml42638\Desktop\TestDB.gdb"
     FC_NAME = "sidewalk_comp"
 
     convertScoreCategory(fc_path=os.path.join(GDB_PATH, FC_NAME),
@@ -306,7 +305,7 @@ def main():
                                 total_lanes="totalLane")
     plts.assignLandUseScore(landUse="landuse")
     plts.aggregateScore()
-#
+
 
 if __name__ == "__main__":
     main()
