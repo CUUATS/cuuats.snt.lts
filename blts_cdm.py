@@ -1,19 +1,23 @@
 # btls_cdm.py
 # Purpose: This script uses the cuuats data model package and calculate the
-# blts score for each road segment.
+# Bike Level of Traffic Stress (BTLS) score for each road segment.
 
 from cuuats.datamodel import feature_class_factory as factory, MethodField
+from cuuats.datamodel import D
 from config import BL_ADJ_PK_TABLE, BL_NO_ADJ_PK_TABLE, MIXED_TRAF_TABLE, \
     RTL_CRIT_TABLE, LTL_CRIT_TABLE, CROSS_NO_MED_TABLE, CROSS_HAS_MED_TABLE
 import arcpy
+import os
 
 
-APPROACH_PATH = r'G:\CUUATS\Sustainable Neighborhoods ' \
-    r'Toolkit\Data\ScoreWorking.gdb\StreetIntersectionApproach'
+SDE_DB = r"G:\Resources\Connections\PCD_Edit_aadt.sde"
+STREET_NAME = "PCD.PCDQC.StreetIntersectionApproach"
+APPROACH_PATH = os.path.join(SDE_DB, STREET_NAME)
+
 
 Approach = factory(APPROACH_PATH)
-Intersection = Approach.related_classes['StreetIntersection']
-Segment = Approach.related_classes['StreetSegment']
+Intersection = Approach.related_classes['PCD.PCDQC.StreetIntersection']
+Segment = Approach.related_classes['PCD.PCDQC.StreetSegment']
 
 
 # method to calculate mix traffic score
@@ -26,7 +30,7 @@ def calculate_mixTraffic(self, field_name):
     :return: int score for mix traffic with sharrow criteria
     """
     score = 0
-    if self.PostedSpeed <= 25:
+    if self.IDOTAADT <= 1000 or self.IDOTAADT is None:
         if self.LanesPerDirection == 0:
             score = MIXED_TRAF_TABLE[0][0]
         elif self.LanesPerDirection == 1:
@@ -35,7 +39,7 @@ def calculate_mixTraffic(self, field_name):
             score = MIXED_TRAF_TABLE[0][2]
         else:
             score = MIXED_TRAF_TABLE[0][3]
-    elif self.PostedSpeed == 30:
+    elif self.IDOTAADT <= 3000:
         if self.LanesPerDirection == 0:
             score = MIXED_TRAF_TABLE[1][0]
         elif self.LanesPerDirection == 1:
@@ -55,9 +59,10 @@ def calculate_mixTraffic(self, field_name):
             score = MIXED_TRAF_TABLE[2][3]
 
     # calculate sharrow
-    #if self.sharrow == "Yes" and self.PostedSpeed <= 25:
-    #    if score > 1:
-    #        score = score - 1
+    if self.BicycleFacilityType == "Sharrows" and self.IDOTAADT <= 1000:
+        if score > 1:
+            score = score - 1
+
 
     return(score)
 
@@ -72,37 +77,65 @@ def calculate_bikeLaneWithParkingLane(self, field_name):
     :param field_name: 
     :return: int score for bike lane with adjacent parking lane
     """
-    score = 0
-    if self.ParkingLaneWidth > 0:
-        if self.LanesPerDirection == 1 or self.LanesPerDirection == 0:
-            if self.PostedSpeed <= 25:
-                if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
-                    score = BL_ADJ_PK_TABLE[0][0]
-                elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
-                    score = BL_ADJ_PK_TABLE[0][1]
+    score = 99
+    BicycleFacilityType = self.BicycleFacilityType
+    #check for bicycle facility
+    if BicycleFacilityType == "Standard Bike Lanes" or BicycleFacilityType ==\
+            "Buffered Bike Lanes" or BicycleFacilityType == "Shared " \
+                                                            "Bike/Parking " \
+                                                            "Lanes":
+        if self.ParkingLaneWidth is not None:
+            if self.LanesPerDirection == 1 or self.LanesPerDirection == 0:
+                if self.IDOTAADT <= 1000:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[0][0]
+                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                        score = BL_ADJ_PK_TABLE[0][1]
+                    else:
+                        score = BL_ADJ_PK_TABLE[0][2]
+                elif self.IDOTAADT <= 3000:
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[1][0]
+                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                        score = BL_ADJ_PK_TABLE[1][1]
+                    else:
+                        score = BL_ADJ_PK_TABLE[1][2]
+                elif self.IDOTAADT <= 30000:
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[2][0]
+                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                        score = BL_ADJ_PK_TABLE[2][1]
+                    else:
+                        score = BL_ADJ_PK_TABLE[2][2]
                 else:
-                    score = BL_ADJ_PK_TABLE[0][2]
-            elif self.PostedSpeed == 30:
-                if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
-                    score = BL_ADJ_PK_TABLE[1][0]
-                elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
-                    score = BL_ADJ_PK_TABLE[1][1]
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >=15:
+                        score = BL_ADJ_PK_TABLE[3][0]
+                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                        score = BL_ADJ_PK_TABLE[3][1]
+                    else:
+                        score = BL_ADJ_PK_TABLE[3][2]
+            elif self.LanesPerDirection >= 2:
+                if self.IDOTAADT <= 1000:
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[0][3]
+                    else:
+                        score = BL_ADJ_PK_TABLE[0][4]
+                elif self.IDOTAADT <= 3000:
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[1][3]
+                    else:
+                        score = BL_ADJ_PK_TABLE[1][4]
+                elif self.IDOTAADT <= 30000:
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[2][3]
+                    else:
+                        score = BL_ADJ_PK_TABLE[2][4]
                 else:
-                    score = BL_ADJ_PK_TABLE[1][2]
-            elif self.PostedSpeed == 35:
-                if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
-                    score = BL_ADJ_PK_TABLE[2][0]
-                elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
-                    score = BL_ADJ_PK_TABLE[2][1]
-                else:
-                    score = BL_ADJ_PK_TABLE[2][2]
-            else:
-                if self.BikeLaneWidth + self.ParkingLaneWidth >=15:
-                    score = BL_ADJ_PK_TABLE[3][0]
-                elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
-                    score = BL_ADJ_PK_TABLE[3][1]
-                else:
-                    score = BL_ADJ_PK_TABLE[3][2]
+                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                        score = BL_ADJ_PK_TABLE[3][3]
+                    else:
+                        score = BL_ADJ_PK_TABLE[3][4]
+
 
     return(score)
 
@@ -117,47 +150,53 @@ def calculate_bikeLaneWithoutParkingLane(self, field_name):
     :param field_name: 
     :return: int score for bike lane without parking lane
     """
-    score = 0
-    if self.ParkingLaneWidth == 0:
-        if self.LanesPerDirection == 1 or self.LanesPerDirection == 0:
-            if self.PostedSpeed <= 30:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_NO_ADJ_PK_TABLE[0][0]
-                elif self.BikeLaneWidth > 5.5:
-                    score = BL_NO_ADJ_PK_TABLE[0][1]
+    score = 99
+    BicycleFacilityType = self.BicycleFacilityType
+    if BicycleFacilityType == "Standard Bike Lanes" or BicycleFacilityType ==\
+            "Buffered Bike Lanes" or BicycleFacilityType == "Shared " \
+                                                            "Bike/Parking " \
+                                                            "Lanes":
+        if self.ParkingLaneWidth is None:
+            if self.LanesPerDirection == 1 or self.LanesPerDirection == 0:
+                if self.IDOTAADT <= 3000:
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_NO_ADJ_PK_TABLE[0][0]
+                    elif self.BikeLaneWidth > 5.5:
+                        score = BL_NO_ADJ_PK_TABLE[0][1]
+                    else:
+                        score = BL_NO_ADJ_PK_TABLE[0][2]
+                elif self.IDOTAADT <= 30000:
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_NO_ADJ_PK_TABLE[1][0]
+                    elif self.BikeLaneWidth > 5.5:
+                        score = BL_NO_ADJ_PK_TABLE[1][1]
+                    else:
+                        score = BL_NO_ADJ_PK_TABLE[1][2]
                 else:
-                    score = BL_NO_ADJ_PK_TABLE[0][2]
-            elif self.PostedSpeed == 35:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_NO_ADJ_PK_TABLE[1][0]
-                elif self.BikeLaneWidth > 5.5:
-                    score = BL_NO_ADJ_PK_TABLE[1][1]
-                else:
-                    score = BL_NO_ADJ_PK_TABLE[1][2]
-            else:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_NO_ADJ_PK_TABLE[2][0]
-                elif self.BikeLaneWidth > 5.5:
-                    score = BL_NO_ADJ_PK_TABLE[2][1]
-                else:
-                    score = BL_NO_ADJ_PK_TABLE[2][2]
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_NO_ADJ_PK_TABLE[2][0]
+                    elif self.BikeLaneWidth > 5.5:
+                        score = BL_NO_ADJ_PK_TABLE[2][1]
+                    else:
+                        score = BL_NO_ADJ_PK_TABLE[2][2]
 
-        elif self.LanesPerDirection >= 2:
-            if self.PostedSpeed <= 30:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_ADJ_PK_TABLE[0][4]
+            elif self.LanesPerDirection >= 2:
+                if self.IDOTAADT <= 3000:
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_ADJ_PK_TABLE[0][4]
+                    else:
+                        score = BL_ADJ_PK_TABLE[0][5]
+                elif self.IDOTAADT == 30000:
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_ADJ_PK_TABLE[1][4]
+                    else:
+                        score = BL_ADJ_PK_TABLE[1][5]
                 else:
-                    score = BL_ADJ_PK_TABLE[0][5]
-            elif self.PostedSpeed == 35:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_ADJ_PK_TABLE[1][4]
-                else:
-                    score = BL_ADJ_PK_TABLE[1][5]
-            else:
-                if self.BikeLaneWidth >= 7:
-                    score = BL_ADJ_PK_TABLE[2][4]
-                else:
-                    score = BL_ADJ_PK_TABLE[2][5]
+                    if self.BikeLaneWidth >= 7:
+                        score = BL_ADJ_PK_TABLE[2][4]
+                    else:
+                        score = BL_ADJ_PK_TABLE[2][5]
+
 
     return(score)
 
@@ -184,6 +223,7 @@ def aggreage_Score(*args, **kwargs):
             if score > i:
                 score = i
 
+
     return(score)
 
 
@@ -198,29 +238,29 @@ def calculate_rightTurnLane(self, field_name):
     :return: int right turn lane score for each segment
     """
     score = 0
-    for approach in self.streetintersectionapproach_set:
-        # check for right turn lane in the new data structure
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
 
-
-
+    for approach in getattr(self, streetintersectionapproach):
         # check for any right turn lane configuration
-        if approach.RTLConfiguration is not 0:
-
+        if approach.LaneConfiguration is None:
+            continue
+        if "R" in approach.LaneConfiguration or \
+            "Q" in approach.LaneConfiguration:
             # check for the first row in the scoring table
-            if approach.RTLConfiguration is "Single" and \
-                approach.RTLLength <= 150 and \
-                approach.BikeApproachAlign is "Straight":
+            if "R" in approach.LaneConfiguration and \
+                approach.RightTurnLength <= 150 and \
+                approach.BikeApproachAlignment is "Straight":
                 if score < RTL_CRIT_TABLE[0]:
                     score = RTL_CRIT_TABLE[0]
 
-            elif approach.RTLConfiguration is "Single" and \
-                approach.RTLLength > 150 and \
-                approach.BikeApproachAlign is "Straight":
+            elif "R" in approach.LaneConfiguration and \
+                approach.RightTurnLength > 150 and \
+                approach.BikeApproachAlignment is "Straight":
                 if score < RTL_CRIT_TABLE[1]:
                     score = RTL_CRIT_TABLE[1]
 
-            elif approach.RTLConfiguration is "Single" and \
-                approach.BikeApproachAlign is "Left":
+            elif "R" in approach.LaneConfiguration and \
+                approach.BikeApproachAlignment is "Left":
                 if score < RTL_CRIT_TABLE[2]:
                     score = RTL_CRIT_TABLE[2]
 
@@ -229,6 +269,7 @@ def calculate_rightTurnLane(self, field_name):
                     score = RTL_CRIT_TABLE[3]
 
     return(score)
+
 
 
 def _calculate_lanecrossed(laneconfiguration):
@@ -244,6 +285,7 @@ def _calculate_lanecrossed(laneconfiguration):
     return(lanecrossed)
 
 
+
 def calculate_leftTurnLane(self, field_name):
     """
     This function calculates the left turn lane score for each segment based 
@@ -254,21 +296,25 @@ def calculate_leftTurnLane(self, field_name):
     :return: int score for the left turn lane criteria
     """
     score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
 
-    for approach in self.streetintersectionapproach_set:
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
         exclusiveLeftTurn = False
         lanecrossed = 0
         # Dual shared or exclusive left turn lane
         if "K" in approach.LaneConfiguration or \
             "L" in approach.LaneConfiguration:
+            lanecrossed = _calculate_lanecrossed(approach.LaneConfiguration)
             # Speed 25 or less
             if self.PostedSpeed <= 25:
                 # No lane crossed
-                if approach.LTLCrossedB == 0:
+                if lanecrossed == 0:
                     if score < LTL_CRIT_TABLE[0][3]:
                         score = LTL_CRIT_TABLE[0][3]
                 # 1 lane crossed
-                elif approach.LTLCrossedB == 1:
+                elif lanecrossed == 1:
                     if score < LTL_CRIT_TABLE[1][3]:
                         score = LTL_CRIT_TABLE[1][3]
                 # 2+ lanes crossed
@@ -317,12 +363,99 @@ def calculate_leftTurnLane(self, field_name):
 
 
 def calculate_unsignalizedCrossingWithoutMedian(self, field_name):
-    return(0)
+    score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
+        if self.PostedSpeed == 25:
+            if len(approach.LaneConfiguration) <= 3 or \
+                    approach.LaneConfiguration is None:
+                score = CROSS_NO_MED_TABLE[0][0]
+            elif len(approach.LaneConfiguration) <= 5:
+                score = CROSS_NO_MED_TABLE[0][1]
+            else:
+                score = CROSS_NO_MED_TABLE[0][2]
+        elif self.PostedSpeed == 30:
+            if len(approach.LaneConfiguration) <= 3 or \
+                    approach.LaneConfiguration is None:
+                score = CROSS_NO_MED_TABLE[1][0]
+            elif len(approach.LaneConfiguration) <= 5:
+                score = CROSS_NO_MED_TABLE[1][1]
+            else:
+                score = CROSS_NO_MED_TABLE[1][2]
+        elif self.PostedSpeed == 35:
+            if len(approach.LaneConfiguration) <= 3 or \
+                    approach.LaneConfiguration is None:
+                score = CROSS_NO_MED_TABLE[2][0]
+            elif len(approach.LaneConfiguration) <= 5:
+                score = CROSS_NO_MED_TABLE[2][1]
+            else:
+                score = CROSS_NO_MED_TABLE[2][2]
+        else:
+            if len(approach.LaneConfiguration) <= 3 or \
+                    approach.LaneConfiguration is None:
+                score = CROSS_NO_MED_TABLE[3][0]
+            elif len(approach.LaneConfiguration) <= 5:
+                score = CROSS_NO_MED_TABLE[3][1]
+            else:
+                score = CROSS_NO_MED_TABLE[3][2]
+
+    return(score)
+
+
+
+def _calculate_maxLane(laneConf):
+    max_lane = 0
+    if laneConf is None:
+        max_lane = 1
+    else:
+        away_lane = len(laneConf[laneConf.find("X"):laneConf.rfind("X")+1])
+        incomeing_lane = len(laneConf[laneConf.rfind("X")+1:])
+        max_lane = max(away_lane, incomeing_lane)
+
+    return(max_lane)
 
 
 
 def calculate_unsignalizedCrossingWithMedian(self, field_name):
-    return(0)
+    score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
+        maxLane = _calculate_maxLane(approach.LaneConfiguration)
+
+        if self.PostedSpeed <= 25:
+            if maxLane <= 2:
+                score = CROSS_HAS_MED_TABLE[0][0]
+            elif maxLane == 3:
+                score = CROSS_HAS_MED_TABLE[0][1]
+            else:
+                score = CROSS_HAS_MED_TABLE[0][2]
+        elif self.PostedSpeed == 30:
+            if maxLane <= 2:
+                score = CROSS_HAS_MED_TABLE[1][0]
+            elif maxLane == 3:
+                score = CROSS_HAS_MED_TABLE[1][1]
+            else:
+                score = CROSS_HAS_MED_TABLE[1][2]
+        elif self.PostedSpeed == 35:
+            if maxLane <= 2:
+                score = CROSS_HAS_MED_TABLE[2][0]
+            elif maxLane == 3:
+                score = CROSS_HAS_MED_TABLE[2][1]
+            else:
+                score = CROSS_HAS_MED_TABLE[2][2]
+        else:
+            if maxLane <= 2:
+                score = CROSS_HAS_MED_TABLE[3][0]
+            elif maxLane == 3:
+                score = CROSS_HAS_MED_TABLE[3][1]
+            else:
+                score = CROSS_HAS_MED_TABLE[3][2]
+
+    return(score)
 
 
 
@@ -386,12 +519,15 @@ if __name__ == "__main__":
     else:
         print("License Available")
 
-    for segment in Segment.objects.all():
-        #print 'StreetID: %i' % (segment.StreetID,)
-        #print 'BLTS Score: %i' % (segment.BLTSScore,)
-        segment.BLTSScore
-        #segment.rightTurnLane
-        #segment.save()
+    with Approach.workspace.edit():
+        UA_Segment = Segment.objects.filter(InUrbanizedArea=D('Yes'))
+
+        for segment in UA_Segment:
+            #print 'StreetID: %i' % (segment.StreetID,)
+            #print 'BLTS Score: %i' % (segment.BLTSScore,)
+            segment.BLTSScore
+            #segment.rightTurnLane
+            #segment.save()
 
 
 
