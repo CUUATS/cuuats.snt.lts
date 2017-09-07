@@ -89,49 +89,49 @@ def calculate_bikeLaneWithParkingLane(self, field_name):
                 if self.IDOTAADT <= 1000:
                     if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[0][0]
-                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                    elif self.BicycleFacilityWidth + self.ParkingLaneWidth > 13:
                         score = BL_ADJ_PK_TABLE[0][1]
                     else:
                         score = BL_ADJ_PK_TABLE[0][2]
                 elif self.IDOTAADT <= 3000:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[1][0]
-                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                    elif self.BicycleFacilityWidth + self.ParkingLaneWidth > 13:
                         score = BL_ADJ_PK_TABLE[1][1]
                     else:
                         score = BL_ADJ_PK_TABLE[1][2]
                 elif self.IDOTAADT <= 30000:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[2][0]
-                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                    elif self.BicycleFacilityWidth + self.ParkingLaneWidth > 13:
                         score = BL_ADJ_PK_TABLE[2][1]
                     else:
                         score = BL_ADJ_PK_TABLE[2][2]
                 else:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >=15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >=15:
                         score = BL_ADJ_PK_TABLE[3][0]
-                    elif self.BikeLaneWidth + self.ParkingLaneWidth > 13:
+                    elif self.BicycleFacilityWidth + self.ParkingLaneWidth > 13:
                         score = BL_ADJ_PK_TABLE[3][1]
                     else:
                         score = BL_ADJ_PK_TABLE[3][2]
             elif self.LanesPerDirection >= 2:
                 if self.IDOTAADT <= 1000:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[0][3]
                     else:
                         score = BL_ADJ_PK_TABLE[0][4]
                 elif self.IDOTAADT <= 3000:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[1][3]
                     else:
                         score = BL_ADJ_PK_TABLE[1][4]
                 elif self.IDOTAADT <= 30000:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[2][3]
                     else:
                         score = BL_ADJ_PK_TABLE[2][4]
                 else:
-                    if self.BikeLaneWidth + self.ParkingLaneWidth >= 15:
+                    if self.BicycleFacilityWidth + self.ParkingLaneWidth >= 15:
                         score = BL_ADJ_PK_TABLE[3][3]
                     else:
                         score = BL_ADJ_PK_TABLE[3][4]
@@ -159,40 +159,40 @@ def calculate_bikeLaneWithoutParkingLane(self, field_name):
         if self.ParkingLaneWidth is None:
             if self.LanesPerDirection == 1 or self.LanesPerDirection == 0:
                 if self.IDOTAADT <= 3000:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_NO_ADJ_PK_TABLE[0][0]
-                    elif self.BikeLaneWidth > 5.5:
+                    elif self.BicycleFacilityWidth > 5.5:
                         score = BL_NO_ADJ_PK_TABLE[0][1]
                     else:
                         score = BL_NO_ADJ_PK_TABLE[0][2]
                 elif self.IDOTAADT <= 30000:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_NO_ADJ_PK_TABLE[1][0]
-                    elif self.BikeLaneWidth > 5.5:
+                    elif self.BicycleFacilityWidth > 5.5:
                         score = BL_NO_ADJ_PK_TABLE[1][1]
                     else:
                         score = BL_NO_ADJ_PK_TABLE[1][2]
                 else:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_NO_ADJ_PK_TABLE[2][0]
-                    elif self.BikeLaneWidth > 5.5:
+                    elif self.BicycleFacilityWidth > 5.5:
                         score = BL_NO_ADJ_PK_TABLE[2][1]
                     else:
                         score = BL_NO_ADJ_PK_TABLE[2][2]
 
             elif self.LanesPerDirection >= 2:
                 if self.IDOTAADT <= 3000:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_ADJ_PK_TABLE[0][4]
                     else:
                         score = BL_ADJ_PK_TABLE[0][5]
                 elif self.IDOTAADT == 30000:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_ADJ_PK_TABLE[1][4]
                     else:
                         score = BL_ADJ_PK_TABLE[1][5]
                 else:
-                    if self.BikeLaneWidth >= 7:
+                    if self.BicycleFacilityWidth >= 7:
                         score = BL_ADJ_PK_TABLE[2][4]
                     else:
                         score = BL_ADJ_PK_TABLE[2][5]
@@ -519,15 +519,11 @@ if __name__ == "__main__":
     else:
         print("License Available")
 
-    with Approach.workspace.edit():
-        UA_Segment = Segment.objects.filter(InUrbanizedArea=D('Yes'))
-
-        for segment in UA_Segment:
-            #print 'StreetID: %i' % (segment.StreetID,)
-            #print 'BLTS Score: %i' % (segment.BLTSScore,)
+    with Segment.workspace.edit():
+        for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
             segment.BLTSScore
-            #segment.rightTurnLane
-            #segment.save()
+            segment.save()
+
 
 
 
