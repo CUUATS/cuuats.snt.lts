@@ -126,17 +126,31 @@ def calculate_rightTurnLane(self):
             continue
         if "R" in approach.LaneConfiguration or \
             "Q" in approach.LaneConfiguration:
-            score = self._calculate_RightTurnLane(approach,
-                                        [2,3,3,4],
-                ['"R" in self.LaneConfiguration and \
-                self.RightTurnLength <= 150 and \
-                self.BikeApproachAlignment is "Straight"',
-                 '"R" in approach.LaneConfiguration and \
-                approach.RightTurnLength > 150 and \
-                approach.BikeApproachAlignment is "Straight"',
-                '"R" in approach.LaneConfiguration and \
-                approach.BikeApproachAlignment is "Left"',
-                 'True'])
+
+            new_score = calculate_score(approach,
+                                    [2,3,3,4],
+                                    ['"R" in self.LaneConfiguration and \
+                                    self.RightTurnLength <= 150 and \
+                                    self.BikeApproachAlignment is "Straight"',
+
+                                     '"R" in self.LaneConfiguration and \
+                                    self.RightTurnLength > 150 and \
+                                    self.BikeApproachAlignment is "Straight"',
+
+                                    '"R" in self.LaneConfiguration and \
+                                    self.BikeApproachAlignment is "Left"',
+
+                                     'True'])
+            if score < new_score:
+                score = new_score
+
+    self.rightTurnLaneScore = score
+    return(score)
+
+
+def calculate_leftTurnLane(self):
+    pass
+
 
 
 def calculate_score(self, scores, *condition_sets):
@@ -168,9 +182,9 @@ def calculate_BLTS(self, field_name):
                          self.bikeLaneWithoutAdjPkScore,
                          self.mixTrafficScore,
                          method="MIN")
-    #self._calculate_RightTurnLane()
+    self._calculate_RightTurnLane()
 
-    print(self.segmentScore)
+
 
 
 
@@ -181,6 +195,7 @@ Segment._calculate_BikeLaneWithoutAdjParking = calculate_bikeLanewithoutAdjParki
 Segment._calculate_BikeLaneWithAdjParking = calculate_bikeLanewithAdjParking
 Segment._aggregate_Score = aggregate_score
 Segment._calculate_RightTurnLane = calculate_rightTurnLane
+Segment._calculate_LeftTurnLane = calculate_leftTurnLane
 
 # Override the BLTSScore field with a method field.
 Segment.BLTS_test = MethodField(
