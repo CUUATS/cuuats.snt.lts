@@ -6,9 +6,6 @@ from config import SDE_DB, APPROACH_NAME
 import os
 
 
-# SEG_PATH = r"C:\Users\kml42638\Desktop\TestDB.gdb\PCD_StreetSegment_1"
-# Segment = factory(SEG_PATH, register=False)
-
 APPROACH_PATH = os.path.join(SDE_DB, APPROACH_NAME)
 Approach = factory(APPROACH_PATH, follow_relationships=True)
 Segment = Approach.related_classes['PCD.PCDQC.StreetSegment']
