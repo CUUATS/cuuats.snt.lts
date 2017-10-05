@@ -140,7 +140,7 @@ def calculate_rightTurnLane(self):
                                     '"R" in self.LaneConfiguration and \
                                     self.BikeApproachAlignment is "Left"',
 
-                                     'True'])
+                                    'True'])
             if score < new_score:
                 score = new_score
 
@@ -149,8 +149,59 @@ def calculate_rightTurnLane(self):
 
 
 def calculate_leftTurnLane(self):
-    pass
+    score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
 
+        if "K" in approach.LaneConfiguration or \
+                        "L" in approach.LaneConfiguration:
+
+            new_score = calculate_score(self,
+                                    [4,4,4],
+                                    ['self.PostedSpeed <= 25',
+                                     'self.PostedSpeed == 30',
+                                     'self.PostedSpeed >= 35'])
+            if score < new_score:
+                score = new_score
+
+        else:
+            self.lanecrossed = self._calculate_lanecrossed(
+                approach.LaneConfiguration)
+            new_score = calculate_score(self,
+                                    [[2,2,3],
+                                    [2,3,4],
+                                    [3,4,4]],
+
+                                    ['self.PostedSpeed <= 25',
+                                     'self.PostedSpeed == 30',
+                                     'self.PostedSpeed >= 35'],
+
+                                    ['self.lanecrossed == 0',
+                                     'self.lanecrossed == 1',
+                                     'self.lanecrossed >= 2'])
+
+            if score < new_score:
+                score = new_score
+
+    self.LeftTurnLaneScore = score
+    print(self.LeftTurnLaneScore)
+    return(score)
+
+
+
+def calculate_lanecrossed(self, lane_config):
+    if lane_config == None:
+        lanecrossed = 0
+    elif lane_config == "X" or \
+                    lane_config == "XX" or \
+                    lane_config == "XXX":
+        lanecrossed = 0
+    else:
+        lanecrossed = len(lane_config) - \
+                      lane_config.rfind("X") - 2
+    return(lanecrossed)
 
 
 def calculate_score(self, scores, *condition_sets):
@@ -175,14 +226,15 @@ def calculate_score(self, scores, *condition_sets):
 
 
 def calculate_BLTS(self, field_name):
-    self._calculate_MixTraffic()
-    self._calculate_BikeLaneWithoutAdjParking()
-    self._calculate_BikeLaneWithAdjParking()
-    self.segmentScore = self._aggregate_Score(self.bikeLaneWithAdjPkScore,
-                         self.bikeLaneWithoutAdjPkScore,
-                         self.mixTrafficScore,
-                         method="MIN")
-    self._calculate_RightTurnLane()
+    # self._calculate_MixTraffic()
+    # self._calculate_BikeLaneWithoutAdjParking()
+    # self._calculate_BikeLaneWithAdjParking()
+    # self.segmentScore = self._aggregate_Score(self.bikeLaneWithAdjPkScore,
+    #                      self.bikeLaneWithoutAdjPkScore,
+    #                      self.mixTrafficScore,
+    #                      method="MIN")
+    # self._calculate_RightTurnLane()
+    self._calculate_LeftTurnLane()
 
 
 
@@ -196,6 +248,7 @@ Segment._calculate_BikeLaneWithAdjParking = calculate_bikeLanewithAdjParking
 Segment._aggregate_Score = aggregate_score
 Segment._calculate_RightTurnLane = calculate_rightTurnLane
 Segment._calculate_LeftTurnLane = calculate_leftTurnLane
+Segment._calculate_lanecrossed = calculate_lanecrossed
 
 # Override the BLTSScore field with a method field.
 Segment.BLTS_test = MethodField(
