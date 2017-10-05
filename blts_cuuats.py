@@ -99,17 +99,6 @@ def calculate_mixTraffic(self):
     self.mixTrafficScore = score
     return(score)
 
-def aggregate_score(*scores, **kwargs):
-    score_list = [score for score in scores if score is not None]
-    method = kwargs.get("method")
-    score = 0
-
-    if method == "MIN":
-        score = min(score_list)
-    elif method == "MAX":
-        score = max(score_list)
-    return(score)
-
 def calculate_rightTurnLane(self):
     score = 0
     streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
@@ -176,9 +165,73 @@ def calculate_leftTurnLane(self):
             if score < new_score:
                 score = new_score
 
-    self.LeftTurnLaneScore = score
-    print(self.LeftTurnLaneScore)
+    self.leftTurnLaneScore = score
     return(score)
+
+def calculate_unsignalizedCrossingWithoutMedian(self):
+    score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
+        self.totalLanes = len(approach.LaneConfiguration)
+        new_score = calculate_score(self,
+                                [[1, 2, 4],
+                                 [1, 2, 4],
+                                 [2, 3, 4],
+                                 [3, 4, 4]],
+
+                                ['self.PostedSpeed <= 25',
+                                 'self.PostedSpeed == 30',
+                                 'self.PostedSpeed == 35',
+                                 'True'],
+
+                                ['self.totalLanes <= 3',
+                                 'self.totalLanes <= 5',
+                                 'True'])
+        if score < new_score:
+            score = new_score
+
+    self.unsignalizedCrossingWithoutMedianScore = score
+    return(score)
+
+def calculate_unsignalizedCrossingWithMedian(self):
+    score = 0
+    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, streetintersectionapproach):
+        if approach.LaneConfiguration is None:
+            continue
+        self.maxLane = self._calculate_MaxLane(approach.LaneConfiguration)
+
+        new_score = calculate_score(self,
+                                    [[1,1,2],
+                                    [1,2,3],
+                                    [2,3,4],
+                                    [3,4,4]],
+
+                                    ['self.PostedSpeed <= 25',
+                                     'self.PostedSpeed == 30',
+                                     'self.PostedSpeed == 35',
+                                     'True'],
+
+                                    ['self.maxLane <= 2',
+                                     'self.maxLane == 3',
+                                     'True'])
+        if score < new_score:
+            score = new_score
+
+    self.unsignalizedCrossingWithMedianScore = score
+    return(score)
+
+def calculate_maxLane(self, lane_config):
+    if lane_config is None:
+        max_lane = 1
+    else:
+        away_lane = len(lane_config[lane_config.find("X"):lane_config.rfind("X")+1])
+        incomeing_lane = len(lane_config[lane_config.rfind("X")+1:])
+        max_lane = max(away_lane, incomeing_lane)
+
+    return(max_lane)
 
 def calculate_lanecrossed(self, lane_config):
     if lane_config == None:
@@ -203,8 +256,16 @@ def calculate_score(self, scores, *condition_sets):
     assert isinstance(score, int)
     return(score)
 
-def calculate_unsignalizedCrossingWithoutMedian(self):
-    pass
+def aggregate_score(self, *scores, **kwargs):
+    score_list = [score for score in scores if score is not None]
+    method = kwargs.get("method")
+    score = 0
+
+    if method == "MIN":
+        score = min(score_list)
+    elif method == "MAX":
+        score = max(score_list)
+    return(score)
 
 def calculate_BLTS(self, field_name):
     self._calculate_MixTraffic()
@@ -216,10 +277,21 @@ def calculate_BLTS(self, field_name):
                          method="MIN")
     self._calculate_RightTurnLane()
     self._calculate_LeftTurnLane()
+    self._calculate_UnsignalizedCrossingWithoutMedian()
+    self._calculate_UnsignalizedCrossingWithMedian()
+    self.overallScore = self._aggregate_Score(self.segmentScore,
+                                  self.rightTurnLaneScore,
+                                  self.leftTurnLaneScore,
+                                  self.unsignalizedCrossingWithoutMedianScore,
+                                  self.unsignalizedCrossingWithMedianScore,
+                                  method="MAX")
+    return(self.overallScore)
 
+# Adding functions as methods for the Segment Class
 Segment._calculate_BLTS = calculate_BLTS
 Segment._calculate_MixTraffic = calculate_mixTraffic
-Segment._calculate_BikeLaneWithoutAdjParking = calculate_bikeLanewithoutAdjParking
+Segment._calculate_BikeLaneWithoutAdjParking = \
+    calculate_bikeLanewithoutAdjParking
 Segment._calculate_BikeLaneWithAdjParking = calculate_bikeLanewithAdjParking
 Segment._aggregate_Score = aggregate_score
 Segment._calculate_RightTurnLane = calculate_rightTurnLane
@@ -227,6 +299,9 @@ Segment._calculate_LeftTurnLane = calculate_leftTurnLane
 Segment._calculate_Lanecrossed = calculate_lanecrossed
 Segment._calculate_UnsignalizedCrossingWithoutMedian = \
     calculate_unsignalizedCrossingWithoutMedian
+Segment._calculate_UnsignalizedCrossingWithMedian = \
+    calculate_unsignalizedCrossingWithMedian
+Segment._calculate_MaxLane = calculate_maxLane
 
 
 # Override the BLTSScore field with a method field.
