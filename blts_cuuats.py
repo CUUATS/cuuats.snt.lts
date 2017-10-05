@@ -5,12 +5,10 @@ from cuuats.datamodel import D
 from config import SDE_DB, APPROACH_NAME
 import os
 
-
 APPROACH_PATH = os.path.join(SDE_DB, APPROACH_NAME)
 Approach = factory(APPROACH_PATH, follow_relationships=True)
 Segment = Approach.related_classes['PCD.PCDQC.StreetSegment']
 Intersection = Approach.related_classes['PCD.PCDQC.StreetIntersection']
-
 
 def calculate_bikeLanewithAdjParking(self):
     score = 99
@@ -50,7 +48,6 @@ def calculate_bikeLanewithAdjParking(self):
     self.bikeLaneWithAdjPkScore = score
     return(score)
 
-
 def calculate_bikeLanewithoutAdjParking(self):
     score = 99
     if self.BicycleFacilityWidth is not None:
@@ -83,7 +80,6 @@ def calculate_bikeLanewithoutAdjParking(self):
     self.bikeLaneWithoutAdjPkScore = score
     return(score)
 
-
 def calculate_mixTraffic(self):
     score = 0
     score = calculate_score(self,
@@ -103,7 +99,6 @@ def calculate_mixTraffic(self):
     self.mixTrafficScore = score
     return(score)
 
-
 def aggregate_score(*scores, **kwargs):
     score_list = [score for score in scores if score is not None]
     method = kwargs.get("method")
@@ -113,9 +108,7 @@ def aggregate_score(*scores, **kwargs):
         score = min(score_list)
     elif method == "MAX":
         score = max(score_list)
-
     return(score)
-
 
 def calculate_rightTurnLane(self):
     score = 0
@@ -147,7 +140,6 @@ def calculate_rightTurnLane(self):
     self.rightTurnLaneScore = score
     return(score)
 
-
 def calculate_leftTurnLane(self):
     score = 0
     streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
@@ -165,9 +157,8 @@ def calculate_leftTurnLane(self):
                                      'self.PostedSpeed >= 35'])
             if score < new_score:
                 score = new_score
-
         else:
-            self.lanecrossed = self._calculate_lanecrossed(
+            self.lanecrossed = self._calculate_Lanecrossed(
                 approach.LaneConfiguration)
             new_score = calculate_score(self,
                                     [[2,2,3],
@@ -189,8 +180,6 @@ def calculate_leftTurnLane(self):
     print(self.LeftTurnLaneScore)
     return(score)
 
-
-
 def calculate_lanecrossed(self, lane_config):
     if lane_config == None:
         lanecrossed = 0
@@ -203,43 +192,30 @@ def calculate_lanecrossed(self, lane_config):
                       lane_config.rfind("X") - 2
     return(lanecrossed)
 
-
 def calculate_score(self, scores, *condition_sets):
     score = scores
-    #assert len(score) == len(condition_sets)
     for condition_set in condition_sets:
+        assert len(score) == len(condition_set)
         for index, condition in enumerate(condition_set):
             if (eval(condition)):
                 score = score[index]
                 break
-        # Loop through an enumeration of the conditions in this set, evaluating
-        # each one. When a condition evalutes to True:
-        # - Set score = score[i], where i is the index of the condition
-        # - Break out of the inner loop.
-    #
-    # assert isinstance(score, Number)
+    assert isinstance(score, int)
     return(score)
 
-
-
-
-
+def calculate_unsignalizedCrossingWithoutMedian(self):
+    pass
 
 def calculate_BLTS(self, field_name):
-    # self._calculate_MixTraffic()
-    # self._calculate_BikeLaneWithoutAdjParking()
-    # self._calculate_BikeLaneWithAdjParking()
-    # self.segmentScore = self._aggregate_Score(self.bikeLaneWithAdjPkScore,
-    #                      self.bikeLaneWithoutAdjPkScore,
-    #                      self.mixTrafficScore,
-    #                      method="MIN")
-    # self._calculate_RightTurnLane()
+    self._calculate_MixTraffic()
+    self._calculate_BikeLaneWithoutAdjParking()
+    self._calculate_BikeLaneWithAdjParking()
+    self.segmentScore = self._aggregate_Score(self.bikeLaneWithAdjPkScore,
+                         self.bikeLaneWithoutAdjPkScore,
+                         self.mixTrafficScore,
+                         method="MIN")
+    self._calculate_RightTurnLane()
     self._calculate_LeftTurnLane()
-
-
-
-
-
 
 Segment._calculate_BLTS = calculate_BLTS
 Segment._calculate_MixTraffic = calculate_mixTraffic
@@ -248,7 +224,10 @@ Segment._calculate_BikeLaneWithAdjParking = calculate_bikeLanewithAdjParking
 Segment._aggregate_Score = aggregate_score
 Segment._calculate_RightTurnLane = calculate_rightTurnLane
 Segment._calculate_LeftTurnLane = calculate_leftTurnLane
-Segment._calculate_lanecrossed = calculate_lanecrossed
+Segment._calculate_Lanecrossed = calculate_lanecrossed
+Segment._calculate_UnsignalizedCrossingWithoutMedian = \
+    calculate_unsignalizedCrossingWithoutMedian
+
 
 # Override the BLTSScore field with a method field.
 Segment.BLTS_test = MethodField(
