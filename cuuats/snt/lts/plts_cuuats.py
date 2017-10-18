@@ -3,43 +3,182 @@
 
 from cuuats.datamodel import feature_class_factory as factory, MethodField
 from cuuats.datamodel import D
-from config import SDE_DB, SEGMENT_NAME, SIDEWALK_NAME, REL_NAME
+from cuuats.datamodel.manytomany import ManyToManyField
+from config import SDE_DB, SEGMENT_NAME, SIDEWALK_NAME, REL_NAME, LANDUSE_DICT
 import os
 
 
 SEGMENT_PATH = os.path.join(SDE_DB, SEGMENT_NAME)
 SIDEWALK_PATH = os.path.join(SDE_DB, SIDEWALK_NAME)
-Segment = factory(SEGMENT_PATH, follow_relationships=False)
-Sidewalk = factory(SIDEWALK_PATH, follow_relationships=False)
+Segment = factory(SEGMENT_PATH)
+Sidewalk = factory(SIDEWALK_PATH)
+
 
 # Create a many-to-many field for the Segment
-
-
 def calculate_sidewalk_conditions(self):
+    score = calculate_score(
+        self,
+        [[4, 4, 4, 4],
+         [3, 3, 3, 4],
+         [2, 2, 3, 4],
+         [1, 1, 2, 3]],
+        ['self.sidewalk_width < 4',
+         'self.sidewalk_width < 5',
+         'self.sidewalk_width < 6',
+         'True'],
+        ['self.sidewalk_cond is "Good"',
+         'self.sidewalk_cond is "Fair"',
+         'self.sidewalk_cond is "Poor"',
+         'True']
+    )
+
+    self.sidewalk_condition_score = score
+    return score
+
+
+def calculate_physical_buffer(self):
+    score = calculate_score(
+        self,
+        [[2, 3, 3, 4],
+         [2, 2, 2, 2],
+         [1, 2, 2, 2],
+         [1, 1, 1, 2]],
+        ['self.buffer_type is "No Buffer"',
+         'self.buffer_type is "Solid Buffer"',
+         'self.buffer_type is "Landscaped"',
+         'self.buffer_type is "Landscaped With Trees"'],
+        ['self.PostedSpeed <= 25',
+         'self.PostedSpeed == 30',
+         'self.PostedSpeed == 35',
+         'True']
+    )
+
+    self.physical_buffer_score = score
+    return score
+
+
+def calculate_total_buffering_width(self):
+    score = calculate_score(
+        self,
+        [[2, 2, 1, 1, 1],
+         [3, 2, 2, 1, 1],
+         [4, 3, 2, 1, 1],
+         [4, 4, 3, 2, 2]],
+        ['self.TotalLanes <= 2',
+         'self.TotalLanes == 3',
+         'self.TotalLanes <= 5',
+         'True'],
+        ['self.buffer_width < 5',
+         'self.buffer_width < 10',
+         'self.buffer_width < 15',
+         'self.buffer_width < 25',
+         'True']
+    )
+
+    self.total_buffering_width_score = score
+    return score
+
+
+def calculate_general_landuse(self):
+    self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
+    return self.general_landuse_score
+
+
+def aggregate_score(self, *scores, **kwargs):
+    """
+    this function aggregate number of scores based on *scores
+    :param self: self
+    :param scores: scores arguments
+    :param kwargs: "MAX" - returns maximum, "MIN" - return minimum
+    :return: int score
+    """
+    score_list = [score for score in scores if score is not None]
+    method = kwargs.get("method")
     score = 0
-    for sw in Segment.Sidewalks:
-        # Calculate sidewalk condition
+
+    if method == "MIN":
+        score = min(score_list)
+    elif method == "MAX":
+        score = max(score_list)
+    return score
+
+
+def convert_score(score):
+    if score > 90:
+        score = 'Good'
+    elif score > 80:
+        score = 'Fair'
+    elif score > 70:
+        score = 'Poor'
+    else:
+        score = 'Very Poor'
+    return score
+
+
+def calculate_score(self, scores, *condition_sets):
+    """
+    this function takes the scores and condition_sets and return the score
+    based on which argument is true
+    :param self: self
+    :param scores: list of scores
+    :param condition_sets: lists of conditions
+    :return: int score
+    """
+    score = scores
+    for condition_set in condition_sets:
+        assert len(score) == len(condition_set)
+        for index, condition in enumerate(condition_set):
+            if eval(condition):
+                score = score[index]
+                break
+    assert isinstance(score, int)
     return score
 
 
 def calculate_plts(self, field_name):
-    score = calculate_sidewalk_conditions(self)
-    return score
+    self.sidewalk_score = 0
+    for sidewalk in getattr(self, 'sidewalks'):
+        self.sidewalk_cond = convert_score(sidewalk.ScoreCompliance)
+        self.sidewalk_width = sidewalk.Width / 12
+        self.buffer_type = sidewalk.BufferType
+        self.buffer_width = sidewalk.BufferWidth
+        self.general_landuse = sidewalk.OverallLandUse
+
+        self._calculate_sidewalk_condition()
+        self._calculate_physical_buffer()
+        self._calculate_total_buffering_width()
+        self._calculate_general_laneuse()
+
+        self.sidewalk_overall_score = self._aggregate_score(
+            self.sidewalk_condition_score,
+            self.physical_buffer_score,
+            self.total_buffering_width_score,
+            self.general_landuse_score,
+            method="MAX"
+        )
+
+        if self.sidewalk_score < self.sidewalk_overall_score:
+            self.sidewalk_score = self.sidewalk_overall_score
+
+    return self.sidewalk_overall_score
 
 
-Segment._calculate_blts = calculate_plts
+Segment._calculate_plts = calculate_plts
 Segment._calculate_sidewalk_condition = calculate_sidewalk_conditions
+Segment._calculate_physical_buffer = calculate_physical_buffer
+Segment._calculate_total_buffering_width = calculate_total_buffering_width
+Segment._calculate_general_laneuse = calculate_general_landuse
+Segment._aggregate_score = aggregate_score
 
-Segment.Sidewalks = ManyToManyField(
+Segment.sidewalks = ManyToManyField(
     "Sidewalks",
-    related_class = Sidewalk,
-    relationship_class = REL_NAME,
-    foreign_key = "StreetSegmentID",
-    related_foreign_key = "SidewalkSegmentID",
-    primary_key = "SegmentID",
-    related_primary_key = "SidewalkID"
+    related_class=Sidewalk,
+    relationship_class=REL_NAME,
+    foreign_key="StreetSegmentID",
+    related_foreign_key="SidewalkSegmentID",
+    primary_key="SegmentID",
+    related_primary_key="SegmentID"
 )
-
 
 # Override the BLTSScore field with a method field.
 Segment.PLTSScore = MethodField(
@@ -49,8 +188,13 @@ Segment.PLTSScore = MethodField(
 
 # Registered call
 Segment.register(SEGMENT_PATH)
+Sidewalk.register(SIDEWALK_PATH)
 
 if __name__ == "__main__":
-    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+    segments = Segment.objects.filter(InUrbanizedArea=D('Yes'))
+
+    for segment in segments:
         segment.PLTSScore
-        # segment.save()
