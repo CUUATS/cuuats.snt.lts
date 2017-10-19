@@ -22,7 +22,7 @@ def calculate_bikelane_with_adj_parking(self):
     score = 99
     if self.BicycleFacilityWidth is not None and self.ParkingLaneWidth is not \
             None:
-        if self.LanesPerDirection is 1:
+        if self.LanesPerDirection is 1 or self.LanesPerDirection is None:
             score = calculate_score(
                 self,
                 [[1, 2, 3],
@@ -66,7 +66,7 @@ def calculate_bikelane_without_adj_parking(self):
     """
     score = 99
     if self.BicycleFacilityWidth is not None:
-        if self.LanesPerDirection is 1:
+        if self.LanesPerDirection is 1 or self.LanesPerDirection is None:
             score = calculate_score(
                 self,
                 [[1, 1, 2],
