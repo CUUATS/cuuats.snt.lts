@@ -138,7 +138,7 @@ def calculate_score(self, scores, *condition_sets):
 def calculate_plts(self, field_name):
     self.sidewalk_score = 0
     for sidewalk in getattr(self, 'sidewalks'):
-        self.sidewalk_cond = convert_score(sidewalk.ScoreCompliance)
+        self.sidewalk_cond = self._convert_score(sidewalk.ScoreCompliance)
         self.sidewalk_width = sidewalk.Width / 12
         self.buffer_type = sidewalk.BufferType
         self.buffer_width = sidewalk.BufferWidth
@@ -160,7 +160,8 @@ def calculate_plts(self, field_name):
         if self.sidewalk_score < self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
-    return self.sidewalk_overall_score
+    print(self.sidewalk_score)
+    return self.sidewalk_score
 
 
 Segment._calculate_plts = calculate_plts
@@ -169,6 +170,7 @@ Segment._calculate_physical_buffer = calculate_physical_buffer
 Segment._calculate_total_buffering_width = calculate_total_buffering_width
 Segment._calculate_general_laneuse = calculate_general_landuse
 Segment._aggregate_score = aggregate_score
+Segment._covert_score = convert_score
 
 Segment.sidewalks = ManyToManyField(
     "Sidewalks",
