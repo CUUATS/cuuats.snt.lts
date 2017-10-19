@@ -126,8 +126,7 @@ def calculate_right_turn_lane(self):
     :return: int score
     """
     score = 0
-    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
-
+    streetintersectionapproach = self.streetintersectionapproach
     for approach in getattr(self, streetintersectionapproach):
         if approach.LaneConfiguration is None:
             continue
@@ -163,7 +162,7 @@ def calculate_left_turn_lane(self):
     :return: int score
     """
     score = 0
-    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    streetintersectionapproach = self.streetintersectionapproach
     for approach in getattr(self, streetintersectionapproach):
         if approach.LaneConfiguration is None:
             continue
@@ -273,7 +272,7 @@ def calculate_unsignalized_crossing_with_median(self):
     return score
 
 
-def calculate_maxLane(self, lane_config):
+def calculate_max_lane(self, lane_config):
     """
     this function takes lane configuration string and return the max lane in
     either direction
@@ -365,6 +364,7 @@ def calculate_blts(self, field_name):
                 self.bikeLaneWithoutAdjPkScore,
                 self.mixTrafficScore,
                 method="MIN")
+    self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
     self._calculate_right_turn_lane()
     self._calculate_left_turn_lane()
     self._calculate_unsignalized_crossing_without_median()
@@ -395,7 +395,7 @@ Segment._calculate_unsignalized_crossing_without_median = \
     calculate_unsignalized_crossing_without_median
 Segment._calculate_unsignalized_crossing_with_median = \
     calculate_unsignalized_crossing_with_median
-Segment._calculate_MaxLane = calculate_maxLane
+Segment._calculate_MaxLane = calculate_max_lane
 
 
 # Override the BLTSScore field with a method field.
