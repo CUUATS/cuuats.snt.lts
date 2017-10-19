@@ -2,7 +2,7 @@ import unittest
 from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_bikelane_with_adj_parking, \
     calculate_bikelane_without_adj_parking, calculate_max_lane, \
-    calculate_lanecrossed
+    calculate_lanecrossed, aggregate_score
 
 
 class TestBLTS(unittest.TestCase):
@@ -187,7 +187,11 @@ class TestBLTS(unittest.TestCase):
         self.assertEqual(calculate_lanecrossed(self, 'XXXXLLTR'), 3)
         self.assertEqual(calculate_lanecrossed(self, 'XXXLLTTR'), 4)
 
-
+    def test_aggregate_score(self):
+        self.assertEqual(aggregate_score(1, 2, 3, method="MAX"), 3)
+        self.assertEqual(aggregate_score(1, 4, 3, 1, method="MAX"), 4)
+        self.assertEqual(aggregate_score(4, 3, 1, method="MIN"), 1)
+        self.assertEqual(aggregate_score(2, 4, 3, 2, method="MIN"), 2)
 
 
 
