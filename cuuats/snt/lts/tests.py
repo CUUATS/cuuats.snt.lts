@@ -1,7 +1,8 @@
 import unittest
 from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_bikelane_with_adj_parking, \
-    calculate_bikelane_without_adj_parking, calculate_max_lane
+    calculate_bikelane_without_adj_parking, calculate_max_lane, \
+    calculate_lanecrossed
 
 
 class TestBLTS(unittest.TestCase):
@@ -175,6 +176,16 @@ class TestBLTS(unittest.TestCase):
         self.assertEqual(calculate_max_lane(self, 'XXLTTR'), 4)
         self.assertEqual(calculate_max_lane(self, 'XXXXTR'), 4)
         self.assertEqual(calculate_max_lane(self, None), 1)
+
+    def test_lane_crossed(self):
+        self.assertEqual(calculate_lanecrossed(self, None), 0)
+        self.assertEqual(calculate_lanecrossed(self, 'X'), 0)
+        self.assertEqual(calculate_lanecrossed(self, 'T'), 0)
+        self.assertEqual(calculate_lanecrossed(self, 'XT'), 0)
+        self.assertEqual(calculate_lanecrossed(self, 'XXTT'), 1)
+        self.assertEqual(calculate_lanecrossed(self, 'XXLTR'), 2)
+        self.assertEqual(calculate_lanecrossed(self, 'XXXXLLTR'), 3)
+        self.assertEqual(calculate_lanecrossed(self, 'XXXLLTTR'), 4)
 
 
 
