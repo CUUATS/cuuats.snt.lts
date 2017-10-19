@@ -1,22 +1,7 @@
 import unittest
-import arcpy
-import gc
-import os
-import shutil
-import tempfile
-import unittest
-from cuuats.datamodel.exceptions import ObjectDoesNotExist, \
-    MultipleObjectsReturned
-from cuuats.datamodel.workspaces import Workspace
-from cuuats.datamodel.fields import BaseField, OIDField, GeometryField, \
-    StringField, NumericField, ScaleField, MethodField, WeightsField
-from cuuats.datamodel.manytomany import ManyToManyField
-from cuuats.datamodel.features import BaseFeature
-from cuuats.datamodel.scales import BreaksScale, DictScale
-from cuuats.datamodel.domains import CodedValue, D
-from cuuats.datamodel.workspaces import WorkspaceManager
 from blts_cuuats import calculate_score, calculate_mix_traffic, \
-    calculate_bikelane_with_adj_parking
+    calculate_bikelane_with_adj_parking, \
+    calculate_bikelane_without_adj_parking
 
 
 class TestBLTS(unittest.TestCase):
@@ -25,7 +10,7 @@ class TestBLTS(unittest.TestCase):
     IDOTAADT = 500
     LanesPerDirection = None
 
-    def test_data_setup(self):
+    def test_environment_setup(self):
         self.assertEqual(self.IDOTAADT, 500)
         self.assertTrue(self.LanesPerDirection is None)
         self.TestData = 500
@@ -88,28 +73,30 @@ class TestBLTS(unittest.TestCase):
         self.BicycleFacilityWidth = 1
         self.assertEqual(calculate_bikelane_with_adj_parking(self), 99)
 
-        # Test 1 Lane Per Direction
-        self.LanesPerDirection = 1
-        IDOTAADT = [None, 1500, 3500, 50000]
-        BicycleFacility = [10, 7, 4]
-        ParkingLaneWidth = [6, 7, 4]
-        score_matrix = [[1, 2, 3],
-                        [1, 2, 3],
-                        [2, 3, 3],
-                        [2, 4, 4]]
-        outer_list = []
-        inner_list = []
-        for i in IDOTAADT:
-            self.IDOTAADT = i
-            for (b, p) in zip(BicycleFacility, ParkingLaneWidth):
-                self.BicycleFacilityWidth = b
-                self.ParkingLaneWidth = p
-                score = calculate_bikelane_with_adj_parking(self)
-                inner_list.append(score)
-            outer_list.append(inner_list)
+        # Test 1 Lane Per Direction or No lanes per direction
+        LanesPerDirection = [None, 1]
+        for l in LanesPerDirection:
+            self.LanesPerDirection = l
+            IDOTAADT = [None, 1500, 3500, 50000]
+            BicycleFacility = [10, 7, 4]
+            ParkingLaneWidth = [6, 7, 4]
+            score_matrix = [[1, 2, 3],
+                            [1, 2, 3],
+                            [2, 3, 3],
+                            [2, 4, 4]]
+            outer_list = []
             inner_list = []
+            for i in IDOTAADT:
+                self.IDOTAADT = i
+                for (b, p) in zip(BicycleFacility, ParkingLaneWidth):
+                    self.BicycleFacilityWidth = b
+                    self.ParkingLaneWidth = p
+                    score = calculate_bikelane_with_adj_parking(self)
+                    inner_list.append(score)
+                outer_list.append(inner_list)
+                inner_list = []
 
-        self.assertEqual(outer_list, score_matrix)
+            self.assertEqual(outer_list, score_matrix)
 
         # Test 2 Lane Per Direction
         self.LanesPerDirection = 2
@@ -133,6 +120,56 @@ class TestBLTS(unittest.TestCase):
             inner_list = []
 
         self.assertEqual(outer_list, score_matrix)
+
+    def test_bike_lane_without_adj_parking(self):
+        # Test Bicycle Facility Filter
+        self.BicycleFacilityWidth = None
+        self.assertEqual(calculate_bikelane_without_adj_parking(self), 99)
+
+        # Test 1 Lane Per Direction or None
+        LanesPerDirection = [None, 1]
+        for l in LanesPerDirection:
+            self.LanesPerDirection = l
+            IDOTAADT = [None, 30000, 40000]
+            BicycleFacilityWidth = [7, 5.5, 4]
+            score_matrix = [[1, 1, 2],
+                            [2, 3, 3],
+                            [3, 4, 4]]
+            outer_list = []
+            inner_list = []
+            for i in IDOTAADT:
+                self.IDOTAADT = i
+                for b in BicycleFacilityWidth:
+                    self.BicycleFacilityWidth = b
+                    score = calculate_bikelane_without_adj_parking(self)
+                    inner_list.append(score)
+                outer_list.append(inner_list)
+                inner_list = []
+
+            self.assertEqual(outer_list, score_matrix)
+
+        # Test more than 1 lane per direction
+        self.LanesPerDirection = 3
+        IDOTAADT = [3000, 30000, 30001]
+        BicycleFacilityWidth = [7, 6]
+        score_matrix = [[1, 3],
+                        [2, 3],
+                        [3, 4]]
+        outer_list = []
+        inner_list = []
+        for i in IDOTAADT:
+            self.IDOTAADT = i
+            for b in BicycleFacilityWidth:
+                self.BicycleFacilityWidth = b
+                score = calculate_bikelane_without_adj_parking(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+
+        self.assertEqual(outer_list, score_matrix)
+
+
+
 
 
 
