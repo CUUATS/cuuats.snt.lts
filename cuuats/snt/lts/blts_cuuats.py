@@ -329,7 +329,7 @@ def calculate_score(self, scores, *condition_sets):
     return score
 
 
-def aggregate_score(self, *scores, **kwargs):
+def aggregate_score(*scores, **kwargs):
     """
     this function aggregate number of scores based on *scores
     :param self: self
