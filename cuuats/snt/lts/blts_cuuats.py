@@ -125,34 +125,31 @@ def calculate_right_turn_lane(self):
     :param self: self
     :return: int score
     """
-    score = 0
-    streetintersectionapproach = self.streetintersectionapproach
-    for approach in getattr(self, streetintersectionapproach):
-        if approach.LaneConfiguration is None:
-            continue
-        if "R" in approach.LaneConfiguration or \
-           "Q" in approach.LaneConfiguration:
+    if self.LaneConfiguration is None:
+        return
+    if "R" in self.LaneConfiguration or \
+       "Q" in self.LaneConfiguration:
 
-            new_score = calculate_score(
-                approach,
-                [2, 3, 3, 4],
-                ['"R" in self.LaneConfiguration and \
-                 self.RightTurnLength <= 150 and \
-                 self.BikeApproachAlignment is "Straight"',
+        new_score = calculate_score(
+            self,
+            [2, 3, 3, 4],
+            ['"R" in self.LaneConfiguration and \
+             self.RightTurnLength <= 150 and \
+             self.BikeApproachAlignment is "Straight"',
 
-                 '"R" in self.LaneConfiguration and \
-                 self.RightTurnLength > 150 and \
-                 self.BikeApproachAlignment is "Straight"',
+             '"R" in self.LaneConfiguration and \
+             self.RightTurnLength > 150 and \
+             self.BikeApproachAlignment is "Straight"',
 
-                 '"R" in self.LaneConfiguration and \
-                 self.BikeApproachAlignment is "Left"',
+             '"R" in self.LaneConfiguration and \
+             self.BikeApproachAlignment is "Left"',
 
-                 'True'])
-            if score < new_score:
-                score = new_score
+             'True'])
 
-    self.rightTurnLaneScore = score
-    return score
+        if self.rightTurnLaneScore < new_score:
+            self.rightTurnLaneScore = new_score
+
+    return self.rightTurnLaneScore
 
 
 def calculate_left_turn_lane(self):
@@ -161,43 +158,40 @@ def calculate_left_turn_lane(self):
     :param self: self
     :return: int score
     """
-    score = 0
-    streetintersectionapproach = self.streetintersectionapproach
-    for approach in getattr(self, streetintersectionapproach):
-        if approach.LaneConfiguration is None:
-            continue
-        if "K" in approach.LaneConfiguration or \
-           "L" in approach.LaneConfiguration:
-            new_score = calculate_score(
-                self,
-                [4, 4, 4],
-                ['self.PostedSpeed <= 25',
-                 'self.PostedSpeed == 30',
-                 'self.PostedSpeed >= 35'])
-            if score < new_score:
-                score = new_score
-        else:
-            self.lanecrossed = self._calculate_Lanecrossed(
-                approach.LaneConfiguration)
-            new_score = calculate_score(
-                self,
-                [[2, 2, 3],
-                 [2, 3, 4],
-                 [3, 4, 4]],
 
-                ['self.PostedSpeed <= 25',
-                 'self.PostedSpeed == 30',
-                 'self.PostedSpeed >= 35'],
+    if self.LaneConfiguration is None:
+        return
+    if "K" in self.LaneConfiguration or \
+       "L" in self.LaneConfiguration:
+        new_score = calculate_score(
+            self,
+            [4, 4, 4],
+            ['self.PostedSpeed <= 25',
+             'self.PostedSpeed == 30',
+             'self.PostedSpeed >= 35'])
+        if self.leftTurnLaneScore < new_score:
+            self.leftTurnLaneScore = new_score
+    else:
+        self.lanecrossed = self._calculate_Lanecrossed(
+            self.LaneConfiguration)
+        new_score = calculate_score(
+            self,
+            [[2, 2, 3],
+             [2, 3, 4],
+             [3, 4, 4]],
 
-                ['self.lanecrossed == 0',
-                 'self.lanecrossed == 1',
-                 'self.lanecrossed >= 2'])
+            ['self.PostedSpeed <= 25',
+             'self.PostedSpeed == 30',
+             'self.PostedSpeed >= 35'],
 
-            if score < new_score:
-                score = new_score
+            ['self.lanecrossed == 0',
+             'self.lanecrossed == 1',
+             'self.lanecrossed >= 2'])
 
-    self.leftTurnLaneScore = score
-    return score
+        if self.leftTurnLaneScore < new_score:
+            self.leftTurnLaneScore = new_score
+
+    return self.leftTurnLaneScore
 
 
 def calculate_unsignalized_crossing_without_median(self):
@@ -207,33 +201,30 @@ def calculate_unsignalized_crossing_without_median(self):
     :param self: self
     :return: int score
     """
-    score = 0
-    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
-    for approach in getattr(self, streetintersectionapproach):
-        if approach.LaneConfiguration is None:
-            continue
-        self.totalLanes = len(approach.LaneConfiguration)
-        new_score = calculate_score(
-            self,
-            [[1, 2, 4],
-             [1, 2, 4],
-             [2, 3, 4],
-             [3, 4, 4]],
+    if self.LaneConfiguration is None:
+        return
+    self.totalLanes = len(self.LaneConfiguration)
+    new_score = calculate_score(
+        self,
+        [[1, 2, 4],
+         [1, 2, 4],
+         [2, 3, 4],
+         [3, 4, 4]],
 
-            ['self.PostedSpeed <= 25',
-             'self.PostedSpeed == 30',
-             'self.PostedSpeed == 35',
-             'True'],
+        ['self.PostedSpeed <= 25',
+         'self.PostedSpeed == 30',
+         'self.PostedSpeed == 35',
+         'True'],
 
-            ['self.totalLanes <= 3',
-             'self.totalLanes <= 5',
-             'True'])
+        ['self.totalLanes <= 3',
+         'self.totalLanes <= 5',
+         'True'])
 
-        if score < new_score:
-            score = new_score
+    if self.unsignalizedCrossingWithoutMedianScore < new_score:
+        self.unsignalizedCrossingWithoutMedianScore = new_score
 
-    self.unsignalizedCrossingWithoutMedianScore = score
-    return score
+    self.unsignalizedCrossingWithoutMedianScore = new_score
+    return self.unsignalizedCrossingWithoutMedianScore
 
 
 def calculate_unsignalized_crossing_with_median(self):
@@ -243,33 +234,30 @@ def calculate_unsignalized_crossing_with_median(self):
     :param self: self
     :return: int score
     """
-    score = 0
-    streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
-    for approach in getattr(self, streetintersectionapproach):
-        if approach.LaneConfiguration is None:
-            continue
-        self.maxLane = self._calculate_MaxLane(approach.LaneConfiguration)
+    if self.LaneConfiguration is None:
+        return
+    self.maxLane = self._calculate_MaxLane(self.LaneConfiguration)
 
-        new_score = calculate_score(
-            self,
-            [[1, 1, 2],
-             [1, 2, 3],
-             [2, 3, 4],
-             [3, 4, 4]],
+    new_score = calculate_score(
+        self,
+        [[1, 1, 2],
+         [1, 2, 3],
+         [2, 3, 4],
+         [3, 4, 4]],
 
-            ['self.PostedSpeed <= 25',
-             'self.PostedSpeed == 30',
-             'self.PostedSpeed == 35',
-             'True'],
+        ['self.PostedSpeed <= 25',
+         'self.PostedSpeed == 30',
+         'self.PostedSpeed == 35',
+         'True'],
 
-            ['self.maxLane <= 2',
-             'self.maxLane == 3',
-             'True'])
-        if score < new_score:
-            score = new_score
+        ['self.maxLane <= 2',
+         'self.maxLane == 3',
+         'True'])
+    if self.unsignalizedCrossingWithMedianScore < new_score:
+        self.unsignalizedCrossingWithMedianScore = new_score
 
-    self.unsignalizedCrossingWithMedianScore = score
-    return score
+    self.unsignalizedCrossingWithMedianScore = new_score
+    return self.unsignalizedCrossingWithMedianScore
 
 
 def calculate_max_lane(self, lane_config):
@@ -329,7 +317,7 @@ def calculate_score(self, scores, *condition_sets):
     return score
 
 
-def aggregate_score(*scores, **kwargs):
+def aggregate_score(self, *scores, **kwargs):
     """
     this function aggregate number of scores based on *scores
     :param self: self
@@ -356,6 +344,7 @@ def calculate_blts(self, field_name):
     :param field_name: required argument
     :return: blts score
     """
+    # Segment condition scores
     self._calculate_mix_traffic()
     self._calculate_bikelane_without_adj_parking()
     self._calculate_bikelane_with_adj_parking()
@@ -364,11 +353,22 @@ def calculate_blts(self, field_name):
                 self.bikeLaneWithoutAdjPkScore,
                 self.mixTrafficScore,
                 method="MIN")
+
+    # Loop through score required approaches
     self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
-    self._calculate_right_turn_lane()
-    self._calculate_left_turn_lane()
-    self._calculate_unsignalized_crossing_without_median()
-    self._calculate_unsignalized_crossing_with_median()
+    self.rightTurnLaneScore = 0
+    self.leftTurnLaneScore = 0
+    self.unsignalizedCrossingWithoutMedianScore = 0
+    self.unsignalizedCrossingWithMedianScore = 0
+    for approach in getattr(self, self.streetintersectionapproach):
+        self.LaneConfiguration = approach.LaneConfiguration
+        self.RightTurnLength = approach.RightTurnLength
+        self.BikeApproachAlignment = approach.BikeApproachAlignment
+        self._calculate_right_turn_lane()
+        self._calculate_left_turn_lane()
+        self._calculate_unsignalized_crossing_without_median()
+        self._calculate_unsignalized_crossing_with_median()
+
     self.overallScore = self._aggregate_Score(
                 self.segmentScore,
                 self.rightTurnLaneScore,
@@ -376,6 +376,7 @@ def calculate_blts(self, field_name):
                 self.unsignalizedCrossingWithoutMedianScore,
                 self.unsignalizedCrossingWithMedianScore,
                 method="MAX")
+
     print(self.overallScore)
     return self.overallScore
 
@@ -408,6 +409,7 @@ Segment.BLTSScore = MethodField(
 Approach.register(APPROACH_PATH)
 
 if __name__ == "__main__":
-    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
+    for segment in Segment.objects.filter(InUrbanizedArea=D(
+            'Yes')):
         segment.BLTSScore
         # segment.save()
