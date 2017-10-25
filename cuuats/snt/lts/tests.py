@@ -352,6 +352,24 @@ class TestPLTS(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
+    def test_physical_buffer(self):
+        buffer_type = ["No Buffer", "Solid Buffer", "Landscaped", "Vertical"]
+        posted_speed = [25, 30, 35, 40]
+        score_matrix = [[2, 3, 3, 4],
+                        [2, 2, 2, 2],
+                        [1, 2, 2, 2],
+                        [1, 1, 1, 2]]
+        outer_list = []
+        inner_list = []
+        for b in buffer_type:
+            self.buffer_type = b
+            for p in posted_speed:
+                self.PostedSpeed = p
+                score = calculate_physical_buffer(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
 
 if __name__ == '__main__':
     unittest.main()
