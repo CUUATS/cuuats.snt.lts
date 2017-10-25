@@ -5,7 +5,9 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_lanecrossed, aggregate_score, calculate_right_turn_lane, \
     calculate_left_turn_lane, calculate_unsignalized_crossing_without_median, \
     calculate_unsignalized_crossing_with_median
-
+from plts_cuuats import calculate_sidewalk_conditions, \
+    calculate_physical_buffer, calculate_general_landuse, \
+    calculate_total_buffering_width
 
 class TestBLTS(unittest.TestCase):
     PostedSpeed = 50
@@ -315,6 +317,41 @@ class TestBLTS(unittest.TestCase):
         self.assertEqual(aggregate_score(1, 4, 3, 1, method="MAX"), 4)
         self.assertEqual(aggregate_score(4, 3, 1, method="MIN"), 1)
         self.assertEqual(aggregate_score(2, 4, 3, 2, method="MIN"), 2)
+
+    def test_blts(self):
+        # Write a test for blts method
+        pass
+
+
+class TestPLTS(unittest.TestCase):
+    dummy = 1
+    dummy_2 = None
+    dummy_3 = True
+
+    def test_evironment_setup(self):
+        self.assertTrue(self.dummy_3)
+        self.assertEqual(self.dummy, 1)
+        self.assertTrue(self.dummy_2 is None)
+
+    def test_sidewalk_conditions(self):
+        sidewalk_width = [3, 4, 5, 6]
+        sidewalk_cond = ["Good", "Fair", "Poor", "Terrible"]
+        score_matrix = [[4, 4, 4, 4],
+                        [3, 3, 3, 4],
+                        [2, 2, 3, 4],
+                        [1, 1, 2, 3]]
+        outer_list = []
+        inner_list = []
+        for w in sidewalk_width:
+            self.sidewalk_width = w
+            for c in sidewalk_cond:
+                self.sidewalk_cond = c
+                score = calculate_sidewalk_conditions(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
+
 
 if __name__ == '__main__':
     unittest.main()
