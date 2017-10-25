@@ -16,6 +16,7 @@ Sidewalk = factory(SIDEWALK_PATH)
 
 # Create a many-to-many field for the Segment
 def calculate_sidewalk_conditions(self):
+    score = 0
     score = calculate_score(
         self,
         [[4, 4, 4, 4],
@@ -35,18 +36,19 @@ def calculate_sidewalk_conditions(self):
     self.sidewalk_condition_score = score
     return score
 
-
 def calculate_physical_buffer(self):
+    score = 0
     score = calculate_score(
         self,
         [[2, 3, 3, 4],
          [2, 2, 2, 2],
          [1, 2, 2, 2],
          [1, 1, 1, 2]],
-        ['self.buffer_type is "No Buffer"',
-         'self.buffer_type is "Solid Buffer"',
-         'self.buffer_type is "Landscaped"',
-         'self.buffer_type is "Landscaped With Trees"'],
+        ['self.buffer_type == "No Buffer"',
+         'self.buffer_type == "Solid Buffer"',
+         'self.buffer_type == "Landscaped"',
+         'True'],
+         # 'self.buffer_type is "Landscaped With Trees"'],
         ['self.PostedSpeed <= 25',
          'self.PostedSpeed == 30',
          'self.PostedSpeed == 35',
@@ -55,7 +57,6 @@ def calculate_physical_buffer(self):
 
     self.physical_buffer_score = score
     return score
-
 
 def calculate_total_buffering_width(self):
     score = calculate_score(
@@ -78,11 +79,9 @@ def calculate_total_buffering_width(self):
     self.total_buffering_width_score = score
     return score
 
-
 def calculate_general_landuse(self):
     self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
     return self.general_landuse_score
-
 
 def aggregate_score(self, *scores, **kwargs):
     """
@@ -102,8 +101,7 @@ def aggregate_score(self, *scores, **kwargs):
         score = max(score_list)
     return score
 
-
-def convert_score(score):
+def convert_score(self, score):
     if score > 90:
         score = 'Good'
     elif score > 80:
@@ -113,7 +111,6 @@ def convert_score(score):
     else:
         score = 'Very Poor'
     return score
-
 
 def calculate_score(self, scores, *condition_sets):
     """
@@ -134,15 +131,14 @@ def calculate_score(self, scores, *condition_sets):
     assert isinstance(score, int)
     return score
 
-
 def calculate_plts(self, field_name):
     self.sidewalk_score = 0
+    self.general_landuse = self.OverallLandUse
     for sidewalk in getattr(self, 'sidewalks'):
         self.sidewalk_cond = self._convert_score(sidewalk.ScoreCompliance)
         self.sidewalk_width = sidewalk.Width / 12
         self.buffer_type = sidewalk.BufferType
         self.buffer_width = sidewalk.BufferWidth
-        self.general_landuse = sidewalk.OverallLandUse
 
         self._calculate_sidewalk_condition()
         self._calculate_physical_buffer()
@@ -160,9 +156,9 @@ def calculate_plts(self, field_name):
         if self.sidewalk_score < self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
+    import pdb; pdb.set_trace()
     print(self.sidewalk_score)
     return self.sidewalk_score
-
 
 Segment._calculate_plts = calculate_plts
 Segment._calculate_sidewalk_condition = calculate_sidewalk_conditions
@@ -170,7 +166,7 @@ Segment._calculate_physical_buffer = calculate_physical_buffer
 Segment._calculate_total_buffering_width = calculate_total_buffering_width
 Segment._calculate_general_laneuse = calculate_general_landuse
 Segment._aggregate_score = aggregate_score
-Segment._covert_score = convert_score
+Segment._convert_score = convert_score
 
 Segment.sidewalks = ManyToManyField(
     "Sidewalks",
@@ -193,10 +189,6 @@ Segment.register(SEGMENT_PATH)
 Sidewalk.register(SIDEWALK_PATH)
 
 if __name__ == "__main__":
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-
-    segments = Segment.objects.filter(InUrbanizedArea=D('Yes'))
-
-    for segment in segments:
+    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
         segment.PLTSScore
+        # segment.save
