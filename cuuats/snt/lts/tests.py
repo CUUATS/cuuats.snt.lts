@@ -3,7 +3,8 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_bikelane_with_adj_parking, \
     calculate_bikelane_without_adj_parking, calculate_max_lane, \
     calculate_lanecrossed, aggregate_score, calculate_right_turn_lane, \
-    calculate_left_turn_lane
+    calculate_left_turn_lane, calculate_unsignalized_crossing_without_median, \
+    calculate_unsignalized_crossing_with_median
 
 
 class TestBLTS(unittest.TestCase):
@@ -244,6 +245,31 @@ class TestBLTS(unittest.TestCase):
             outer_list.append(inner_list)
             inner_list = []
 
+        self.assertEqual(outer_list, score_matrix)
+
+    def test_unsignalized_crossing_without_median(self):
+        self.LaneConfiguration = "XXTT"
+        self.PostedSpeed = 25
+        self.totalLanes = 3
+        self.assertEqual(calculate_unsignalized_crossing_without_median(
+            self), 1)
+
+        posted_speed = [25, 30, 35, 40]
+        total_lanes = [3, 5, 6]
+        score_matrix = [[1, 2, 4],
+                        [1, 2, 4],
+                        [2, 3, 4],
+                        [3, 4, 4]]
+        outer_list = []
+        inner_list = []
+        for p in posted_speed:
+            self.PostedSpeed = p
+            for l in total_lanes:
+                self.totalLanes = l
+                score = calculate_unsignalized_crossing_without_median(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
     def test_max_lane(self):
