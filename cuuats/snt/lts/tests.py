@@ -2,7 +2,7 @@ import unittest
 from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_bikelane_with_adj_parking, \
     calculate_bikelane_without_adj_parking, calculate_max_lane, \
-    calculate_lanecrossed, aggregate_score
+    calculate_lanecrossed, aggregate_score, calculate_right_turn_lane
 
 
 class TestBLTS(unittest.TestCase):
@@ -169,6 +169,39 @@ class TestBLTS(unittest.TestCase):
 
         self.assertEqual(outer_list, score_matrix)
 
+    def test_right_turn_lane(self):
+        self.LaneConfiguration = None
+        self.RightTurnLength = 0
+        self.BikeLaneApproachAlignment = None
+        self.rightTurnLaneScore = 0
+
+        # Test No Lane Configuration
+        self.assertEqual(calculate_right_turn_lane(self), 0)
+
+        # Test condition 1
+        self.LaneConfiguration = "XXTR"
+        self.RightTurnLength = 120
+        self.BikeApproachAlignment = "Straight"
+        self.assertEqual(calculate_right_turn_lane(self), 2)
+
+        # Test Condition 2
+        self.LaneConfiguration = "XXLTTR"
+        self.RightTurnLength = 151
+        self.BikeApproachAlignment = "Straight"
+        self.assertEqual(calculate_right_turn_lane(self), 3)
+
+        # Test Condition 3
+        self.LaneConfiguration = "XXLTTR"
+        self.RightTurnLength = 151
+        self.BikeApproachAlignment = "Left"
+        self.assertEqual(calculate_right_turn_lane(self), 3)
+
+        # Test Condition 4
+        self.LaneConfiguration = "XXLTTQ"
+        self.RightTurnLength = 151
+        self.BikeApproachAlignment = "Straight"
+        self.assertEqual(calculate_right_turn_lane(self), 4)
+
     def test_max_lane(self):
         self.assertEqual(calculate_max_lane(self, 'XXTT'), 2)
         self.assertEqual(calculate_max_lane(self, 'TT'), 2)
@@ -192,9 +225,6 @@ class TestBLTS(unittest.TestCase):
         self.assertEqual(aggregate_score(1, 4, 3, 1, method="MAX"), 4)
         self.assertEqual(aggregate_score(4, 3, 1, method="MIN"), 1)
         self.assertEqual(aggregate_score(2, 4, 3, 2, method="MIN"), 2)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
