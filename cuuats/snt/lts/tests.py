@@ -371,5 +371,24 @@ class TestPLTS(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
+    def test_total_buffering_width(self):
+        total_lanes = [2, 3, 5, 6]
+        buffer_width = [4, 7, 12, 24, 25]
+        score_matrix = [[2, 2, 1, 1, 1],
+                        [3, 2, 2, 1, 1],
+                        [4, 3, 2, 1, 1],
+                        [4, 4, 3, 2, 2]]
+        outer_list = []
+        inner_list = []
+        for l in total_lanes:
+            self.TotalLanes = l
+            for w in buffer_width:
+                self.buffer_width = w
+                score = calculate_total_buffering_width(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
+
 if __name__ == '__main__':
     unittest.main()
