@@ -390,5 +390,18 @@ class TestPLTS(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
+    def test_general_landuse(self):
+        self.general_landuse = "residential"
+        self.assertEqual(calculate_general_landuse(self), 1)
+        self.general_landuse = "strip commerical"
+        self.assertEqual(calculate_general_landuse(self), 2)
+        self.general_landuse = "big-box"
+        self.assertEqual(calculate_general_landuse(self), 3)
+        self.general_landuse = "freeway interchages"
+        self.assertEqual(calculate_general_landuse(self), 4)
+        self.general_landuse = "school"
+        self.assertEqual(calculate_general_landuse(self), 0)
+
+
 if __name__ == '__main__':
     unittest.main()
