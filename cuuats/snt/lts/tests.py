@@ -2,7 +2,8 @@ import unittest
 from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_bikelane_with_adj_parking, \
     calculate_bikelane_without_adj_parking, calculate_max_lane, \
-    calculate_lanecrossed, aggregate_score, calculate_right_turn_lane
+    calculate_lanecrossed, aggregate_score, calculate_right_turn_lane, \
+    calculate_left_turn_lane
 
 
 class TestBLTS(unittest.TestCase):
@@ -201,6 +202,49 @@ class TestBLTS(unittest.TestCase):
         self.RightTurnLength = 151
         self.BikeApproachAlignment = "Straight"
         self.assertEqual(calculate_right_turn_lane(self), 4)
+
+        self.LaneConfiguration = "XXTR"
+        self.RightTurnLength = 120
+        self.BikeApproachAlignment = "Straight"
+        self.assertEqual(calculate_right_turn_lane(self), 2)
+
+    def test_left_turn_lane(self):
+        self.LaneConfiguration = None
+        self.PostedSpeed = 0
+        self.leftTurnLaneScore = 0
+        self.dummy = 10
+
+        self.assertEqual(calculate_left_turn_lane(self), 0)
+
+        # Test for dual shared or exclusive left turn lane
+        self.LaneConfiguration = "XXLTTR"
+        self.assertEqual(calculate_left_turn_lane(self), 4)
+        self.LaneConfiguration = "XXKTTR"
+        self.assertEqual(calculate_left_turn_lane(self), 4)
+
+        # Test for Lanecrossed criterias
+        self.LaneConfiguration = "XXTTR"
+        self.PostedSpeed = 25
+        self.lanecrossed = 0
+
+
+        lanecrossed = [0, 1, 2]
+        posted_speed = [25, 30, 35]
+        score_matrix = [[2, 2, 3],
+                        [2, 3, 4],
+                        [3, 4, 4]]
+        outer_list = []
+        inner_list = []
+        for p in posted_speed:
+            self.PostedSpeed = p
+            for l in lanecrossed:
+                self.lanecrossed = l
+                score = calculate_left_turn_lane(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+
+        self.assertEqual(outer_list, score_matrix)
 
     def test_max_lane(self):
         self.assertEqual(calculate_max_lane(self, 'XXTT'), 2)
