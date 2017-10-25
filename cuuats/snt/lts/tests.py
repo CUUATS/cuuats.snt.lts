@@ -272,6 +272,26 @@ class TestBLTS(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
+    def test_unsignalized_crossing_with_median(self):
+        self.LaneConfiguration = "XXTT"
+        posted_speed = [25, 30, 35, 40]
+        max_lanes = [2, 3, 4]
+        score_matrix = [[1, 1, 2],
+                        [1, 2, 3],
+                        [2, 3, 4],
+                        [3, 4, 4]]
+        outer_list = []
+        inner_list = []
+        for p in posted_speed:
+            self.PostedSpeed = p
+            for m in max_lanes:
+                self.maxLane = m
+                score = calculate_unsignalized_crossing_with_median(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
+
     def test_max_lane(self):
         self.assertEqual(calculate_max_lane(self, 'XXTT'), 2)
         self.assertEqual(calculate_max_lane(self, 'TT'), 2)
