@@ -125,8 +125,9 @@ def calculate_right_turn_lane(self):
     :param self: self
     :return: int score
     """
+    self.rightTurnLaneScore = 0
     if self.LaneConfiguration is None:
-        return
+        return 0
     if "R" in self.LaneConfiguration or \
        "Q" in self.LaneConfiguration:
 
@@ -154,13 +155,14 @@ def calculate_right_turn_lane(self):
 
 def calculate_left_turn_lane(self):
     """
-    this function calculate the left turn lane score based on the criterias
+    this function calculate the left turn lane score based on the criteria
     :param self: self
     :return: int score
     """
-
+    self.leftTurnLaneScore = 0
     if self.LaneConfiguration is None:
-        return
+        return 0
+
     if "K" in self.LaneConfiguration or \
        "L" in self.LaneConfiguration:
         new_score = calculate_score(
@@ -172,8 +174,6 @@ def calculate_left_turn_lane(self):
         if self.leftTurnLaneScore < new_score:
             self.leftTurnLaneScore = new_score
     else:
-        self.lanecrossed = self._calculate_Lanecrossed(
-            self.LaneConfiguration)
         new_score = calculate_score(
             self,
             [[2, 2, 3],
@@ -364,6 +364,8 @@ def calculate_blts(self, field_name):
         self.LaneConfiguration = approach.LaneConfiguration
         self.RightTurnLength = approach.RightTurnLength
         self.BikeApproachAlignment = approach.BikeApproachAlignment
+        self.lanecrossed = self._calculate_Lanecrossed(
+            self.LaneConfiguration)
         self._calculate_right_turn_lane()
         self._calculate_left_turn_lane()
         self._calculate_unsignalized_crossing_without_median()
@@ -409,7 +411,6 @@ Segment.BLTSScore = MethodField(
 Approach.register(APPROACH_PATH)
 
 if __name__ == "__main__":
-    for segment in Segment.objects.filter(InUrbanizedArea=D(
-            'Yes')):
+    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
         segment.BLTSScore
         # segment.save()
