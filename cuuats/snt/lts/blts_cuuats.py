@@ -201,9 +201,9 @@ def calculate_unsignalized_crossing_without_median(self):
     :param self: self
     :return: int score
     """
+    self.unsignalizedCrossingWithoutMedianScore = 0
     if self.LaneConfiguration is None:
         return
-    self.totalLanes = len(self.LaneConfiguration)
     new_score = calculate_score(
         self,
         [[1, 2, 4],
@@ -339,7 +339,7 @@ def aggregate_score(self, *scores, **kwargs):
 def calculate_blts(self, field_name):
     """
     this is a method field function that calculated the score for the
-    BLTSScore field
+    BLTSScore field by calling the different individual methods
     :param self: self
     :param field_name: required argument
     :return: blts score
@@ -360,6 +360,7 @@ def calculate_blts(self, field_name):
     self.leftTurnLaneScore = 0
     self.unsignalizedCrossingWithoutMedianScore = 0
     self.unsignalizedCrossingWithMedianScore = 0
+
     for approach in getattr(self, self.streetintersectionapproach):
         self.LaneConfiguration = approach.LaneConfiguration
         self.RightTurnLength = approach.RightTurnLength
@@ -368,8 +369,15 @@ def calculate_blts(self, field_name):
             self.LaneConfiguration)
         self._calculate_right_turn_lane()
         self._calculate_left_turn_lane()
-        self._calculate_unsignalized_crossing_without_median()
-        self._calculate_unsignalized_crossing_with_median()
+        if self.LaneConfiguration is not None:
+            self.totalLanes = len(self.LaneConfiguration)
+
+        intersection = approach.IntersectionID
+        if intersection.ControlType is not "Signal":
+            if approach.HasMedian is "Yes":
+                self._calculate_unsignalized_crossing_with_median()
+            else:
+                self._calculate_unsignalized_crossing_without_median()
 
     self.overallScore = self._aggregate_Score(
                 self.segmentScore,
@@ -381,7 +389,6 @@ def calculate_blts(self, field_name):
 
     print(self.overallScore)
     return self.overallScore
-
 
 # Adding functions as methods for the Segment Class
 Segment._calculate_blts = calculate_blts
