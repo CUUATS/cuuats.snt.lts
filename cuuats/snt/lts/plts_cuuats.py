@@ -131,12 +131,19 @@ def calculate_score(self, scores, *condition_sets):
     assert isinstance(score, int)
     return score
 
+def convert_feet_to_inches(feet):
+    if feet is None:
+        return 0
+    else:
+        return float(feet) / 12
+
+
 def calculate_plts(self, field_name):
     self.sidewalk_score = 0
     self.general_landuse = self.OverallLandUse
     for sidewalk in getattr(self, 'sidewalks'):
         self.sidewalk_cond = self._convert_score(sidewalk.ScoreCompliance)
-        self.sidewalk_width = sidewalk.Width / 12
+        self.sidewalk_width = self._convert_feet_to_inches(sidewalk.Width)
         self.buffer_type = sidewalk.BufferType
         self.buffer_width = sidewalk.BufferWidth
 
@@ -156,7 +163,6 @@ def calculate_plts(self, field_name):
         if self.sidewalk_score < self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
-    import pdb; pdb.set_trace()
     print(self.sidewalk_score)
     return self.sidewalk_score
 
@@ -167,6 +173,7 @@ Segment._calculate_total_buffering_width = calculate_total_buffering_width
 Segment._calculate_general_laneuse = calculate_general_landuse
 Segment._aggregate_score = aggregate_score
 Segment._convert_score = convert_score
+Segment._convert_feet_to_inches = convert_feet_to_inches
 
 Segment.sidewalks = ManyToManyField(
     "Sidewalks",
@@ -191,4 +198,4 @@ Sidewalk.register(SIDEWALK_PATH)
 if __name__ == "__main__":
     for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
         segment.PLTSScore
-        # segment.save
+        segment.save
