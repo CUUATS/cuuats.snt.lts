@@ -7,7 +7,7 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_unsignalized_crossing_with_median
 from plts_cuuats import calculate_sidewalk_conditions, \
     calculate_physical_buffer, calculate_general_landuse, \
-    calculate_total_buffering_width, convert_score
+    calculate_total_buffering_width, convert_score, convert_feet_to_inches
 
 class TestBLTS(unittest.TestCase):
     PostedSpeed = 50
@@ -409,6 +409,11 @@ class TestPLTS(unittest.TestCase):
         self.assertEqual(convert_score(80, 'Poor'))
         self.assertEqual(convert_score(70, 'Very Poor'))
         self.assertEqual(convert_score(None, 'Very Poor'))
+
+    def test_convert_feet_to_inches(self):
+        self.assertEqual(convert_feet_to_inches(12), 1)
+        self.assertEqual(convert_feet_to_inches(45), 3.75)
+        self.assertEqual(convert_feet_to_inches(None), 0)
 
 if __name__ == '__main__':
     unittest.main()
