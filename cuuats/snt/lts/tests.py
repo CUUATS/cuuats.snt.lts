@@ -7,7 +7,8 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
     calculate_unsignalized_crossing_with_median
 from plts_cuuats import calculate_sidewalk_conditions, \
     calculate_physical_buffer, calculate_general_landuse, \
-    calculate_total_buffering_width, convert_score, convert_feet_to_inches
+    calculate_total_buffering_width, convert_score, convert_feet_to_inches, \
+    calculate_total_lanes_crossed
 
 class TestBLTS(unittest.TestCase):
     PostedSpeed = 50
@@ -403,17 +404,20 @@ class TestPLTS(unittest.TestCase):
         self.assertEqual(calculate_general_landuse(self), 0)
 
     def test_convert_score(self):
-        self.assertEqual(convert_score(100), 'Good')
-        self.assertEqual(convert_score(91, 'Good'))
-        self.assertEqual(convert_score(90, 'Fair'))
-        self.assertEqual(convert_score(80, 'Poor'))
-        self.assertEqual(convert_score(70, 'Very Poor'))
-        self.assertEqual(convert_score(None, 'Very Poor'))
+        self.assertEqual(convert_score(self, 91), 'Good')
+        self.assertEqual(convert_score(self, 90), 'Good')
+        self.assertEqual(convert_score(self, 80), 'Fair')
+        self.assertEqual(convert_score(self, 70), 'Poor')
+        self.assertEqual(convert_score(self, 60), 'Very Poor')
+        self.assertEqual(convert_score(self, None), 'Very Poor')
 
     def test_convert_feet_to_inches(self):
-        self.assertEqual(convert_feet_to_inches(12), 1)
-        self.assertEqual(convert_feet_to_inches(45), 3.75)
-        self.assertEqual(convert_feet_to_inches(None), 0)
+        self.assertEqual(convert_feet_to_inches(self, 12), 1)
+        self.assertEqual(convert_feet_to_inches(self, 45), 3.75)
+        self.assertEqual(convert_feet_to_inches(self, None), 0)
+
+    def test_calculate_total_lanes_crossd(self):
+        self.assertTrue(True)
 
 if __name__ == '__main__':
     unittest.main()
