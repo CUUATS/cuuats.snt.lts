@@ -36,6 +36,7 @@ def calculate_sidewalk_conditions(self):
     self.sidewalk_condition_score = score
     return score
 
+
 def calculate_physical_buffer(self):
     score = 0
     score = calculate_score(
@@ -58,6 +59,7 @@ def calculate_physical_buffer(self):
     self.physical_buffer_score = score
     return score
 
+
 def calculate_total_buffering_width(self):
     score = calculate_score(
         self,
@@ -79,9 +81,11 @@ def calculate_total_buffering_width(self):
     self.total_buffering_width_score = score
     return score
 
+
 def calculate_general_landuse(self):
     self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
     return self.general_landuse_score
+
 
 def aggregate_score(self, *scores, **kwargs):
     """
@@ -101,16 +105,18 @@ def aggregate_score(self, *scores, **kwargs):
         score = max(score_list)
     return score
 
+
 def convert_score(self, score):
-    if score > 90:
+    if score > 80:
         score = 'Good'
-    elif score > 80:
-        score = 'Fair'
     elif score > 70:
+        score = 'Fair'
+    elif score > 60:
         score = 'Poor'
     else:
         score = 'Very Poor'
     return score
+
 
 def calculate_score(self, scores, *condition_sets):
     """
@@ -131,7 +137,8 @@ def calculate_score(self, scores, *condition_sets):
     assert isinstance(score, int)
     return score
 
-def convert_feet_to_inches(feet):
+
+def convert_feet_to_inches(self, feet):
     if feet is None:
         return 0
     else:
@@ -139,7 +146,7 @@ def convert_feet_to_inches(feet):
 
 
 def calculate_plts(self, field_name):
-    self.sidewalk_score = 0
+    self.sidewalk_score = 4
     self.general_landuse = self.OverallLandUse
     for sidewalk in getattr(self, 'sidewalks'):
         self.sidewalk_cond = self._convert_score(sidewalk.ScoreCompliance)
@@ -160,7 +167,7 @@ def calculate_plts(self, field_name):
             method="MAX"
         )
 
-        if self.sidewalk_score < self.sidewalk_overall_score:
+        if self.sidewalk_score > self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
     print(self.sidewalk_score)
@@ -196,6 +203,7 @@ Segment.register(SEGMENT_PATH)
 Sidewalk.register(SIDEWALK_PATH)
 
 if __name__ == "__main__":
-    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
-        segment.PLTSScore
-        segment.save
+    with Segment.workspace.edit():
+        for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
+            segment.PLTSScore
+            segment.save()
