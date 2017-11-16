@@ -188,7 +188,7 @@ def calculate_unsignalized_arterial_crossing_score(self):
     if self.lanecrossed <= 2:
         score = calculate_score(
             self,
-            [[2, 3, 3],
+            [[2, 2, 3],
              [2, 3, 3],
              [3, 3, 4],
              [3, 4, 4]],
