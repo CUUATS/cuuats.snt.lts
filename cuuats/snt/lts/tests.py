@@ -8,7 +8,9 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
 from plts_cuuats import calculate_sidewalk_conditions, \
     calculate_physical_buffer, calculate_general_landuse, \
     calculate_total_buffering_width, convert_score, convert_feet_to_inches, \
-    calculate_total_lanes_crossed, categorize_functional_class
+    calculate_total_lanes_crossed, categorize_functional_class, \
+    calculate_unsignalized_collector_crossing_score, \
+    calculate_unsignalized_arterial_crossing_score
 
 class TestBLTS(unittest.TestCase):
     PostedSpeed = 50
@@ -432,6 +434,25 @@ class TestPLTS(unittest.TestCase):
         self.assertEqual(categorize_functional_class(self, 3), "A")
         self.assertEqual(categorize_functional_class(self, 4), "C")
         self.assertEqual(categorize_functional_class(self, None), "C")
+
+    def test_calculate_unsignalized_collector_crossing_score(self):
+        PostedSpeed = [20, 30, 35, 40]
+        total_lanes_crossed = [1, 2]
+        score_matrix = [[1, 1],
+                        [1, 2],
+                        [2, 2],
+                        [3, 3]]
+        outer_list = []
+        inner_list = []
+        for s in PostedSpeed:
+            self.PostedSpeed = s
+            for l in total_lanes_crossed:
+                self.lanecrossed = l
+                score = calculate_unsignalized_collector_crossing_score(self)
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
 
 
 if __name__ == '__main__':
