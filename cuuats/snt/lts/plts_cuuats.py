@@ -146,10 +146,12 @@ def convert_feet_to_inches(self, feet):
 
 
 def categorize_functional_class(self, category):
-    if category <= 3:
-        return "A"
-    else:
+    if category is None:
         return "C"
+    if category >= 4:
+        return "C"
+    else:
+        return "A"
 
 
 def calculate_total_lanes_crossed(self, lane_conf):
@@ -313,4 +315,4 @@ if __name__ == "__main__":
     with Segment.workspace.edit():
         for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
             segment.PLTSScore
-            #segment.save()
+            segment.save()
