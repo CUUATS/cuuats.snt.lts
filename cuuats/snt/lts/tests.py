@@ -416,8 +416,16 @@ class TestPLTS(unittest.TestCase):
         self.assertEqual(convert_feet_to_inches(self, 45), 3.75)
         self.assertEqual(convert_feet_to_inches(self, None), 0)
 
-    def test_calculate_total_lanes_crossd(self):
-        self.assertTrue(True)
+    def test_calculate_total_lanes_crossed(self):
+        self.MarkedCenterLine = "No"
+        self.assertEqual(calculate_total_lanes_crossed(self, None), 1)
+        self.MarkedCenterLine = "No"
+        self.assertEqual(calculate_total_lanes_crossed(self, "XT"), 2)
+
+        self.MarkedCenterLine = "Yes"
+        self.assertEqual(calculate_total_lanes_crossed(self, None), 2)
+        self.MarkedCenterLine = "Yes"
+        self.assertEqual(calculate_total_lanes_crossed(self, "XXTT"), 4)
 
 if __name__ == '__main__':
     unittest.main()
