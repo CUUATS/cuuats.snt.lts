@@ -8,7 +8,7 @@ from blts_cuuats import calculate_score, calculate_mix_traffic, \
 from plts_cuuats import calculate_sidewalk_conditions, \
     calculate_physical_buffer, calculate_general_landuse, \
     calculate_total_buffering_width, convert_score, convert_feet_to_inches, \
-    calculate_total_lanes_crossed
+    calculate_total_lanes_crossed, categorize_functional_class
 
 class TestBLTS(unittest.TestCase):
     PostedSpeed = 50
@@ -426,6 +426,13 @@ class TestPLTS(unittest.TestCase):
         self.assertEqual(calculate_total_lanes_crossed(self, None), 2)
         self.MarkedCenterLine = "Yes"
         self.assertEqual(calculate_total_lanes_crossed(self, "XXTT"), 4)
+
+    def test_categorized_functional_class(self):
+        self.assertEqual(categorize_functional_class(self, 1), "A")
+        self.assertEqual(categorize_functional_class(self, 3), "A")
+        self.assertEqual(categorize_functional_class(self, 4), "C")
+        self.assertEqual(categorize_functional_class(self, None), "C")
+
 
 if __name__ == '__main__':
     unittest.main()
