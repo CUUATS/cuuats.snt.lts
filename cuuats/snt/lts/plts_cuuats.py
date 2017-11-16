@@ -145,14 +145,113 @@ def convert_feet_to_inches(self, feet):
         return float(feet) / 12
 
 
+def categorize_functional_class(self, category):
+    if category <= 3:
+        return "A"
+    else:
+        return "C"
+
+
+def calculate_total_lanes_crossed(self, lane_conf):
+    if self.MarkedCenterLine == "No" and lane_conf is None:
+        return 1
+    elif self.MarkedCenterLine == "Yes" and lane_conf is None:
+        return 2
+    elif lane_conf is None:
+        return 2
+    else:
+        return len(lane_conf)
+
+
+def calculate_unsignalized_collector_crossing_score(self):
+    score = 0
+    score = calculate_score(
+        self,
+        [[1, 1],
+         [1, 2],
+         [2, 2],
+         [3, 3]],
+        ['self.PostedSpeed <= 25',
+         'self.PostedSpeed == 30',
+         'self.PostedSpeed == 35',
+         'True'],
+        ['self.lanecrossed <= 1',
+         'True']
+    )
+    return score
+
+
+def calculate_unsignalized_arterial_crossing_score(self):
+    score = 0
+    if self.lanecrossed <= 2:
+        score = calculate_score(
+            self,
+            [[2, 3, 3],
+             [2, 3, 3],
+             [3, 3, 4],
+             [3, 4, 4]],
+            ['self.PostedSpeed <= 25',
+             'self.PostedSpeed == 30',
+             'self.PostedSpeed == 35',
+             'True'],
+            ['self.IDOTAADT < 5000',
+             'self.IDOTAADT < 9000',
+             'True']
+        )
+    else:
+        score = calculate_score(
+            self,
+            [[3, 3, 4],
+             [3, 3, 4],
+             [3, 4, 4],
+             [4, 4, 4]],
+            ['self.PostedSpeed <= 25',
+             'self.PostedSpeed == 30',
+             'self.PostedSpeed == 35',
+             'True'],
+            ['self.IDOTAADT < 8000',
+             'self.IDOTAADT < 12000',
+             'True']
+        )
+    return score
+
+
+def calculate_crossing_score(self):
+    self.unsignalized_arterial_crossing_score = 0
+    self.unsignalized_collector_crossing_score = 0
+
+    if self._categorize_functional_class(self.FunctionalClassification) == "A":
+        temp_score = self._calculate_unsignalized_arterial_crossing_score()
+        if temp_score > self.unsignalized_arterial_crossing_score:
+            self.unsignalized_arterial_crossing_score = temp_score
+    else:
+        temp_score = self._calculate_unsignalized_collector_crossing_score()
+        if temp_score > self.unsignalized_collector_crossing_score:
+            self.unsignalized_collector_crossing_score = temp_score
+
+
+
 def calculate_plts(self, field_name):
     self.sidewalk_score = 4
     self.general_landuse = self.OverallLandUse
+
+    # find score with approach attributes
+    self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
+    for approach in getattr(self, self.streetintersectionapproach):
+        # grabbing the attributes from approach
+        self.LaneConfiguration = approach.LaneConfiguration
+        self.lanecrossed = self._calculate_total_lane_crossed(
+            self.LaneConfiguration)
+        # do calculation
+        self._calculate_crossing_score()
+
+    # find score with sidewalk attributes
     for sidewalk in getattr(self, 'sidewalks'):
         self.sidewalk_cond = self._convert_score(sidewalk.ScoreCompliance)
         self.sidewalk_width = self._convert_feet_to_inches(sidewalk.Width)
         self.buffer_type = sidewalk.BufferType
         self.buffer_width = sidewalk.BufferWidth
+
 
         self._calculate_sidewalk_condition()
         self._calculate_physical_buffer()
@@ -164,12 +263,15 @@ def calculate_plts(self, field_name):
             self.physical_buffer_score,
             self.total_buffering_width_score,
             self.general_landuse_score,
+            self.unsignalized_arterial_crossing_score,
+            self.unsignalized_collector_crossing_score,
             method="MAX"
         )
 
         if self.sidewalk_score > self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
+    import pdb; pdb.set_trace()
     print(self.sidewalk_score)
     return self.sidewalk_score
 
@@ -181,6 +283,13 @@ Segment._calculate_general_laneuse = calculate_general_landuse
 Segment._aggregate_score = aggregate_score
 Segment._convert_score = convert_score
 Segment._convert_feet_to_inches = convert_feet_to_inches
+Segment._categorize_functional_class = categorize_functional_class
+Segment._calculate_crossing_score = calculate_crossing_score
+Segment._calculate_unsignalized_collector_crossing_score = \
+    calculate_unsignalized_collector_crossing_score
+Segment._calculate_unsignalized_arterial_crossing_score = \
+    calculate_unsignalized_arterial_crossing_score
+Segment._calculate_total_lane_crossed = calculate_total_lanes_crossed
 
 Segment.sidewalks = ManyToManyField(
     "Sidewalks",
