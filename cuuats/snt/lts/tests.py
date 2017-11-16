@@ -454,6 +454,51 @@ class TestPLTS(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
+    def test_calculate_unsignalized_arterial_crossing_score(self):
+        lanescrossed = [2, 3]
+        for l in lanescrossed:
+            self.lanecrossed = l
+            if self.lanecrossed == 2:
+                PostedSpeed = [20, 30, 35, 40]
+                AADT = [1100, 6000, 10000]
+                score_matrix = [[2, 2, 3],
+                                [2, 3, 3],
+                                [3, 3, 4],
+                                [3, 4, 4]]
+
+                outer_list = []
+                inner_list = []
+                for s in PostedSpeed:
+                    self.PostedSpeed = s
+                    for a in AADT:
+                        self.IDOTAADT = a
+                        score = calculate_unsignalized_arterial_crossing_score(
+                            self)
+                        inner_list.append(score)
+                    outer_list.append(inner_list)
+                    inner_list = []
+                self.assertEqual(outer_list, score_matrix)
+            else:
+                PostedSpeed = [20, 30, 35, 40]
+                AADT = [4000, 9000, 30000]
+                score_matrix = [[3, 3, 4],
+                                [3, 3, 4],
+                                [3, 4, 4],
+                                [4, 4, 4]]
+
+                outer_list = []
+                inner_list = []
+                for s in PostedSpeed:
+                    self.PostedSpeed = s
+                    for a in AADT:
+                        self.IDOTAADT = a
+                        score = calculate_unsignalized_arterial_crossing_score(
+                            self)
+                        inner_list.append(score)
+                    outer_list.append(inner_list)
+                    inner_list = []
+                self.assertEqual(outer_list, score_matrix)
+
 
 if __name__ == '__main__':
     unittest.main()
