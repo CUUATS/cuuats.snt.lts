@@ -217,9 +217,6 @@ def calculate_unsignalized_arterial_crossing_score(self):
 
 
 def calculate_crossing_score(self):
-    self.unsignalized_arterial_crossing_score = 0
-    self.unsignalized_collector_crossing_score = 0
-
     if self._categorize_functional_class(self.FunctionalClassification) == "A":
         temp_score = self._calculate_unsignalized_arterial_crossing_score()
         if temp_score > self.unsignalized_arterial_crossing_score:
@@ -236,6 +233,8 @@ def calculate_plts(self, field_name):
     self.general_landuse = self.OverallLandUse
 
     # find score with approach attributes
+    self.unsignalized_arterial_crossing_score = 0
+    self.unsignalized_collector_crossing_score = 0
     self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
     for approach in getattr(self, self.streetintersectionapproach):
         # grabbing the attributes from approach
@@ -271,7 +270,6 @@ def calculate_plts(self, field_name):
         if self.sidewalk_score > self.sidewalk_overall_score:
             self.sidewalk_score = self.sidewalk_overall_score
 
-    import pdb; pdb.set_trace()
     print(self.sidewalk_score)
     return self.sidewalk_score
 
@@ -315,4 +313,4 @@ if __name__ == "__main__":
     with Segment.workspace.edit():
         for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
             segment.PLTSScore
-            segment.save()
+            #segment.save()
