@@ -3,13 +3,13 @@
 
 from cuuats.datamodel import feature_class_factory as factory, MethodField
 from cuuats.datamodel import D
-from config import SDE_DB, APPROACH_NAME
+from config import SDE_DB, APPROACH_NAME, SEGMENT_NAME, INTERSECTION_NAME
 import os
 
 APPROACH_PATH = os.path.join(SDE_DB, APPROACH_NAME)
 Approach = factory(APPROACH_PATH, follow_relationships=True)
-Segment = Approach.related_classes['PCD.PCDQC.StreetSegment']
-Intersection = Approach.related_classes['PCD.PCDQC.StreetIntersection']
+Segment = Approach.related_classes[SEGMENT_NAME]
+Intersection = Approach.related_classes[INTERSECTION_NAME]
 
 
 def calculate_bikelane_with_adj_parking(self):
@@ -223,7 +223,6 @@ def calculate_unsignalized_crossing_without_median(self):
     if self.unsignalizedCrossingWithoutMedianScore < new_score:
         self.unsignalizedCrossingWithoutMedianScore = new_score
 
-    self.unsignalizedCrossingWithoutMedianScore = new_score
     return self.unsignalizedCrossingWithoutMedianScore
 
 
@@ -234,9 +233,9 @@ def calculate_unsignalized_crossing_with_median(self):
     :param self: self
     :return: int score
     """
+    self.unsignalizedCrossingWithMedianScore = 0
     if self.LaneConfiguration is None:
         return
-    self.maxLane = self._calculate_MaxLane(self.LaneConfiguration)
 
     new_score = calculate_score(
         self,
@@ -354,7 +353,7 @@ def calculate_blts(self, field_name):
                 self.mixTrafficScore,
                 method="MIN")
 
-    # Loop through score required approaches
+    # Loop through approach for rtl, ltl, crossing
     self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
     self.rightTurnLaneScore = 0
     self.leftTurnLaneScore = 0
@@ -369,8 +368,10 @@ def calculate_blts(self, field_name):
             self.LaneConfiguration)
         self._calculate_right_turn_lane()
         self._calculate_left_turn_lane()
+
         if self.LaneConfiguration is not None:
             self.totalLanes = len(self.LaneConfiguration)
+            self.maxLane = self._calculate_MaxLane(self.LaneConfiguration)
 
         intersection = approach.IntersectionID
         if intersection.ControlType is not "Signal":
@@ -378,6 +379,7 @@ def calculate_blts(self, field_name):
                 self._calculate_unsignalized_crossing_with_median()
             else:
                 self._calculate_unsignalized_crossing_without_median()
+
 
     self.overallScore = self._aggregate_Score(
                 self.segmentScore,
@@ -418,6 +420,7 @@ Segment.BLTSScore = MethodField(
 Approach.register(APPROACH_PATH)
 
 if __name__ == "__main__":
-    for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
-        segment.BLTSScore
-        # segment.save()
+    with Approach.workspace.edit():
+        for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
+            segment.BLTSScore
+            segment.save()
