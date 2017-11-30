@@ -83,7 +83,8 @@ def calculate_total_buffering_width(self):
 
 
 def calculate_general_landuse(self):
-    self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
+    self.general_landuse_score = int(self.OverallLandUse)
+    #self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
     return self.general_landuse_score
 
 
@@ -229,10 +230,8 @@ def calculate_crossing_score(self):
             self.unsignalized_collector_crossing_score = temp_score
 
 
-
 def calculate_plts(self, field_name):
     self.sidewalk_score = 4
-    self.general_landuse = self.OverallLandUse
 
     # find score with approach attributes
     self.unsignalized_arterial_crossing_score = 0
