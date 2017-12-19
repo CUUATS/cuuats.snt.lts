@@ -4,6 +4,7 @@
 from cuuats.datamodel import feature_class_factory as factory, MethodField
 from cuuats.datamodel import D
 from config import SDE_DB, APPROACH_NAME, SEGMENT_NAME, INTERSECTION_NAME
+import config as c
 import os
 
 APPROACH_PATH = os.path.join(SDE_DB, APPROACH_NAME)
@@ -25,10 +26,7 @@ def calculate_bikelane_with_adj_parking(self):
         if self.LanesPerDirection is 1 or self.LanesPerDirection is None:
             score = calculate_score(
                 self,
-                [[1, 2, 3],
-                 [1, 2, 3],
-                 [2, 3, 3],
-                 [2, 4, 4]],
+                c.BL_ADJ_PK_TABLE_ONE_LANE,
                 ['self.IDOTAADT <= 1000 or self.IDOTAADT is None',
                  'self.IDOTAADT <= 3000',
                  'self.IDOTAADT <= 30000',
@@ -39,11 +37,7 @@ def calculate_bikelane_with_adj_parking(self):
         else:
             score = calculate_score(
                 self,
-                [[2, 3],
-                 [2, 3],
-                 [3, 3],
-                 [3, 4]],
-
+                c.BL_ADJ_PK_TABLE_TWO_LANES,
                 ['self.IDOTAADT <= 1000 or self.IDOTAADT is None',
                  'self.IDOTAADT <= 3000',
                  'self.IDOTAADT <= 30000',
@@ -69,9 +63,7 @@ def calculate_bikelane_without_adj_parking(self):
         if self.LanesPerDirection is 1 or self.LanesPerDirection is None:
             score = calculate_score(
                 self,
-                [[1, 1, 2],
-                 [2, 3, 3],
-                 [3, 4, 4]],
+                c.BL_NO_ADJ_PK_TABLE_ONE_LANE,
                 ['self.IDOTAADT <= 3000 or self.IDOTAADT is None',
                  'self.IDOTAADT <= 30000',
                  'True'],
@@ -81,9 +73,7 @@ def calculate_bikelane_without_adj_parking(self):
         else:
             score = calculate_score(
                 self,
-                [[1, 3],
-                 [2, 3],
-                 [3, 4]],
+                c.BL_NO_ADJ_PK_TABLE_TWO_LANES,
                 ['self.IDOTAADT <= 3000 or self.IDOTAADT is None',
                  'self.IDOTAADT <= 30000',
                  'True'],
@@ -104,9 +94,7 @@ def calculate_mix_traffic(self):
     score = 0
     score = calculate_score(
         self,
-        [[1, 2, 3, 4],
-         [2, 3, 4, 4],
-         [3, 4, 4, 4]],
+        c.MIXED_TRAF_TABLE,
         ['self.IDOTAADT <= 1000',
          'self.IDOTAADT <= 3000',
          'True'],
@@ -133,7 +121,7 @@ def calculate_right_turn_lane(self):
 
         new_score = calculate_score(
             self,
-            [2, 3, 3, 4],
+            c.RTL_CRIT_TABLE,
             ['"R" in self.LaneConfiguration and \
              self.RightTurnLength <= 150 and \
              self.BikeApproachAlignment is "Straight"',
@@ -167,7 +155,7 @@ def calculate_left_turn_lane(self):
        "L" in self.LaneConfiguration:
         new_score = calculate_score(
             self,
-            [4, 4, 4],
+            c.LTL_DUAL_SHARED_TABLE,
             ['self.PostedSpeed <= 25',
              'self.PostedSpeed == 30',
              'self.PostedSpeed >= 35'])
@@ -176,10 +164,7 @@ def calculate_left_turn_lane(self):
     else:
         new_score = calculate_score(
             self,
-            [[2, 2, 3],
-             [2, 3, 4],
-             [3, 4, 4]],
-
+            c.LTL_CRIT_TABLE,
             ['self.PostedSpeed <= 25',
              'self.PostedSpeed == 30',
              'self.PostedSpeed >= 35'],
@@ -206,11 +191,7 @@ def calculate_unsignalized_crossing_without_median(self):
         return
     new_score = calculate_score(
         self,
-        [[1, 2, 4],
-         [1, 2, 4],
-         [2, 3, 4],
-         [3, 4, 4]],
-
+        c.CROSSING_NO_MED_TABLE,
         ['self.PostedSpeed <= 25',
          'self.PostedSpeed == 30',
          'self.PostedSpeed == 35',
@@ -239,11 +220,7 @@ def calculate_unsignalized_crossing_with_median(self):
 
     new_score = calculate_score(
         self,
-        [[1, 1, 2],
-         [1, 2, 3],
-         [2, 3, 4],
-         [3, 4, 4]],
-
+        c.CROSSING_HAS_MED_TABLE,
         ['self.PostedSpeed <= 25',
          'self.PostedSpeed == 30',
          'self.PostedSpeed == 35',
