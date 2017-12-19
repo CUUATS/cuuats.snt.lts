@@ -64,6 +64,29 @@ def calculate_bicycle_facility(self):
     return self.bicycle_facility_score
 
 
+def calculate_land_use(self):
+    """
+    calculate the land used score based on PLTS land use score
+    :param self: 
+    :return: 
+    """
+    self.land_use_score = 0
+    if int(self.OverallLandUse) == 0:
+        return 0
+
+    score = calculate_score(
+        self,
+        [1, 2, 3, 4],
+        ['int(self.OverallLandUse) == 3',
+         'int(self.OverallLandUse) == 2',
+         'int(self.OverallLandUse) == 1',
+         'int(self.OverallLandUse) == 4']
+    )
+
+    self.land_use_score = score
+    return score
+
+
 def calculate_score(self, scores, *condition_sets):
     """
     this function takes the scores and condition_sets and return the score
@@ -86,11 +109,12 @@ def calculate_score(self, scores, *condition_sets):
 
 def calculate_alts(self, field_name):
     self._calculate_bicycle_facility()
+    self._calculate_land_use()
     self.overallScore = self._aggregate_score(
         self.bicycle_facility_score,
+        self.land_use_score,
         method="MAX"
     )
-
     print(self.overallScore)
     return self.overallScore
 
@@ -98,6 +122,7 @@ def calculate_alts(self, field_name):
 Segment._aggregate_score = aggregate_score
 Segment._calculate_alts = calculate_alts
 Segment._calculate_bicycle_facility = calculate_bicycle_facility
+Segment._calculate_land_use = calculate_land_use
 
 Segment.ALTSScore = MethodField(
     'ALTS Score',
@@ -110,4 +135,3 @@ if __name__ == "__main__":
         for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
             segment.ALTSScore
             segment.save()
-            
