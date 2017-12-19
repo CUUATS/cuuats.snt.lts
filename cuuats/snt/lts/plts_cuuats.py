@@ -4,7 +4,8 @@
 from cuuats.datamodel import feature_class_factory as factory, MethodField
 from cuuats.datamodel import D
 from cuuats.datamodel.manytomany import ManyToManyField
-from config import SDE_DB, SEGMENT_NAME, SIDEWALK_NAME, REL_NAME, LANDUSE_DICT
+from config import SDE_DB, SEGMENT_NAME, SIDEWALK_NAME, REL_NAME
+import config as c
 import os
 
 
@@ -19,10 +20,7 @@ def calculate_sidewalk_conditions(self):
     score = 0
     score = calculate_score(
         self,
-        [[4, 4, 4, 4],
-         [3, 3, 3, 4],
-         [2, 2, 3, 4],
-         [1, 1, 2, 3]],
+        c.SW_COND_TABLE,
         ['self.sidewalk_width < 4',
          'self.sidewalk_width < 5',
          'self.sidewalk_width < 6',
@@ -41,10 +39,7 @@ def calculate_physical_buffer(self):
     score = 0
     score = calculate_score(
         self,
-        [[2, 3, 3, 4],
-         [2, 2, 2, 2],
-         [1, 2, 2, 2],
-         [1, 1, 1, 2]],
+        c.BUFFER_TYPE_TABLE,
         ['self.buffer_type == "No Buffer"',
          'self.buffer_type == "Solid Buffer"',
          'self.buffer_type == "Landscaped"',
@@ -63,10 +58,7 @@ def calculate_physical_buffer(self):
 def calculate_total_buffering_width(self):
     score = calculate_score(
         self,
-        [[2, 2, 1, 1, 1],
-         [3, 2, 2, 1, 1],
-         [4, 3, 2, 1, 1],
-         [4, 4, 3, 2, 2]],
+        c.BUFFER_WIDTH_TABLE,
         ['self.TotalLanes <= 2',
          'self.TotalLanes == 3',
          'self.TotalLanes <= 5',
@@ -84,7 +76,8 @@ def calculate_total_buffering_width(self):
 
 def calculate_general_landuse(self):
     self.general_landuse_score = int(self.OverallLandUse)
-    #self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
+    # data structure for landuse is stored as the exact value
+    # self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
     return self.general_landuse_score
 
 
@@ -108,11 +101,11 @@ def aggregate_score(self, *scores, **kwargs):
 
 
 def convert_score(self, score):
-    if score > 80:
+    if score > 70:
         score = 'Good'
-    elif score > 70:
-        score = 'Fair'
     elif score > 60:
+        score = 'Fair'
+    elif score > 50:
         score = 'Poor'
     else:
         score = 'Very Poor'
