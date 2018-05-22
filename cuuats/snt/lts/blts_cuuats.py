@@ -13,6 +13,14 @@ Segment = Approach.related_classes[SEGMENT_NAME]
 Intersection = Approach.related_classes[INTERSECTION_NAME]
 
 
+def calculate_shared_path(self):
+    if self.BicycleFacilityType == "Shared-Use Path":
+        self.shared_use_path_score = 1
+    else:
+        self.shared_use_path_score = 0
+    # print('shared use path score: ' + str(self.shared_use_path_score))
+    return 1
+
 def calculate_bikelane_with_adj_parking(self):
     """
     This function calculates the score of bike lane with adjacent parking
@@ -48,6 +56,7 @@ def calculate_bikelane_with_adj_parking(self):
                  'True'])
 
     self.bikeLaneWithAdjPkScore = score
+
     return score
 
 
@@ -81,6 +90,7 @@ def calculate_bikelane_without_adj_parking(self):
                  'True'])
 
     self.bikeLaneWithoutAdjPkScore = score
+
     return score
 
 
@@ -103,6 +113,7 @@ def calculate_mix_traffic(self):
          'self.LanesPerDirection == 2',
          'self.LanesPerDirection >= 3'])
 
+
     self.mixTrafficScore = score
     return score
 
@@ -113,8 +124,8 @@ def calculate_right_turn_lane(self):
     :param self: self
     :return: int score
     """
-    self.rightTurnLaneScore = 0
-    if self.LaneConfiguration is None:
+    # self.rightTurnLaneScore = 0
+    if self.LaneConfiguration is None or self.FunctionalClassification is None:
         return 0
     if "R" in self.LaneConfiguration or \
        "Q" in self.LaneConfiguration:
@@ -138,6 +149,7 @@ def calculate_right_turn_lane(self):
         if self.rightTurnLaneScore < new_score:
             self.rightTurnLaneScore = new_score
 
+
     return self.rightTurnLaneScore
 
 
@@ -147,8 +159,8 @@ def calculate_left_turn_lane(self):
     :param self: self
     :return: int score
     """
-    self.leftTurnLaneScore = 0
-    if self.LaneConfiguration is None:
+    # self.leftTurnLaneScore = 0
+    if self.LaneConfiguration is None or self.FunctionalClassification is None:
         return 0
 
     if "K" in self.LaneConfiguration or \
@@ -176,6 +188,7 @@ def calculate_left_turn_lane(self):
         if self.leftTurnLaneScore < new_score:
             self.leftTurnLaneScore = new_score
 
+    # print('left turn lane: ' + str(self.leftTurnLaneScore))
     return self.leftTurnLaneScore
 
 
@@ -321,6 +334,7 @@ def calculate_blts(self, field_name):
     :return: blts score
     """
     # Segment condition scores
+    self._calculate_shared_path()
     self._calculate_mix_traffic()
     self._calculate_bikelane_without_adj_parking()
     self._calculate_bikelane_with_adj_parking()
@@ -329,6 +343,7 @@ def calculate_blts(self, field_name):
                 self.bikeLaneWithoutAdjPkScore,
                 self.mixTrafficScore,
                 method="MIN")
+    # print('segment Score: ' + str(self.segmentScore))
 
     # Loop through approach for rtl, ltl, crossing
     self.streetintersectionapproach = "pcd.pcdqc.streetintersectionapproach_set"
@@ -337,14 +352,21 @@ def calculate_blts(self, field_name):
     self.unsignalizedCrossingWithoutMedianScore = 0
     self.unsignalizedCrossingWithMedianScore = 0
 
+
     for approach in getattr(self, self.streetintersectionapproach):
         self.LaneConfiguration = approach.LaneConfiguration
         self.RightTurnLength = approach.RightTurnLength
         self.BikeApproachAlignment = approach.BikeApproachAlignment
         self.lanecrossed = self._calculate_Lanecrossed(
             self.LaneConfiguration)
-        self._calculate_right_turn_lane()
-        self._calculate_left_turn_lane()
+
+    # this checks for condition to ignore turn lanes
+        if self.IDOTAADT is not None and self.IDOTAADT > 10000:
+            self._calculate_right_turn_lane()
+            self._calculate_left_turn_lane()
+        elif self.IDOTAADT is None and self.FunctionalClassification in [1, 2, 3, 4]:
+            self._calculate_right_turn_lane()
+            self._calculate_left_turn_lane()
 
         if self.LaneConfiguration is not None:
             self.totalLanes = len(self.LaneConfiguration)
@@ -358,6 +380,17 @@ def calculate_blts(self, field_name):
                 self._calculate_unsignalized_crossing_without_median()
 
 
+    print("--debug--")
+    print('bikelane with adj park: ' + str(self.bikeLaneWithAdjPkScore))
+    print('bikelane without adj park: ' + str(self.bikeLaneWithoutAdjPkScore))
+    print('mix traffic: ' + str(self.mixTrafficScore))
+    print("segmentScore: " + str(self.segmentScore))
+    print("RTL: " + str(self.rightTurnLaneScore))
+    print("LTL: " + str(self.leftTurnLaneScore))
+    print("unsignalized without median: " + str(self.unsignalizedCrossingWithoutMedianScore))
+    print("unsignalized with median: " + str(
+        self.unsignalizedCrossingWithMedianScore))
+    
     self.overallScore = self._aggregate_Score(
                 self.segmentScore,
                 self.rightTurnLaneScore,
@@ -366,7 +399,11 @@ def calculate_blts(self, field_name):
                 self.unsignalizedCrossingWithMedianScore,
                 method="MAX")
 
-    print(self.overallScore)
+    if self.shared_use_path_score == 1:
+        self.overallScore = 1
+
+    print('ObjectId: ' + str(self.OBJECTID) + ' final score: ' + str(
+        self.overallScore))
     return self.overallScore
 
 # Adding functions as methods for the Segment Class
@@ -385,6 +422,7 @@ Segment._calculate_unsignalized_crossing_without_median = \
 Segment._calculate_unsignalized_crossing_with_median = \
     calculate_unsignalized_crossing_with_median
 Segment._calculate_MaxLane = calculate_max_lane
+Segment._calculate_shared_path = calculate_shared_path
 
 
 # Override the BLTSScore field with a method field.
@@ -399,5 +437,5 @@ Approach.register(APPROACH_PATH)
 if __name__ == "__main__":
     with Approach.workspace.edit():
         for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
-            segment.BLTSScore
+            # segment.BLTSScore
             segment.save()
