@@ -325,6 +325,12 @@ def aggregate_score(self, *scores, **kwargs):
     return score
 
 
+def calculate_highway_score(self):
+    if self.FunctionalClassification == 'Interstate':
+        self.segmentScore = 4
+    return self.segmentScore
+
+
 def calculate_blts(self, field_name):
     """
     this is a method field function that calculated the score for the
@@ -343,6 +349,7 @@ def calculate_blts(self, field_name):
                 self.bikeLaneWithoutAdjPkScore,
                 self.mixTrafficScore,
                 method="MIN")
+    self._calculate_highway_score()
     # print('segment Score: ' + str(self.segmentScore))
 
     # Loop through approach for rtl, ltl, crossing
@@ -423,6 +430,7 @@ Segment._calculate_unsignalized_crossing_with_median = \
     calculate_unsignalized_crossing_with_median
 Segment._calculate_MaxLane = calculate_max_lane
 Segment._calculate_shared_path = calculate_shared_path
+Segment._calculate_highway_score = calculate_highway_score
 
 
 # Override the BLTSScore field with a method field.
@@ -436,6 +444,7 @@ Approach.register(APPROACH_PATH)
 
 if __name__ == "__main__":
     with Approach.workspace.edit():
-        for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
-            # segment.BLTSScore
-            segment.save()
+        # for segment in Segment.objects.filter(InUrbanizedArea=D('Yes')):
+        for segment in Segment.objects.filter(OBJECTID=1):
+            segment.BLTSScore
+            # segment.save()
