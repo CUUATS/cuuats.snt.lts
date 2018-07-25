@@ -16,7 +16,7 @@ class Lts:
         """
         score = scores
         for condition_set in condition_sets:
-            # assert len(score) == len(condition_set)
+            assert len(score) == len(condition_set)
             for index, condition in enumerate(condition_set):
                 if eval(condition):
                     score = score[index]
