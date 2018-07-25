@@ -41,3 +41,6 @@ class Lts:
         elif method == "MAX":
             score = max(score_list)
         return score
+
+    def _get_high_score(self, *scores):
+        return 

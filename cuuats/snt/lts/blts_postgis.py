@@ -1,47 +1,48 @@
 ## postgis blts class
 from cuuats.snt.lts.lts_postgis import Lts
+from cuuats.snt.lts.Segment import Segment
+from cuuats.snt.lts.Approach import Approach
 from cuuats.snt.lts import config as c
 
 class Blts(Lts):
     def __init__(self, **kwargs):
-        self.bicycle_facility_type = kwargs.get('bicycle_facility_type')
-        self.bicycle_facility_width = kwargs.get('bicycle_facility_width')
-        self.lanes_per_direction = kwargs.get('lanes_per_direction')
-        self.parking_lane_width = kwargs.get('parking_lane_width')
-        self.aadt = self._remove_none(kwargs.get('aadt'))
-
+        self.segment = kwargs.get('segment')
+        self.approaches = []
+        for a in kwargs.get('approaches'):
+            self.approaches.append(a)
         self.bike_lane_with_adj_parking_score = 0
         self.bike_lane_without_adj_parking_score = 0
+        self.right_turn_lane_score = 0
         self.mix_traffic_score = 0
         self.blts_score = 0
 
     def _remove_none(self, value):
         if value is None:
             value = 0
-        return value
+        return(value)
 
     def _calculate_bikelane_with_adj_parking(self):
         score = 0
-        if self.bicycle_facility_width is not None and \
-            self.parking_lane_width is not None:
-            if self.lanes_per_direction is 1 or self.lanes_per_direction is None:
+        if self.segment.bicycle_facility_width is not None and \
+            self.segment.parking_lane_width is not None:
+            if self.segment.lanes_per_direction is 1 or self.segment.lanes_per_direction is None:
                 score = self._calculate_score(
                     c.BL_ADJ_PK_TABLE_ONE_LANE,
-                    ['self.aadt <= 1000',
-                     'self.aadt <= 3000',
-                     'self.aadt <= 30000',
+                    ['self.segment.aadt <= 1000',
+                     'self.segment.aadt <= 3000',
+                     'self.segment.aadt <= 30000',
                      'True'],
-                    ['self.bicycle_facility_width + self.parking_lane_width >= 15',
-                     'self.bicycle_facility_width + self.parking_lane_width > 13',
+                    ['self.segment.bicycle_facility_width + self.segment.parking_lane_width >= 15',
+                     'self.segment.bicycle_facility_width + self.segment.parking_lane_width > 13',
                      'True'])
             else:
                 score = self._calculate_score(
                     c.BL_ADJ_PK_TABLE_TWO_LANES,
-                    ['self.aadt <= 1000',
-                     'self.aadt <= 3000',
-                     'self.aadt <= 30000',
+                    ['self.segment.aadt <= 1000',
+                     'self.segment.aadt <= 3000',
+                     'self.segment.aadt <= 30000',
                      'True'],
-                    ['self.bicycle_facility_width + self.parking_lane_width >= 15',
+                    ['self.segment.bicycle_facility_width + self.segment.parking_lane_width >= 15',
                      'True'])
 
         self.bike_lane_with_adj_parking_score = score
@@ -55,23 +56,23 @@ class Blts(Lts):
         :return: int score
         """
         score = 0
-        if self.bicycle_facility_width is not None:
-            if self.lanes_per_direction is 1 or self.lanes_per_direction is None:
+        if self.segment.bicycle_facility_width is not None:
+            if self.segment.lanes_per_direction is 1 or self.segment.lanes_per_direction is None:
                 score = self._calculate_score(
                     c.BL_NO_ADJ_PK_TABLE_ONE_LANE,
-                    ['self.aadt <= 3000',
-                     'self.aadt <= 30000',
+                    ['self.segment.aadt <= 3000',
+                     'self.segment.aadt <= 30000',
                      'True'],
-                    ['self.bicycle_facility_width >= 7',
-                     'self.bicycle_facility_width >= 5.5',
+                    ['self.segment.bicycle_facility_width >= 7',
+                     'self.segment.bicycle_facility_width >= 5.5',
                      'True'])
             else:
                 score = self._calculate_score(
                     c.BL_NO_ADJ_PK_TABLE_TWO_LANES,
-                    ['self.aadt <= 3000',
-                     'self.aadt <= 30000',
+                    ['self.segment.aadt <= 3000',
+                     'self.segment.aadt <= 30000',
                      'True'],
-                    ['self.bicycle_facility_width >= 7',
+                    ['self.segment.bicycle_facility_width >= 7',
                      'True'])
 
         self.bike_lane_without_adj_parking_score = score
@@ -87,16 +88,44 @@ class Blts(Lts):
         score = 0
         score = self._calculate_score(
             c.MIXED_TRAF_TABLE,
-            ['self.aadt <= 1000',
-             'self.aadt <= 3000',
+            ['self.segment.aadt <= 1000',
+             'self.segment.aadt <= 3000',
              'True'],
-            ['self.lanes_per_direction in (0, None)',
-             'self.lanes_per_direction == 1',
-             'self.lanes_per_direction == 2',
-             'self.lanes_per_direction >= 3'])
+            ['self.segment.lanes_per_direction in (0, None)',
+             'self.segment.lanes_per_direction == 1',
+             'self.segment.lanes_per_direction == 2',
+             'self.segment.lanes_per_direction >= 3'])
 
         self.mix_traffic_score = score
         return(score)
+
+    def _calculate_right_turn_lane(self):
+        score = 0
+        for approach in self.approaches:
+            self.approach = approach
+            if self.approach.lane_configuration is None or \
+                self.segment.functional_class is None:
+                return score
+            if "R" in self.approach.lane_configuration or \
+               "Q" in self.approach.lane_configuration:
+               print('right')
+               score = self._calculate_score(
+                    c.RTL_CRIT_TABLE,
+                    ['"R" in self.approach.lane_configuration and \
+                     self.approach.right_turn_lane_length <= 150 and \
+                     self.approach.bike_lane_approach is "Straight"',
+
+                     '"R" in self.approach.lane_configuration and \
+                     self.approach.right_turn_lane_length > 150 and \
+                     self.approach.bike_lane_approach is "Straight"',
+
+                     '"R" in self.approach.lane_configuration and \
+                     self.approach.bike_lane_approach is "Left"',
+
+                     'True']
+               )
+               self.right_turn_lane_score = max(self.right_turn_lane_score, score)
+               return(score)
 
 
     def calculate_blts(self):
@@ -109,14 +138,30 @@ class Blts(Lts):
             self.mix_traffic_score,
             method = "MIN"
         )
+        self._calculate_right_turn_lane()
         self.blts_score = self._aggregate_score(
+            self.right_turn_lane_score,
             self.segment_score,
             method = "MAX"
         )
         return(self.blts_score)
 
 
-
-blts = Blts(bicycle_facility_width = 6, lanes_per_direction = 1, parking_lane_width = 1, aadt = None)
-blts.calculate_blts()
-print(blts.segment_score)
+if __name__ == '__main__':
+    segment = Segment(bicycle_facility_width = 6,
+                        lanes_per_direction = 1,
+                        parking_lane_width = 1,
+                        aadt = None,
+                        functional_class = 'Major')
+    approaches = [Approach(lane_configuration = "XXTR",
+                          right_turn_lane_length = 50,
+                          right_turn_lane_config = "Single",
+                          bike_lane_approach = "Straight"),
+                 Approach(lane_configuration = "XXTRR",
+                           right_turn_lane_length = 151,
+                           right_turn_lane_config = "Dual",
+                           bike_lane_approach = "Left")]
+    blts = Blts(segment=segment, approaches = approaches)
+    blts.calculate_blts()
+    print(blts.segment_score)
+    import pdb; pdb.set_trace()
