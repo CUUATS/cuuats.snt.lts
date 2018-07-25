@@ -7,7 +7,8 @@ class Approach(object):
         self.right_turn_lane_config = kwargs.get('right_turn_lane_config')
         self.bike_lane_approach = kwargs.get('bike_lane_approach')
         self.lanes_crossed = self._calculate_lanes_crossed(self.lane_configuration)
-
+        self.max_lane = self._calculate_max_lane(self.lane_configuration)
+        self.total_lanes = len(self.lane_configuration)
 
     def _calculate_max_lane(self, lane_config):
         """

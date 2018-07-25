@@ -14,8 +14,10 @@ class Blts(Lts):
         # for i in kwargs.get('intersections'):
         #     self.intersections.append(i)
 
-        self.calculate_turn = self._turn_criteria_check(kwargs.get('turn_criteria'))
+        self.calculate_turn = self._check_turn_criteria(kwargs.get('turn_criteria'))
 
+        self.crossing_without_median_score = 0
+        self.crossing_with_median_score = 0
         self.bike_lane_with_adj_parking_score = 0
         self.bike_lane_without_adj_parking_score = 0
         self.right_turn_lane_score = 0
@@ -23,11 +25,13 @@ class Blts(Lts):
         self.mix_traffic_score = 0
         self.blts_score = 0
 
-    def _turn_criteria_check(self, turn_criteria):
+    def _check_turn_criteria(self, turn_criteria):
         if self.segment.aadt > turn_criteria:
             return True
         else:
             return False
+
+
 
     def _remove_none(self, value):
         if value is None:
@@ -166,7 +170,23 @@ class Blts(Lts):
             self.left_turn_lane_score = max(self.left_turn_lane_score, score)
         return(score)
 
+    def _calculate_crossing_without_median(self):
+        score = 0
+        if self.approach.lane_configuration is None:
+            return score
+        score = self._calculate_score(
+            c.CROSSING_NO_MED_TABLE,
+            ['self.segment.posted_speed <= 25',
+             'self.segment.posted_speed == 30',
+             'self.segment.posted_speed == 35',
+             'True'],
 
+            ['self.approach.total_lanes <= 3',
+             'self.approach.total_lanes <= 5',
+             'True'])
+
+        self.crossing_without_median_score = max(self.crossing_without_median_score, score)
+        return(score)
 
     def calculate_blts(self):
         self._calculate_bikelane_with_adj_parking()
@@ -178,15 +198,18 @@ class Blts(Lts):
             self.mix_traffic_score,
             method = "MIN"
         )
-        if self.calculate_turn:
-            for approach in self.approaches:
-                self.approach = approach
+
+        for approach in self.approaches:
+            self.approach = approach
+            if self.calculate_turn:
                 self._calculate_right_turn_lane()
                 self._calculate_left_turn_lane()
+            self._calculate_crossing_without_median()
 
         self.blts_score = self._aggregate_score(
             self.right_turn_lane_score,
             self.left_turn_lane_score,
+            self.crossing_without_median_score,
             self.segment_score,
             method = "MAX"
         )
