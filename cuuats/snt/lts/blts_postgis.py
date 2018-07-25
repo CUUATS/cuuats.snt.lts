@@ -10,11 +10,24 @@ class Blts(Lts):
         self.approaches = []
         for a in kwargs.get('approaches'):
             self.approaches.append(a)
+        self.intersections = []
+        # for i in kwargs.get('intersections'):
+        #     self.intersections.append(i)
+
+        self.calculate_turn = self._turn_criteria_check(kwargs.get('turn_criteria'))
+
         self.bike_lane_with_adj_parking_score = 0
         self.bike_lane_without_adj_parking_score = 0
         self.right_turn_lane_score = 0
+        self.left_turn_lane_score = 0
         self.mix_traffic_score = 0
         self.blts_score = 0
+
+    def _turn_criteria_check(self, turn_criteria):
+        if self.segment.aadt > turn_criteria:
+            return True
+        else:
+            return False
 
     def _remove_none(self, value):
         if value is None:
@@ -101,15 +114,13 @@ class Blts(Lts):
 
     def _calculate_right_turn_lane(self):
         score = 0
-        for approach in self.approaches:
-            self.approach = approach
-            if self.approach.lane_configuration is None or \
-                self.segment.functional_class is None:
-                return score
-            if "R" in self.approach.lane_configuration or \
-               "Q" in self.approach.lane_configuration:
-               print('right')
-               score = self._calculate_score(
+        if self.approach.lane_configuration is None or \
+            self.segment.functional_class is None:
+            return score
+
+        if "R" in self.approach.lane_configuration or \
+           "Q" in self.approach.lane_configuration:
+            score = self._calculate_score(
                     c.RTL_CRIT_TABLE,
                     ['"R" in self.approach.lane_configuration and \
                      self.approach.right_turn_lane_length <= 150 and \
@@ -122,10 +133,39 @@ class Blts(Lts):
                      '"R" in self.approach.lane_configuration and \
                      self.approach.bike_lane_approach is "Left"',
 
-                     'True']
-               )
-               self.right_turn_lane_score = max(self.right_turn_lane_score, score)
-               return(score)
+                     'True'])
+            self.right_turn_lane_score = max(self.right_turn_lane_score, score)
+        return(score)
+
+    def _calculate_left_turn_lane(self):
+        """
+        this function calculate the left turn lane score based on the criteria
+        :param self: self
+        :return: int score
+        """
+        score = 0
+        if self.approach.lane_configuration is None or self.segment.functional_class is None:
+            return score
+        if "K" in self.approach.lane_configuration or "L" in self.approach.lane_configuration:
+            score = self._calculate_score(
+                c.LTL_DUAL_SHARED_TABLE,
+                ['self.segment.posted_speed <= 25',
+                 'self.segment.posted_speed == 30',
+                 'self.segment.posted_speed >= 35'])
+        else:
+            score = self._calculate_score(
+                c.LTL_CRIT_TABLE,
+                ['self.segment.posted_speed <= 25',
+                 'self.segment.posted_speed == 30',
+                 'self.segment.posted_speed >= 35'],
+
+                ['self.approach.lanes_crossed == 0',
+                 'self.approach.lanes_crossed == 1',
+                 'self.approach.lanes_crossed >= 2'])
+
+            self.left_turn_lane_score = max(self.left_turn_lane_score, score)
+        return(score)
+
 
 
     def calculate_blts(self):
@@ -138,9 +178,15 @@ class Blts(Lts):
             self.mix_traffic_score,
             method = "MIN"
         )
-        self._calculate_right_turn_lane()
+        if self.calculate_turn:
+            for approach in self.approaches:
+                self.approach = approach
+                self._calculate_right_turn_lane()
+                self._calculate_left_turn_lane()
+
         self.blts_score = self._aggregate_score(
             self.right_turn_lane_score,
+            self.left_turn_lane_score,
             self.segment_score,
             method = "MAX"
         )
@@ -152,16 +198,19 @@ if __name__ == '__main__':
                         lanes_per_direction = 1,
                         parking_lane_width = 1,
                         aadt = None,
-                        functional_class = 'Major')
-    approaches = [Approach(lane_configuration = "XXTR",
+                        functional_class = 'Major',
+                        posted_speed = 35)
+    approaches = [Approach(lane_configuration = "XXT",
                           right_turn_lane_length = 50,
                           right_turn_lane_config = "Single",
                           bike_lane_approach = "Straight"),
-                 Approach(lane_configuration = "XXTRR",
+                 Approach(lane_configuration = "XXT",
                            right_turn_lane_length = 151,
                            right_turn_lane_config = "Dual",
                            bike_lane_approach = "Left")]
-    blts = Blts(segment=segment, approaches = approaches)
+    blts = Blts(segment=segment,
+                approaches = approaches,
+                turn_criteria = 10000)
     blts.calculate_blts()
     print(blts.segment_score)
     import pdb; pdb.set_trace()

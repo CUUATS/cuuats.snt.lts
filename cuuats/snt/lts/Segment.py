@@ -8,6 +8,7 @@ class Segment(object):
         self.parking_lane_width = kwargs.get('parking_lane_width')
         self.aadt = self._remove_none(kwargs.get('aadt'))
         self.functional_class = kwargs.get('functional_class')
+        self.posted_speed = kwargs.get('posted_speed')
 
     def _remove_none(self, value):
         if value is None:

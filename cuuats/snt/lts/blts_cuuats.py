@@ -397,7 +397,7 @@ def calculate_blts(self, field_name):
     print("unsignalized without median: " + str(self.unsignalizedCrossingWithoutMedianScore))
     print("unsignalized with median: " + str(
         self.unsignalizedCrossingWithMedianScore))
-    
+
     self.overallScore = self._aggregate_Score(
                 self.segmentScore,
                 self.rightTurnLaneScore,
