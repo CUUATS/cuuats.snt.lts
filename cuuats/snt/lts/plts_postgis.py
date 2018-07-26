@@ -22,6 +22,7 @@ class Plts(Lts):
         self.buffer_width_score = 0
         self.landuse_score = 0
         self.collector_crossing_score = 0
+        self.arterial_crossing_score = 0
         self.total_lanes_crossed = 0
 
     def _calculate_condition_score(self):
@@ -98,6 +99,32 @@ class Plts(Lts):
         self.collector_crossing_score = max(self.collector_crossing_score, score)
         return(score)
 
+    def _calculate_arterial_crossing_score(self):
+        score = 0
+        if self.total_lanes_crossed <= 2:
+            score = self._calculate_score(
+                c.ARTERIAL_CROSSING_TWO_LANES_TABLE,
+                ['self.segment.posted_speed <= 25',
+                 'self.segment.posted_speed == 30',
+                 'self.segment.posted_speed == 35',
+                 'True'],
+                ['self.segment.aadt < 5000',
+                 'self.segment.aadt < 9000',
+                 'True']
+            )
+        else:
+            score = self._calculate_score(
+                c.ARTERIAL_CROSSING_THREE_LANES_TABLE,
+                ['self.segment.posted_speed <= 25',
+                 'self.segment.posted_speed == 30',
+                 'self.segment.posted_speed == 35',
+                 'True'],
+                ['self.segment.aadt < 8000',
+                 'self.segment.aadt < 12000',
+                 'True']
+            )
+        self.arterial_crossing_score = max(self.arterial_crossing_score, score)
+        return score
 
     def calculate_plts(self):
         # sidewalk criteria scores
@@ -108,12 +135,13 @@ class Plts(Lts):
             self._calculate_buffer_width_score()
 
         # crossing related scores
-        if self.segment.categorize_functional_class() == "C":
-            for approach in self.approaches:
-                self.approach = approach
-                self._calculate_total_lanes_crossed()
+        for approach in self.approaches:
+            self.approach = approach
+            self._calculate_total_lanes_crossed()
+            if self.segment.categorize_functional_class() == "C":
                 self._calculate_collector_crossing_score()
-
+            else:
+                self._calculate_arterial_crossing_score()
 
         self.plts_score = self._aggregate_score(
             self.condition_score,
