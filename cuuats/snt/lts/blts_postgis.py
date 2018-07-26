@@ -1,7 +1,7 @@
 ## postgis blts class
 from cuuats.snt.lts.lts_postgis import Lts
-from cuuats.snt.lts.Segment import Segment
-from cuuats.snt.lts.Approach import Approach
+from cuuats.snt.lts.model.Segment import Segment
+from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts import config as c
 
 class Blts(Lts):
