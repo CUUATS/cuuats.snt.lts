@@ -31,8 +31,6 @@ class Blts(Lts):
         else:
             return False
 
-
-
     def _remove_none(self, value):
         if value is None:
             value = 0
@@ -188,6 +186,25 @@ class Blts(Lts):
         self.crossing_without_median_score = max(self.crossing_without_median_score, score)
         return(score)
 
+    def _calculate_crossing_with_median(self):
+        score = 0
+        if self.approach.lane_configuration is None:
+            return(score)
+
+        score = self._calculate_score(
+            c.CROSSING_HAS_MED_TABLE,
+            ['self.segment.posted_speed <= 25',
+             'self.segment.posted_speed == 30',
+             'self.segment.posted_speed == 35',
+             'True'],
+
+            ['self.approach.max_lane <= 2',
+             'self.approach.max_lane == 3',
+             'True'])
+
+        self.corssing_with_median_score = max(self.corssing_with_median_score, score)
+        return(score)
+
     def calculate_blts(self):
         self._calculate_bikelane_with_adj_parking()
         self._calculate_bikelane_without_adj_parking()
@@ -204,12 +221,17 @@ class Blts(Lts):
             if self.calculate_turn:
                 self._calculate_right_turn_lane()
                 self._calculate_left_turn_lane()
-            self._calculate_crossing_without_median()
+
+            if self.approach.median_present and not self.approach.is_signalized():
+                self._calculate_crossing_with_median()
+            else:
+                self._calculate_crossing_without_median()
 
         self.blts_score = self._aggregate_score(
             self.right_turn_lane_score,
             self.left_turn_lane_score,
             self.crossing_without_median_score,
+            self.crossing_with_median_score,
             self.segment_score,
             method = "MAX"
         )
@@ -235,5 +257,5 @@ if __name__ == '__main__':
                 approaches = approaches,
                 turn_criteria = 10000)
     blts.calculate_blts()
-    print(blts.segment_score)
+    print('blts score: ' + str(blts.segment_score))
     import pdb; pdb.set_trace()

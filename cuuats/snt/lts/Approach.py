@@ -9,6 +9,8 @@ class Approach(object):
         self.lanes_crossed = self._calculate_lanes_crossed(self.lane_configuration)
         self.max_lane = self._calculate_max_lane(self.lane_configuration)
         self.total_lanes = len(self.lane_configuration)
+        self.median_present = kwargs.get('median_present')
+        self.control_type = kwargs.get('control_type')
 
     def _calculate_max_lane(self, lane_config):
         """
@@ -28,7 +30,6 @@ class Approach(object):
 
         return(max_lane)
 
-
     def _calculate_lanes_crossed(self, lane_config):
         """
         this function takes lane configuration string and return the lanecrossed
@@ -45,3 +46,9 @@ class Approach(object):
             lanecrossed = len(lane_config) - \
                           lane_config.rfind("X") - 2
         return(lanecrossed)
+
+    def is_signalized(self):
+        if self.control_type == 'signalized':
+            return True
+        else:
+            return False
