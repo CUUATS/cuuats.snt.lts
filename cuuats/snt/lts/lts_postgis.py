@@ -43,4 +43,20 @@ class Lts:
         return score
 
     def _get_high_score(self, *scores):
-        return 
+        return
+
+    def _calculate_total_lanes_crossed(self):
+        self.total_lanes_crossed = 0
+        if self.segment.marked_center_lane == "No" and \
+            self.approach.lane_configuration is None:
+            lanes = 1
+        elif self.segment.marked_center_lane == "Yes" and \
+            self.approach.lane_configuration is None:
+            lanes = 2
+        elif self.approach.lane_configuration is None:
+            lanes = 2
+        else:
+            lanes = len(self.approach.lane_configuration)
+
+        self.total_lanes_crossed = lanes
+        return(lanes)

@@ -6,15 +6,23 @@ from cuuats.snt.lts.model.Sidewalk import Sidewalk
 from cuuats.snt.lts import config as c
 
 class Plts(Lts):
-    def __init__(self, **kwargs):
-        self.sidewalk = kwargs.get('sidewalk')
-        self.segment = kwargs.get('segment')
+    def __init__(self, segment, sidewalks, approaches):
+        self.segment = segment
 
+        self.sidewalks = []
+        for s in sidewalks:
+            self.sidewalks.append(s)
+
+        self.approaches = []
+        for a in approaches:
+            self.approaches.append(a)
         self.plts_score = 0
         self.condition_score = 0
         self.physical_buffer_score = 0
         self.buffer_width_score = 0
-        self.land_use_score = 0
+        self.landuse_score = 0
+        self.collector_crossing_score = 0
+        self.total_lanes_crossed = 0
 
     def _calculate_condition_score(self):
         score = 0
@@ -33,9 +41,9 @@ class Plts(Lts):
         self.condition_score = max(self.condition_score, score)
         return(score)
 
-    def _calculate_physical_buffer(self):
+    def _calculate_physical_buffer_score(self):
         score = 0
-        score = self._calcuate_score(
+        score = self._calculate_score(
             c.BUFFER_TYPE_TABLE,
             ['self.sidewalk.buffer_type == "No Buffer"',
              'self.sidewalk.buffer_type == "Solid Buffer"',
@@ -50,21 +58,95 @@ class Plts(Lts):
         self.physical_buffer_score = max(self.physical_buffer_score, score)
         return(score)
 
+    def _calculate_buffer_width_score(self):
+        score = 0
+        score = self._calculate_score(
+            c.BUFFER_WIDTH_TABLE,
+            ['self.segment.total_lanes <= 2',
+             'self.segment.total_lanes == 3',
+             'self.segment.total_lanes <= 5',
+             'True'],
+            ['self.sidewalk.buffer_width < 5',
+             'self.sidewalk.buffer_width < 10',
+             'self.sidewalk.buffer_width < 15',
+             'self.sidewalk.buffer_width < 25',
+             'True']
+        )
+
+        self.buffer_width_score = max(self.buffer_width_score, score)
+        return(score)
+
+    def _calculate_general_landuse(self):
+        score = 0
+        score = int(self.sidewalk.overall_landuse)
+        # data structure for landuse is stored as the exact value
+        # self.general_landuse_score = LANDUSE_DICT.get(self.general_landuse, 0)
+        self.sidewalk.landuse_score = max(self.sidewalk.landuse_score, score)
+        return(score)
+
+    def _calculate_collector_crossing_score(self):
+        score = 0
+        score = self._calculate_score(
+            c.COLLECTOR_CROSSING_TABLE,
+            ['self.segment.posted_speed <= 25',
+             'self.segment.posted_speed == 30',
+             'self.segment.posted_speed == 35',
+             'True'],
+            ['self.total_lanes_crossed <= 1',
+             'True']
+        )
+        self.collector_crossing_score = max(self.collector_crossing_score, score)
+        return(score)
+
+
     def calculate_plts(self):
-        self._calculate_condition_score()
+        # sidewalk criteria scores
+        for sidewalk in self.sidewalks:
+            self.sidewalk = sidewalk
+            self._calculate_condition_score()
+            self._calculate_physical_buffer_score()
+            self._calculate_buffer_width_score()
+
+        # crossing related scores
+        if self.segment.categorize_functional_class() == "C":
+            for approach in self.approaches:
+                self.approach = approach
+                self._calculate_total_lanes_crossed()
+                self._calculate_collector_crossing_score()
+
 
         self.plts_score = self._aggregate_score(
             self.condition_score,
             self.physical_buffer_score,
+            self.buffer_width_score,
+            self.landuse_score,
             method = "MAX"
         )
 
 if __name__ == '__main__':
-    sidewalk = Sidewalk(sidewalk_width = 15,
+    # how to use the plts class
+    sidewalks = [Sidewalk(sidewalk_width = 15,
                         buffer_type = 'No Buffer',
                         buffer_width = 0,
-                        sidewalk_score = 60)
-    segment = Segment(posted_speed = 30)
-    plts = Plts(sidewalk = sidewalk, segment = segment)
+                        sidewalk_score = 60),
+               Sidewalk(sidewalk_width = 15,
+                         buffer_type = 'Solid Buffer',
+                         buffer_width = 20,
+                         sidewalk_score = 80)]
+    segment = Segment(posted_speed = 30,
+                        total_lanes = 3,
+                        functional_class = 6,
+                        marked_center_lane = 'Yes')
+    approaches = [Approach(lane_configuration = "XXT",
+                          right_turn_lane_length = 50,
+                          right_turn_lane_config = "Single",
+                          bike_lane_approach = "Straight"),
+                 Approach(lane_configuration = "XXT",
+                           right_turn_lane_length = 151,
+                           right_turn_lane_config = "Dual",
+                           bike_lane_approach = "Left")]
+
+    plts = Plts(segment = segment, sidewalks = sidewalks, approaches = approaches)
     plts.calculate_plts()
+    print(plts.plts_score)
     import pdb; pdb.set_trace()

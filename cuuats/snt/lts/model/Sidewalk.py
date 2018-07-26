@@ -7,6 +7,7 @@ class Sidewalk(object):
         self.buffer_width = kwargs.get('buffer_width')
         self.sidewalk_score = kwargs.get('sidewalk_score')
         self.sidewalk_condition = self._convert_score_to_condition(self.sidewalk_score)
+        self.overall_landuse = kwargs.get('overall_landuse')
 
     def _convert_score_to_condition(self, score):
         if score > 70:
@@ -18,5 +19,3 @@ class Sidewalk(object):
         else:
             score = 'Very Poor'
         return(score)
-
-        
