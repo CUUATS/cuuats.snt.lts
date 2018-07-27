@@ -235,6 +235,25 @@ class BltsTest(unittest.TestCase):
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
 
-    
+    def test_crossing_with_median(self):
+        self.Blts.approach.lane_configuration = "XXTT"
+        posted_speed = [25, 30, 35, 40]
+        max_lanes = [2, 3, 4]
+        score_matrix = [[1, 1, 2],
+                        [1, 2, 3],
+                        [2, 3, 4],
+                        [3, 4, 4]]
+        outer_list = []
+        inner_list = []
+        for p in posted_speed:
+            self.Blts.segment.posted_speed = p
+            for m in max_lanes:
+                self.Blts.approach.max_lane = m
+                score = self.Blts._calculate_crossing_with_median()
+                inner_list.append(score)
+            outer_list.append(inner_list)
+            inner_list = []
+        self.assertEqual(outer_list, score_matrix)
+
 if __name__ == '__main__':
     unittest.main()

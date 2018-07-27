@@ -205,7 +205,7 @@ class Blts(Lts):
              'self.approach.max_lane == 3',
              'True'])
 
-        self.corssing_with_median_score = max(self.corssing_with_median_score, score)
+        self.crossing_with_median_score = max(self.crossing_with_median_score, score)
         return(score)
 
     def calculate_blts(self):
