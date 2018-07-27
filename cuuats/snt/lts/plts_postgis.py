@@ -7,15 +7,25 @@ from cuuats.snt.lts import config as c
 
 class Plts(Lts):
     def __init__(self, segment, sidewalks, approaches):
-        self.segment = segment
+        if type(segment) is Segment:
+            self.segment = segment
+        else:
+            raise TypeError('segment is not a Segment object')
 
         self.sidewalks = []
         for s in sidewalks:
-            self.sidewalks.append(s)
+            if type(s) is Sidewalk:
+                self.sidewalks.append(s)
+            else:
+                raise TypeError('sidewalk is not a Sidewalk object')
 
         self.approaches = []
         for a in approaches:
-            self.approaches.append(a)
+            if type(a) is Approach:
+                self.approaches.append(a)
+            else:
+                raise TypeError('approach is not an Approach object')
+
         self.plts_score = 0
         self.condition_score = 0
         self.physical_buffer_score = 0

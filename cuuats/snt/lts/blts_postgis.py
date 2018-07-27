@@ -6,15 +6,19 @@ from cuuats.snt.lts import config as c
 
 class Blts(Lts):
     def __init__(self, segment, approaches, turn_criteria = 10000):
-        self.segment = segment
+        if type(segment) is Segment:
+            self.segment = segment
+        else:
+            raise TypeError('segment is not a Segment object')
+
         self.approach = Approach()
         self.approaches = []
         if approaches is not None:
             for a in approaches:
-                self.approaches.append(a)
-        # self.intersections = []
-        # for i in kwargs.get('intersections'):
-        #     self.intersections.append(i)
+                if type(a) is Approach:
+                    self.approaches.append(a)
+                else:
+                    raise TypeError('approach is not an Approach object')
 
         self.calculate_turn = self._check_turn_criteria(turn_criteria)
         self.crossing_without_median_score = 0
