@@ -6,7 +6,7 @@ class Segment(object):
         self.bicycle_facility_width = kwargs.get('bicycle_facility_width')
         self.lanes_per_direction = kwargs.get('lanes_per_direction')
         self.parking_lane_width = kwargs.get('parking_lane_width')
-        self.aadt = self._remove_none(kwargs.get('aadt'))
+        self.aadt = int(self._remove_none(kwargs.get('aadt')))
         self.functional_class = kwargs.get('functional_class')
         self.posted_speed = kwargs.get('posted_speed')
         self.total_lanes = kwargs.get('total_lanes')

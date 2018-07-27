@@ -3,6 +3,46 @@ from blts_postgis import Blts
 from cuuats.snt.lts.model.Segment import Segment
 from cuuats.snt.lts.model.Approach import Approach
 
+class SegmentTest(unittest.TestCase):
+    segment = Segment()
+
+    def test_remove_none(self):
+        self.assertEqual(self.segment._remove_none(None), 0)
+        self.assertEqual(self.segment._remove_none(1), 1)
+        self.assertEqual(self.segment._remove_none('5'), '5')
+
+
+    def test_categorized_functional_class(self):
+        self.segment.functional_class = None
+        self.assertEqual(self.segment.categorize_functional_class(), 'C')
+        self.segment.functional_class = 4
+        self.assertEqual(self.segment.categorize_functional_class(), 'C')
+        self.segment.functional_class = 1
+        self.assertEqual(self.segment.categorize_functional_class(), 'A')
+        self.segment.functional_class = 5
+        self.assertEqual(self.segment.categorize_functional_class(), 'C')
+
+class ApproachTest(unittest.TestCase):
+    approach = Approach()
+
+    def test_calculate_max_lane(self):
+        self.assertEqual(self.approach._calculate_max_lane('XXTT'), 2)
+        self.assertEqual(self.approach._calculate_max_lane('TT'), 2)
+        self.assertEqual(self.approach._calculate_max_lane('XXX'), 3)
+        self.assertEqual(self.approach._calculate_max_lane('XXLTTR'), 4)
+        self.assertEqual(self.approach._calculate_max_lane('XXXXTR'), 4)
+        self.assertEqual(self.approach._calculate_max_lane(None), 1)
+
+    def test_lane_crossed(self):
+        self.assertEqual(self.approach._calculate_lanes_crossed(None), 0)
+        self.assertEqual(self.approach._calculate_lanes_crossed('X'), 0)
+        self.assertEqual(self.approach._calculate_lanes_crossed('T'), 0)
+        self.assertEqual(self.approach._calculate_lanes_crossed('XT'), 0)
+        self.assertEqual(self.approach._calculate_lanes_crossed('XXTT'), 1)
+        self.assertEqual(self.approach._calculate_lanes_crossed('XXLTR'), 2)
+        self.assertEqual(self.approach._calculate_lanes_crossed('XXXXLLTR'), 3)
+        self.assertEqual(self.approach._calculate_lanes_crossed('XXXLLTTR'), 4)
+
 class BltsTest(unittest.TestCase):
     segment = Segment()
     approaches = [Approach()]
@@ -254,6 +294,7 @@ class BltsTest(unittest.TestCase):
             outer_list.append(inner_list)
             inner_list = []
         self.assertEqual(outer_list, score_matrix)
+
 
 if __name__ == '__main__':
     unittest.main()
