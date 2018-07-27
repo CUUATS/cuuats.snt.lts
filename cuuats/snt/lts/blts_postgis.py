@@ -5,17 +5,18 @@ from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts import config as c
 
 class Blts(Lts):
-    def __init__(self, **kwargs):
-        self.segment = kwargs.get('segment')
+    def __init__(self, segment, approaches, turn_criteria = 10000):
+        self.segment = segment
+        self.approach = Approach()
         self.approaches = []
-        for a in kwargs.get('approaches'):
-            self.approaches.append(a)
-        self.intersections = []
+        if approaches is not None:
+            for a in approaches:
+                self.approaches.append(a)
+        # self.intersections = []
         # for i in kwargs.get('intersections'):
         #     self.intersections.append(i)
 
-        self.calculate_turn = self._check_turn_criteria(kwargs.get('turn_criteria'))
-
+        self.calculate_turn = self._check_turn_criteria(turn_criteria)
         self.crossing_without_median_score = 0
         self.crossing_with_median_score = 0
         self.bike_lane_with_adj_parking_score = 0
@@ -26,6 +27,8 @@ class Blts(Lts):
         self.blts_score = 0
 
     def _check_turn_criteria(self, turn_criteria):
+        if self.segment is None:
+            return False
         if self.segment.aadt > turn_criteria:
             return True
         else:

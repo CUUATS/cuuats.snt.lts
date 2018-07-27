@@ -8,7 +8,8 @@ class Approach(object):
         self.bike_lane_approach = kwargs.get('bike_lane_approach')
         self.lanes_crossed = self._calculate_lanes_crossed(self.lane_configuration)
         self.max_lane = self._calculate_max_lane(self.lane_configuration)
-        self.total_lanes = len(self.lane_configuration)
+        if self.lane_configuration is not None:
+            self.total_lanes = len(self.lane_configuration)
         self.median_present = kwargs.get('median_present')
         self.control_type = kwargs.get('control_type')
 
