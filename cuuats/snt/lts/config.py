@@ -1,6 +1,6 @@
 # Environment Variables
 
-SDE_DB = ""
+SDE_DB = r""
 APPROACH_NAME = ""
 SEGMENT_NAME = ""
 SIDEWALK_NAME = ""
