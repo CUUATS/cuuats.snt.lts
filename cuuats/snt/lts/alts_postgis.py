@@ -2,8 +2,9 @@
 
 from cuuats.snt.lts.lts_postgis import Lts
 from cuuats.snt.lts.model.Segment import Segment
-from cuuats.snt.lts.model.Approach import Approach
-from cuuats.snt.lts import config as c
+# from cuuats.snt.lts.model.Approach import Approach
+# from cuuats.snt.lts import config as c
+
 
 class Alts(Lts):
     def __init__(self, segment):
@@ -16,7 +17,8 @@ class Alts(Lts):
         pass
 
     def calculate_alts(self):
+        pass
 
 
 if __name__ == '__main__':
-    alts = Alts(segment = Segment())
+    alts = Alts(segment=Segment())

@@ -1,5 +1,6 @@
 ## base classs of LTS
 
+
 class Lts:
     def __init__(self):
         self.overall_score = 0
@@ -48,10 +49,10 @@ class Lts:
     def _calculate_total_lanes_crossed(self):
         self.total_lanes_crossed = 0
         if self.segment.marked_center_lane == "No" and \
-            self.approach.lane_configuration is None:
+                self.approach.lane_configuration is None:
             lanes = 1
         elif self.segment.marked_center_lane == "Yes" and \
-            self.approach.lane_configuration is None:
+                self.approach.lane_configuration is None:
             lanes = 2
         elif self.approach.lane_configuration is None:
             lanes = 2

@@ -1,11 +1,12 @@
-## postgis blts class
+# postgis blts class
 from cuuats.snt.lts.lts_postgis import Lts
 from cuuats.snt.lts.model.Segment import Segment
 from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts import config as c
 
+
 class Blts(Lts):
-    def __init__(self, segment, approaches, turn_criteria = 10000):
+    def __init__(self, segment, approaches, turn_criteria=10000):
         if type(segment) is Segment:
             self.segment = segment
         else:
@@ -46,8 +47,9 @@ class Blts(Lts):
     def _calculate_bikelane_with_adj_parking(self):
         score = 0
         if self.segment.bicycle_facility_width is not None and \
-            self.segment.parking_lane_width is not None:
-            if self.segment.lanes_per_direction is 1 or self.segment.lanes_per_direction is None:
+                self.segment.parking_lane_width is not None:
+            if self.segment.lanes_per_direction is 1 or \
+                    self.segment.lanes_per_direction is None:
                 score = self._calculate_score(
                     c.BL_ADJ_PK_TABLE_ONE_LANE,
                     ['self.segment.aadt <= 1000',
@@ -79,7 +81,8 @@ class Blts(Lts):
         """
         score = 0
         if self.segment.bicycle_facility_width is not None:
-            if self.segment.lanes_per_direction is 1 or self.segment.lanes_per_direction is None:
+            if self.segment.lanes_per_direction is 1 or \
+                    self.segment.lanes_per_direction is None:
                 score = self._calculate_score(
                     c.BL_NO_ADJ_PK_TABLE_ONE_LANE,
                     ['self.segment.aadt <= 3000',
@@ -124,7 +127,7 @@ class Blts(Lts):
     def _calculate_right_turn_lane(self):
         score = 0
         if self.approach.lane_configuration is None or \
-            self.segment.functional_class is None:
+                self.segment.functional_class is None:
             return score
 
         if "R" in self.approach.lane_configuration or \
@@ -153,9 +156,11 @@ class Blts(Lts):
         :return: int score
         """
         score = 0
-        if self.approach.lane_configuration is None or self.segment.functional_class is None:
+        if self.approach.lane_configuration is None or \
+                self.segment.functional_class is None:
             return score
-        if "K" in self.approach.lane_configuration or "L" in self.approach.lane_configuration:
+        if "K" in self.approach.lane_configuration or "L" in \
+                self.approach.lane_configuration:
             score = self._calculate_score(
                 c.LTL_DUAL_SHARED_TABLE,
                 ['self.segment.posted_speed <= 25',
@@ -190,7 +195,9 @@ class Blts(Lts):
              'self.approach.total_lanes <= 5',
              'True'])
 
-        self.crossing_without_median_score = max(self.crossing_without_median_score, score)
+        self.crossing_without_median_score = max(
+                                            self.crossing_without_median_score,
+                                            score)
         return(score)
 
     def _calculate_crossing_with_median(self):
@@ -209,7 +216,8 @@ class Blts(Lts):
              'self.approach.max_lane == 3',
              'True'])
 
-        self.crossing_with_median_score = max(self.crossing_with_median_score, score)
+        self.crossing_with_median_score = max(self.crossing_with_median_score,
+                                              score)
         return(score)
 
     def calculate_blts(self):
@@ -220,7 +228,7 @@ class Blts(Lts):
             self.bike_lane_with_adj_parking_score,
             self.bike_lane_without_adj_parking_score,
             self.mix_traffic_score,
-            method = "MIN"
+            method="MIN"
         )
 
         for approach in self.approaches:
@@ -229,7 +237,8 @@ class Blts(Lts):
                 self._calculate_right_turn_lane()
                 self._calculate_left_turn_lane()
 
-            if self.approach.median_present and not self.approach.is_signalized():
+            if self.approach.median_present and not \
+                    self.approach.is_signalized():
                 self._calculate_crossing_with_median()
             else:
                 self._calculate_crossing_without_median()
@@ -240,29 +249,28 @@ class Blts(Lts):
             self.crossing_without_median_score,
             self.crossing_with_median_score,
             self.segment_score,
-            method = "MAX"
+            method="MAX"
         )
         return(self.blts_score)
 
 
 if __name__ == '__main__':
-    segment = Segment(bicycle_facility_width = 6,
-                        lanes_per_direction = 1,
-                        parking_lane_width = 1,
-                        aadt = None,
-                        functional_class = 'Major',
-                        posted_speed = 35)
-    approaches = [Approach(lane_configuration = "XXT",
-                          right_turn_lane_length = 50,
-                          right_turn_lane_config = "Single",
-                          bike_lane_approach = "Straight"),
-                 Approach(lane_configuration = "XXT",
-                           right_turn_lane_length = 151,
-                           right_turn_lane_config = "Dual",
-                           bike_lane_approach = "Left")]
+    segment = Segment(bicycle_facility_width=6,
+                      lanes_per_direction=1,
+                      parking_lane_width=1,
+                      aadt=None,
+                      functional_class='Major',
+                      posted_speed=35)
+    approaches = [Approach(lane_configuration="XXT",
+                           right_turn_lane_length=50,
+                           right_turn_lane_config="Single",
+                           bike_lane_approach="Straight"),
+                  Approach(lane_configuration="XXT",
+                           right_turn_lane_length=151,
+                           right_turn_lane_config="Dual",
+                           bike_lane_approach="Left")]
     blts = Blts(segment=segment,
-                approaches = approaches,
-                turn_criteria = 10000)
+                approaches=approaches,
+                turn_criteria=10000)
     blts.calculate_blts()
     print('blts score: ' + str(blts.segment_score))
-    import pdb; pdb.set_trace()

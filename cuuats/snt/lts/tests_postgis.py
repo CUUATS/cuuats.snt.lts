@@ -3,6 +3,7 @@ from blts_postgis import Blts
 from cuuats.snt.lts.model.Segment import Segment
 from cuuats.snt.lts.model.Approach import Approach
 
+
 class SegmentTest(unittest.TestCase):
     segment = Segment()
 
@@ -10,7 +11,6 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(self.segment._remove_none(None), 0)
         self.assertEqual(self.segment._remove_none(1), 1)
         self.assertEqual(self.segment._remove_none('5'), '5')
-
 
     def test_categorized_functional_class(self):
         self.segment.functional_class = None
@@ -21,6 +21,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(self.segment.categorize_functional_class(), 'A')
         self.segment.functional_class = 5
         self.assertEqual(self.segment.categorize_functional_class(), 'C')
+
 
 class ApproachTest(unittest.TestCase):
     approach = Approach()
@@ -42,6 +43,7 @@ class ApproachTest(unittest.TestCase):
         self.assertEqual(self.approach._calculate_lanes_crossed('XXLTR'), 2)
         self.assertEqual(self.approach._calculate_lanes_crossed('XXXXLLTR'), 3)
         self.assertEqual(self.approach._calculate_lanes_crossed('XXXLLTTR'), 4)
+
 
 class BltsTest(unittest.TestCase):
     segment = Segment()
@@ -231,7 +233,6 @@ class BltsTest(unittest.TestCase):
         self.Blts.approach.lane_configuration = "XXTTR"
         self.Blts.segment.posted_speed = 25
         self.Blts.approach.lanes_crossed = 0
-
 
         lanecrossed = [0, 1, 2]
         posted_speed = [25, 30, 35]

@@ -1,4 +1,5 @@
-## Approach class for LTS
+# Approach class for LTS
+
 
 class Approach(object):
     def __init__(self, **kwargs):
@@ -6,7 +7,8 @@ class Approach(object):
         self.right_turn_lane_length = kwargs.get('right_turn_lane_length')
         self.right_turn_lane_config = kwargs.get('right_turn_lane_config')
         self.bike_lane_approach = kwargs.get('bike_lane_approach')
-        self.lanes_crossed = self._calculate_lanes_crossed(self.lane_configuration)
+        self.lanes_crossed = self._calculate_lanes_crossed(
+                                    self.lane_configuration)
         self.max_lane = self._calculate_max_lane(self.lane_configuration)
         if self.lane_configuration is not None:
             self.total_lanes = len(self.lane_configuration)
@@ -15,8 +17,8 @@ class Approach(object):
 
     def _calculate_max_lane(self, lane_config):
         """
-        this function takes lane configuration string and return the max lane in
-        either direction
+        this function takes lane configuration string and return the max lane
+        in either direction
         :param self: self
         :param lane_config: coded string of lane configuration
         :return: int represent max lane
@@ -33,8 +35,8 @@ class Approach(object):
 
     def _calculate_lanes_crossed(self, lane_config):
         """
-        this function takes lane configuration string and return the lanecrossed
-        from righter most lane to the left turn lane
+        this function takes lane configuration string and return the
+        lanecrossed from righter most lane to the left turn lane
         :param self: self
         :param lane_config: coded string of lane_config
         :return:
