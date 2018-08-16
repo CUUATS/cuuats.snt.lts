@@ -1,12 +1,13 @@
-## base classs of LTS
+# base classs of LTS
 
 
 class Lts:
-    def __init__(self):
-        self.overall_score = 0
-        self.segment_score = 0
+    # def __init__(self):
+    #     self.overall_score = 0
+    #     self.segment_score = 0
 
-    def _calculate_score(self, scores, *condition_sets):
+    @staticmethod
+    def _calculate_score(scores, *condition_sets):
         """
         this function takes the scores and condition_sets and return the score
         based on which argument is true
@@ -24,8 +25,9 @@ class Lts:
                     break
         assert isinstance(score, int)
         return score
-
-    def _aggregate_score(self, *scores, **kwargs):
+        
+    @staticmethod
+    def _aggregate_score(*scores, **kwargs):
         """
         this function aggregate number of scores based on *scores
         :param self: self
@@ -43,10 +45,12 @@ class Lts:
             score = max(score_list)
         return score
 
-    def _get_high_score(self, *scores):
+    @staticmethod
+    def _get_high_score(*scores):
         return
 
-    def _calculate_total_lanes_crossed(self):
+    @staticmethod
+    def _calculate_total_lanes_crossed():
         self.total_lanes_crossed = 0
         if self.segment.marked_center_lane == "No" and \
                 self.approach.lane_configuration is None:
