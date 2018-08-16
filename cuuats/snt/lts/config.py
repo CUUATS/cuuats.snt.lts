@@ -1,11 +1,4 @@
-# Environment Variables
-
-SDE_DB = r""
-APPROACH_NAME = ""
-SEGMENT_NAME = ""
-SIDEWALK_NAME = ""
-INTERSECTION_NAME = ""
-REL_NAME = ""
+import pandas as pd
 
 # BLTS - SEGMENT SCORING TABLE
 ## Bike Lane with Adjacent Parking Lane Criteria Scorintg Table
@@ -28,6 +21,13 @@ BL_NO_ADJ_PK_TABLE_TWO_LANES = [[1, 3],
                                 [2, 3],
                                 [3, 4]]
 
+# Scale for Mix Traffic
+URBAN_FIX_TRAFFIC_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 3000, 30000],
+                    [3000, 30000, float('Inf')])
+URBAN_FIX_TRAFFIC_LANE_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 0, 1, 2],
+                    [0, 1, 2, float('Inf')])
 ## Urban/Suburban Mixed Traffic Criteria Scoring Table
 MIXED_TRAF_TABLE = [[1, 2, 3, 4],
                     [2, 3, 4, 4],
