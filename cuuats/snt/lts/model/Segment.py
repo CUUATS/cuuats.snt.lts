@@ -51,22 +51,44 @@ class Segment(object):
             if bike_path.width is None:
                 return 0
 
+            # No marked lanes or 1 lpd
             if self.lanes_per_direction is None or \
                self.lanes_per_direction == 1:
                 table = pd.DataFrame(c.BL_ADJ_PK_TABLE_ONE_LANE)
                 crits = ([self.aadt, c.BL_ADJ_PK_AADT_SCALE],
                          [bike_path.width, c.BL_ADJ_PK_WIDTH_SCALE])
                 return (Lts.calculate_score(table, crits))
+            # 2 lpd or greater
             else:
                 table = pd.DataFrame(c.BL_ADJ_PK_TABLE_TWO_LANES)
                 crits = ([self.aadt, c.BL_ADJ_PK_AADT_SCALE],
                          [bike_path.width, c.BL_ADJ_PK_TWO_WIDTH_SCALE])
                 return (Lts.calculate_score(table, crits))
 
+    def _calculate_bikelane_without_adj_parking(self, bike_paths):
+        if self.parking_lane_width is None:
+            for bike_path in bike_paths:
+                if bike_path.width is None:
+                    return 0
+                # no marked lane or 1 lpd
+                if self.lanes_per_direction is None or \
+                   self.lanes_per_direction == 1:
+                    table = pd.DataFrame(c.BL_NO_ADJ_PK_TABLE_ONE_LANE)
+                    crits = ([self.aadt, c.BL_NO_ADJ_PK_AADT_SCALE],
+                             [bike_path.width, c.BL_NO_ADJ_PK_WIDTH_SCALE])
+                    return (Lts.calculate_score(table, crits))
+                # 2 lps or greater
+                else:
+                    table = pd.DataFrame(c.BL_NO_ADJ_PK_TABLE_TWO_LANES)
+                    crits = ([self.aadt, c.BL_NO_ADJ_PK_AADT_SCALE],
+                             [bike_path.width, c.BL_NO_ADJ_PK_TWO_WIDTH_SCALE])
+                    return (Lts.calculate_score(table, crits))
+
     def blts_score(self, approaches, bike_paths):
         return Lts._aggregate_score(
             # self._calculate_mix_traffic(),
             self._calculate_bikelane_with_adj_parking(bike_paths),
+            self._calculate_bikelane_without_adj_parking(bike_paths),
             method='MAX'
         )
 
@@ -74,8 +96,8 @@ class Segment(object):
 if __name__ == '__main__':
     segment = Segment(bicycle_facility_width=6,
                       lanes_per_direction=2,
-                      parking_lane_width=1,
-                      aadt=1500,
+                      parking_lane_width=None,
+                      aadt=3001,
                       functional_class='Major',
                       posted_speed=35)
     approaches = [Approach(lane_configuration="XXT",
@@ -86,5 +108,5 @@ if __name__ == '__main__':
                              right_turn_lane_length=151,
                              right_turn_lane_config="Dual",
                              bike_lane_approach="Left")]
-    bike_paths = [BikePath(width=15)]
+    bike_paths = [BikePath(width=8)]
     print(segment.blts_score(approaches, bike_paths))

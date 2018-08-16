@@ -23,13 +23,23 @@ BL_ADJ_PK_TWO_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                     [14.5, float('Inf')])
 
 # Bike Lane without Adjacent Parking Lane Criteria Scoring Table
-BL_NO_ADJ_PK_TABLE_ONE_LANE = [[1, 1, 2],
-                               [2, 3, 3],
-                               [3, 4, 4]]
+BL_NO_ADJ_PK_TABLE_ONE_LANE = [[2, 1, 1],
+                               [3, 3, 2],
+                               [4, 4, 3]]
+BL_NO_ADJ_PK_AADT_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 3000, 30000],
+                    [3000, 30000, float('Inf')])
+BL_NO_ADJ_PK_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 5.5, 7],
+                    [5.5, 7, float('Inf')])
 
-BL_NO_ADJ_PK_TABLE_TWO_LANES = [[1, 3],
-                                [2, 3],
-                                [3, 4]]
+
+BL_NO_ADJ_PK_TABLE_TWO_LANES = [[3, 1],
+                                [3, 2],
+                                [4, 3]]
+BL_NO_ADJ_PK_TWO_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 7],
+                    [7, float('Inf')])
 
 # Urban/Suburban Mixed Traffic Criteria Scoring Table
 MIXED_TRAF_TABLE = [[1, 2, 3, 4],
