@@ -1,7 +1,6 @@
 # Segment Class for LTS Assessment
 from cuuats.snt.lts import config as c
 import pandas as pd
-import numpy as np
 from cuuats.snt.lts.lts_postgis import Lts
 from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts.model.BikePath import BikePath
@@ -39,51 +38,44 @@ class Segment(object):
         :param self: self
         :return: np.int64 score
         """
-        score = pd.DataFrame(c.MIXED_TRAF_TABLE)
-        crits = ([self.aadt, c.URBAN_FIX_TRAFFIC_SPEED_SCALE],
+        table = pd.DataFrame(c.MIXED_TRAF_TABLE)
+        crits = ([self.aadt, c.URBAN_FIX_TRAFFIC_AADT_SCALE],
                  [self.lanes_per_direction, c.URBAN_FIX_TRAFFIC_LANE_SCALE])
-        return self._calculate_score(score, crits)
+        return Lts.calculate_score(table, crits)
 
-    def _calculate_score(self, score, crits):
-        if not isinstance(score, pd.DataFrame):
-            raise TypeError('df argument must be a pandas dataframe object')
-        assert len(crits) == 2
-        for crit in crits:
-            score.index = crit[1]
-            score = score.loc[crit[0]]
-        assert isinstance(score, np.int64)
-        return score
+    def _calculate_bikelane_with_adj_parking(self, bike_paths):
+        if self.parking_lane_width is None:
+            return 0
 
-    def _aggregate_score(self, *scores, **kwargs):
-        """
-        this function aggregate number of scores based on *scores
-        :param self: self
-        :param scores: scores arguments
-        :param kwargs: "MAX" - returns maximum, "MIN" - return minimum
-        :return: int score
-        """
-        score_list = [score for score in scores if score is not 0]
-        method = kwargs.get("method")
-        score = 0
+        for bike_path in bike_paths:
+            if bike_path.width is None:
+                return 0
 
-        if method == "MIN":
-            score = min(score_list)
-        elif method == "MAX":
-            score = max(score_list)
-        return score
+            if self.lanes_per_direction is None or \
+               self.lanes_per_direction == 1:
+                table = pd.DataFrame(c.BL_ADJ_PK_TABLE_ONE_LANE)
+                crits = ([self.aadt, c.BL_ADJ_PK_AADT_SCALE],
+                         [bike_path.width, c.BL_ADJ_PK_WIDTH_SCALE])
+                return (Lts.calculate_score(table, crits))
+            else:
+                table = pd.DataFrame(c.BL_ADJ_PK_TABLE_TWO_LANES)
+                crits = ([self.aadt, c.BL_ADJ_PK_AADT_SCALE],
+                         [bike_path.width, c.BL_ADJ_PK_TWO_WIDTH_SCALE])
+                return (Lts.calculate_score(table, crits))
 
     def blts_score(self, approaches, bike_paths):
         return Lts._aggregate_score(
-            self._calculate_mix_traffic(),
+            # self._calculate_mix_traffic(),
+            self._calculate_bikelane_with_adj_parking(bike_paths),
             method='MAX'
         )
 
 
 if __name__ == '__main__':
     segment = Segment(bicycle_facility_width=6,
-                      lanes_per_direction=1,
+                      lanes_per_direction=2,
                       parking_lane_width=1,
-                      aadt=500,
+                      aadt=1500,
                       functional_class='Major',
                       posted_speed=35)
     approaches = [Approach(lane_configuration="XXT",
@@ -94,5 +86,5 @@ if __name__ == '__main__':
                              right_turn_lane_length=151,
                              right_turn_lane_config="Dual",
                              bike_lane_approach="Left")]
-    bike_paths = BikePath()
+    bike_paths = [BikePath(width=15)]
     print(segment.blts_score(approaches, bike_paths))

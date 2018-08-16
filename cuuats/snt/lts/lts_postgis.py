@@ -1,4 +1,6 @@
 # base classs of LTS
+import pandas as pd
+import numpy as np
 
 
 class Lts:
@@ -7,25 +9,16 @@ class Lts:
     #     self.segment_score = 0
 
     @staticmethod
-    def _calculate_score(scores, *condition_sets):
-        """
-        this function takes the scores and condition_sets and return the score
-        based on which argument is true
-        :param self: self
-        :param scores: list of scores
-        :param condition_sets: lists of conditions
-        :return: int score
-        """
-        score = scores
-        for condition_set in condition_sets:
-            assert len(score) == len(condition_set)
-            for index, condition in enumerate(condition_set):
-                if eval(condition):
-                    score = score[index]
-                    break
-        assert isinstance(score, int)
+    def calculate_score(score, crits):
+        if not isinstance(score, pd.DataFrame):
+            raise TypeError('df argument must be a pandas dataframe object')
+        assert len(crits) == 2
+        for crit in crits:
+            score.index = crit[1]
+            score = score.loc[crit[0]]
+        assert isinstance(score, np.int64)
         return score
-        
+
     @staticmethod
     def _aggregate_score(*scores, **kwargs):
         """
