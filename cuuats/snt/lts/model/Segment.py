@@ -45,7 +45,7 @@ class Segment(object):
 
     def _calculate_bikelane_with_adj_parking(self, bike_paths):
         if self.parking_lane_width is None:
-            return 0
+            return 99
 
         for bike_path in bike_paths:
             if bike_path.width is None:
@@ -84,11 +84,44 @@ class Segment(object):
                              [bike_path.width, c.BL_NO_ADJ_PK_TWO_WIDTH_SCALE])
                     return (Lts.calculate_score(table, crits))
 
-    def blts_score(self, approaches, bike_paths):
+    def _calculate_right_turn_lane(self, approach):
+        if approach.lane_configuration is None or \
+           self.functional_class is None:
+            return 0
+
+        if "R" in approach.lane_configuration:
+            if approach.right_turn_lane_length <= 150 and \
+               approach.bike_lane_approach is "Straight":
+                return c.RTL_CRIT_TABLE[0]
+            elif approach.right_turn_lane_length > 150 and \
+                 approach.bike_lane_approach is "Straight":
+                return c.RTL_CRIT_TABLE[1]
+            else:
+                return c.RTL_CRIT_TABLE[2]
+        elif "Q" in approach.lane_configuration:
+            return c.RTL_CRIT_TABLE[3]
+
+        return 0
+
+    def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
+        if bike_paths is None:
+            segment_score = self._calculate_mix_traffic()
+        else:
+            segment_score = Lts._aggregate_score(
+                self._calculate_mix_traffic(),
+                self._calculate_bikelane_with_adj_parking(bike_paths),
+                self._calculate_bikelane_without_adj_parking(bike_paths),
+                method='MIN'
+            )
+
+        rtl_score = -float('Inf')
+
+        for approach in approaches:
+            rtl_score = max(rtl_score, self._calculate_right_turn_lane(approach))
+
         return Lts._aggregate_score(
-            # self._calculate_mix_traffic(),
-            self._calculate_bikelane_with_adj_parking(bike_paths),
-            self._calculate_bikelane_without_adj_parking(bike_paths),
+            segment_score,
+            rtl_score,
             method='MAX'
         )
 
@@ -100,8 +133,8 @@ if __name__ == '__main__':
                       aadt=3001,
                       functional_class='Major',
                       posted_speed=35)
-    approaches = [Approach(lane_configuration="XXT",
-                             right_turn_lane_length=50,
+    approaches = [Approach(lane_configuration="XXTR",
+                             right_turn_lane_length=160,
                              right_turn_lane_config="Single",
                              bike_lane_approach="Straight"),
                     Approach(lane_configuration="XXT",
