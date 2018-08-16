@@ -59,10 +59,20 @@ RTL_CRIT_TABLE = [2, 3, 3, 4]
 
 # Left Turn Lane Criteria Scoring Table
 LTL_DUAL_SHARED_TABLE = [4, 4, 4]
+LTL_DUAL_SHARED_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 25, 30],
+                    [25, 30, float('Inf')])
+
 
 LTL_CRIT_TABLE = [[2, 2, 3],
                   [2, 3, 4],
                   [3, 4, 4]]
+LTL_CRIT_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 25, 30],
+                    [25, 30, float('Inf')])
+LTL_CRIT_LANE_CROSSED_SCALE = pd.IntervalIndex.from_arrays(
+                    [-float('Inf'), 0, 1],
+                    [0, 1, float('Inf')])
 
 # Unsignalized Intersection Crossing Without a Median Refuge Criteria
 # Scoring Table

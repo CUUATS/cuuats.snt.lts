@@ -10,9 +10,9 @@ class Lts:
 
     @staticmethod
     def calculate_score(score, crits):
-        if not isinstance(score, pd.DataFrame):
-            raise TypeError('df argument must be a pandas dataframe object')
-        assert len(crits) == 2
+        # if not isinstance(score, pd.DataFrame) or not isinstance(score, pd.Series):
+        #     raise TypeError('df argument must be a pandas DataFrame of Series object')
+        # assert len(crits) == 2
         for crit in crits:
             score.index = crit[1]
             score = score.loc[crit[0]]

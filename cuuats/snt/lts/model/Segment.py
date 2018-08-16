@@ -103,7 +103,27 @@ class Segment(object):
 
         return 0
 
+    def _calculate_left_turn_lane(self, approach):
+        lane_config = approach.lane_configuration
+        speed = self.posted_speed
+
+        if lane_config is None or self.functional_class is None:
+            return 0
+
+        if "K" in lane_config or "L" in lane_config:
+            table = pd.Series(c.LTL_DUAL_SHARED_TABLE)
+            crit = [(speed, c.LTL_DUAL_SHARED_SPEED_SCALE)]
+            return Lts.calculate_score(table, crit)
+        else:
+            table = pd.DataFrame(c.LTL_CRIT_TABLE)
+            crit = [(speed, c.LTL_CRIT_SPEED_SCALE),
+                    (speed, c.LTL_CRIT_LANE_CROSSED_SCALE)]
+            return Lts.calculate_score(table, crit)
+
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
+        rtl_score = 0
+        ltl_score = 0
+
         if bike_paths is None:
             segment_score = self._calculate_mix_traffic()
         else:
@@ -114,14 +134,17 @@ class Segment(object):
                 method='MIN'
             )
 
-        rtl_score = -float('Inf')
-
-        for approach in approaches:
-            rtl_score = max(rtl_score, self._calculate_right_turn_lane(approach))
+        if self.aadt >= turn_threshold:
+            for approach in approaches:
+                rtl_score = max(rtl_score,
+                                self._calculate_right_turn_lane(approach))
+                ltl_score = max(ltl_score,
+                                self._calculate_left_turn_lane(approach))
 
         return Lts._aggregate_score(
             segment_score,
             rtl_score,
+            ltl_score,
             method='MAX'
         )
 
@@ -137,7 +160,7 @@ if __name__ == '__main__':
                              right_turn_lane_length=160,
                              right_turn_lane_config="Single",
                              bike_lane_approach="Straight"),
-                    Approach(lane_configuration="XXT",
+                    Approach(lane_configuration="XXLT",
                              right_turn_lane_length=151,
                              right_turn_lane_config="Dual",
                              bike_lane_approach="Left")]
