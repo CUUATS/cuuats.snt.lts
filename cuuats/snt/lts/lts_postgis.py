@@ -1,5 +1,5 @@
 # base classs of LTS
-import pandas as pd
+# import pandas as pd
 import numpy as np
 
 
@@ -20,7 +20,7 @@ class Lts:
         return score
 
     @staticmethod
-    def _aggregate_score(*scores, **kwargs):
+    def aggregate_score(*scores, **kwargs):
         """
         this function aggregate number of scores based on *scores
         :param self: self
@@ -40,21 +40,36 @@ class Lts:
 
     @staticmethod
     def _get_high_score(*scores):
-        return
+        pass
 
     @staticmethod
-    def _calculate_total_lanes_crossed():
-        self.total_lanes_crossed = 0
-        if self.segment.marked_center_lane == "No" and \
-                self.approach.lane_configuration is None:
-            lanes = 1
-        elif self.segment.marked_center_lane == "Yes" and \
-                self.approach.lane_configuration is None:
-            lanes = 2
-        elif self.approach.lane_configuration is None:
-            lanes = 2
+    def calculate_ltl_crossed(lane_config):
+        """
+        this function takes lane configuration string and return the lanecrossed
+        from righter most lane to the left turn lane
+        :param self: self
+        :param lane_config: coded string of lane_config
+        :return:
+        """
+        if lane_config is None:
+            lanecrossed = 0
+        elif lane_config == "X" or lane_config == "XX" or lane_config == "XXX":
+            lanecrossed = 0
         else:
-            lanes = len(self.approach.lane_configuration)
+            lanecrossed = len(lane_config) - \
+                          lane_config.rfind("X") - 2
+        return lanecrossed
 
-        self.total_lanes_crossed = lanes
-        return(lanes)
+    @staticmethod
+    def calculate_total_lanes_crossed(marked_center_lane, lane_config):
+        total_lanes_crossed = 0
+        if marked_center_lane == "No" and lane_config is None:
+            total_lanes_crossed = 1
+        elif marked_center_lane == "Yes" and lane_config is None:
+            total_lanes_crossed = 2
+        elif lane_config is None:
+            total_lanes_crossed = 2
+        else:
+            total_lanes_crossed = len(lane_config)
+
+        return total_lanes_crossed

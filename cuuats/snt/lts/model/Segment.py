@@ -141,13 +141,12 @@ class Segment(object):
         L = "L"  # exclusive left turn lane
         dual_shared_score = c.LTL_DUAL_SHARED_TABLE
         ltl_score = c.LTL_CRIT_TABLE
-        lane_crossed = Lts._calculate_total_lanes_crossed(lane_config)
+        lane_crossed = Lts.calculate_ltl_crossed(lane_config)
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
         if lane_config is None or functional_class is None:
             return 0
-
         if L in lane_config or K in lane_config:
             table = pd.Series(dual_shared_score)
             crit = [(speed, speed_scale)]
@@ -156,6 +155,7 @@ class Segment(object):
             table = pd.DataFrame(ltl_score)
             crit = [(speed, speed_scale),
                     (lane_crossed, lane_crossed_scale)]
+
             return Lts.calculate_score(table, crit)
 
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
@@ -165,7 +165,7 @@ class Segment(object):
         if bike_paths is None:
             segment_score = self._calculate_mix_traffic()
         else:
-            segment_score = Lts._aggregate_score(
+            segment_score = Lts.aggregate_score(
                 self._calculate_mix_traffic(),
                 self._calculate_bikelane_with_adj_parking(bike_paths),
                 self._calculate_bikelane_without_adj_parking(bike_paths),
@@ -179,7 +179,7 @@ class Segment(object):
                 ltl_score = max(ltl_score,
                                 self._calculate_left_turn_lane(approach))
 
-        return Lts._aggregate_score(
+        return Lts.aggregate_score(
             segment_score,
             rtl_score,
             ltl_score,
