@@ -114,19 +114,21 @@ class Segment(object):
         bike_lane_approach = approach.bike_lane_approach
         rtl_score = c.RTL_CRIT_TABLE
         straight = "Straight"
+        R = "R"  # right turn lane
+        Q = "Q"  # dual shared right turn
 
         if lane_config is None or \
            self.functional_class is None:
             return 0
 
-        if "R" in lane_config:
+        if R in lane_config:
             if rtl_length <= 150 and bike_lane_approach is straight:
                 return rtl_score[0]
             elif rtl_length > 150 and bike_lane_approach is straight:
                 return rtl_score[1]
             else:
                 return rtl_score[2]
-        elif "Q" in lane_config:
+        elif Q in lane_config:
             return rtl_score[3]
 
         return 0
@@ -139,6 +141,7 @@ class Segment(object):
         L = "L"  # exclusive left turn lane
         dual_shared_score = c.LTL_DUAL_SHARED_TABLE
         ltl_score = c.LTL_CRIT_TABLE
+        lane_crossed = Lts._calculate_total_lanes_crossed(lane_config)
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
@@ -152,7 +155,7 @@ class Segment(object):
         else:
             table = pd.DataFrame(ltl_score)
             crit = [(speed, speed_scale),
-                    (speed, lane_crossed_scale)]
+                    (lane_crossed, lane_crossed_scale)]
             return Lts.calculate_score(table, crit)
 
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
@@ -191,13 +194,13 @@ if __name__ == '__main__':
                       aadt=3001,
                       functional_class='Major',
                       posted_speed=35)
-    approaches = [Approach(lane_configuration="XXTR",
-                             right_turn_lane_length=160,
-                             right_turn_lane_config="Single",
-                             bike_lane_approach="Straight"),
-                    Approach(lane_configuration="XXLT",
-                             right_turn_lane_length=151,
-                             right_turn_lane_config="Dual",
-                             bike_lane_approach="Left")]
+    approaches = [Approach(lane_configuration="XXT",
+                           right_turn_lane_length=160,
+                           right_turn_lane_config="Single",
+                           bike_lane_approach="Straight"),
+                  Approach(lane_configuration="XXT",
+                           right_turn_lane_length=151,
+                           right_turn_lane_config="Dual",
+                           bike_lane_approach="Left")]
     bike_paths = [BikePath(width=8)]
-    print(segment.blts_score(approaches, bike_paths))
+    print(segment.blts_score(approaches, bike_paths, turn_threshold=10))
