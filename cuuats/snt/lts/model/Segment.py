@@ -10,16 +10,11 @@ class Segment(object):
     def __init__(self, **kwargs):
         self.lanes_per_direction = kwargs.get('lanes_per_direction')
         self.parking_lane_width = kwargs.get('parking_lane_width')
-        self.aadt = int(self._remove_none(kwargs.get('aadt')))
+        self.aadt = int(Lts.remove_none(kwargs.get('aadt')))
         self.functional_class = kwargs.get('functional_class')
-        self.posted_speed = self._remove_none(kwargs.get('posted_speed'))
+        self.posted_speed = Lts.remove_none(kwargs.get('posted_speed'))
         self.total_lanes = kwargs.get('total_lanes')
         self.marked_center_lane = kwargs.get('marked_center_lane')
-
-    def _remove_none(self, value):
-        if value is None:
-            value = 0
-        return value
 
     def _categorize_functional_class(self):
         if self.functional_class is None:
@@ -37,7 +32,7 @@ class Segment(object):
         :return: np.int64 score
         """
         aadt = self.aadt
-        lpd = self._remove_none(self.lanes_per_direction)
+        lpd = Lts.remove_none(self.lanes_per_direction)
         mix_traffic_score = c.MIXED_TRAF_TABLE
         aadt_scale = c.URBAN_FIX_TRAFFIC_AADT_SCALE
         lane_scale = c.URBAN_FIX_TRAFFIC_LANE_SCALE
@@ -119,9 +114,10 @@ class Segment(object):
         R = "R"  # right turn lane
         Q = "Q"  # dual shared right turn
 
+        score = 0
         if lane_config is None or \
            self.functional_class is None:
-            return 0
+            return score
 
         if R in lane_config:
             if rtl_length <= 150 and bike_lane_approach is straight:
@@ -133,7 +129,7 @@ class Segment(object):
         elif Q in lane_config:
             return rtl_score[3]
 
-        return 0
+        return score
 
     def _calculate_left_turn_lane(self, approach):
         lane_config = approach.lane_configuration
@@ -171,22 +167,19 @@ class Segment(object):
             method='MIN'
         )
 
-        return segment_score
+        if self.aadt >= turn_threshold:
+            for approach in approaches:
+                rtl_score = max(rtl_score,
+                                self._calculate_right_turn_lane(approach))
+                ltl_score = max(ltl_score,
+                                self._calculate_left_turn_lane(approach))
 
-            # if self.aadt >= turn_threshold:
-            #     for approach in approaches:
-            #         rtl_score = max(rtl_score,
-            #                         self._calculate_right_turn_lane(approach))
-            #         ltl_score = max(ltl_score,
-            #                         self._calculate_left_turn_lane(approach))
-            #
-            # return Lts.aggregate_score(
-            #     segment_score,
-            #     rtl_score,
-            #     ltl_score,
-            #     method='MAX'
-            # )
-
+        return Lts.aggregate_score(
+            segment_score,
+            rtl_score,
+            ltl_score,
+            method='MAX'
+        )
 
 
 if __name__ == '__main__':

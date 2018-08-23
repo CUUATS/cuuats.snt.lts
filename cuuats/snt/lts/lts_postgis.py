@@ -9,6 +9,12 @@ class Lts:
     #     self.segment_score = 0
 
     @staticmethod
+    def remove_none(value):
+        if value is None:
+            value = 0
+        return value
+
+    @staticmethod
     def calculate_score(score, crits):
         # if not isinstance(score, pd.DataFrame) or not isinstance(score, pd.Series):
         #     raise TypeError('df argument must be a pandas DataFrame of Series object')
