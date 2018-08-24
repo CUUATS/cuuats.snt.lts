@@ -38,8 +38,8 @@ BL_NO_ADJ_PK_TABLE_TWO_LANES = [[3, 1],
                                 [3, 2],
                                 [4, 3]]
 BL_NO_ADJ_PK_TWO_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
-                    [-float('Inf'), 7],
-                    [7, float('Inf')])
+                    [-float('Inf'), 6.9],
+                    [6.9, float('Inf')])
 
 # Urban/Suburban Mixed Traffic Criteria Scoring Table
 MIXED_TRAF_TABLE = [[1, 2, 3, 4],
