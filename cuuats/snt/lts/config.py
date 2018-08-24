@@ -47,8 +47,8 @@ MIXED_TRAF_TABLE = [[1, 2, 3, 4],
                     [3, 4, 4, 4]]
 # Scale for Mix Traffic
 URBAN_FIX_TRAFFIC_AADT_SCALE = pd.IntervalIndex.from_arrays(
-                    [-float('Inf'), 3000, 30000],
-                    [3000, 30000, float('Inf')])
+                    [-float('Inf'), 1000, 3000],
+                    [1000, 3000, float('Inf')])
 URBAN_FIX_TRAFFIC_LANE_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 0, 1, 2],
                     [0, 1, 2, float('Inf')])
