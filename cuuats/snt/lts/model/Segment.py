@@ -42,7 +42,7 @@ class Segment(object):
                  [lpd, lane_scale])
         return Lts.calculate_score(table, crits)
 
-    def _calculate_bikelane_with_adj_parking(self, bike_paths):
+    def _calculate_bikelane_with_adj_parking(self, bike_path):
         parking_lane_width = self.parking_lane_width
         lpd = self.lanes_per_direction
         aadt = self.aadt
@@ -51,31 +51,27 @@ class Segment(object):
         aadt_scale = c.BL_ADJ_PK_AADT_SCALE
         width_scale = c.BL_ADJ_PK_WIDTH_SCALE
         width_scale_two_lanes = c.BL_ADJ_PK_TWO_WIDTH_SCALE
+        width = bike_path.width
 
         score = 99
-        if parking_lane_width is None:
+        # if there is no bike lane width or no bike lane
+        if parking_lane_width is None or width is None:
             return score
 
-        for bike_path in bike_paths:
-            width = bike_path.width
-            # if there is no bike lane width or no bike lane
-            if width is None:
-                continue
-            # No marked lanes or 1 lpd
-            elif lpd is None or lpd == 1:
-                table = pd.DataFrame(bl_adj_pk_score_one_lane)
-                crits = ([aadt, aadt_scale],
-                         [width, width_scale])
-                score = min(score, Lts.calculate_score(table, crits))
-            # 2 lpd or greater
-            else:
-                table = pd.DataFrame(bl_adj_pk_score_two_lanes)
-                crits = ([aadt, aadt_scale],
-                         [width, width_scale_two_lanes])
-                score = min(score, Lts.calculate_score(table, crits))
-        return score
+        # No marked lanes or 1 lpd
+        elif lpd is None or lpd == 1:
+            table = pd.DataFrame(bl_adj_pk_score_one_lane)
+            crits = ([aadt, aadt_scale],
+                     [width + parking_lane_width, width_scale])
+            return Lts.calculate_score(table, crits)
+        # 2 lpd or greater
+        else:
+            table = pd.DataFrame(bl_adj_pk_score_two_lanes)
+            crits = ([aadt, aadt_scale],
+                     [width + parking_lane_width, width_scale_two_lanes])
+            return Lts.calculate_score(table, crits)
 
-    def _calculate_bikelane_without_adj_parking(self, bike_paths):
+    def _calculate_bikelane_without_adj_parking(self, bike_path):
         parking_lane_width = self.parking_lane_width
         lpd = self.lanes_per_direction
         aadt = self.aadt
@@ -84,26 +80,23 @@ class Segment(object):
         aadt_scale = c.BL_NO_ADJ_PK_AADT_SCALE
         width_scale_one_lane = c.BL_NO_ADJ_PK_WIDTH_SCALE
         width_scale_two_lane = c.BL_NO_ADJ_PK_TWO_WIDTH_SCALE
+        width = bike_path.width
 
         score = 99
-        if parking_lane_width is None:
-            for bike_path in bike_paths:
-                width = bike_path.width
-                if width is None:
-                    continue
-                # no marked lane or 1 lpd
-                elif lpd is None or lpd == 1:
-                    table = pd.DataFrame(bl_wo_adj_pk_score_one_lane)
-                    crits = ([aadt, aadt_scale],
-                             [width, width_scale_one_lane])
-                    score = min(score, Lts.calculate_score(table, crits))
-                # 2 lps or greater
-                else:
-                    table = pd.DataFrame(bl_wo_adj_pk_score_two_lanes)
-                    crits = ([aadt, aadt_scale],
-                             [width, width_scale_two_lane])
-                    score = min(score, Lts.calculate_score(table, crits))
-        return score
+        if parking_lane_width is not None or width is None:
+            return score
+        # no marked lane or 1 lpd
+        elif lpd is None or lpd == 1:
+            table = pd.DataFrame(bl_wo_adj_pk_score_one_lane)
+            crits = ([aadt, aadt_scale],
+                     [width, width_scale_one_lane])
+            return Lts.calculate_score(table, crits)
+        # 2 lps or greater
+        else:
+            table = pd.DataFrame(bl_wo_adj_pk_score_two_lanes)
+            crits = ([aadt, aadt_scale],
+                     [width, width_scale_two_lane])
+            return Lts.calculate_score(table, crits)
 
     def _calculate_right_turn_lane(self, approach):
         lane_config = approach.lane_configuration
@@ -159,11 +152,23 @@ class Segment(object):
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
         rtl_score = 0
         ltl_score = 0
+        pk_score = 0
+        no_pk_score = 0
+
+        mix_traffic_score = self._calculate_mix_traffic()
+
+        for bike_path in bike_paths:
+            pk_score = max(pk_score,
+                           self._calculate_bikelane_with_adj_parking(
+                            bike_path))
+            no_pk_score = max(pk_score,
+                              self._calculate_bikelane_without_adj_parking(
+                               bike_path))
 
         segment_score = Lts.aggregate_score(
-            self._calculate_mix_traffic(),
-            self._calculate_bikelane_with_adj_parking(bike_paths),
-            self._calculate_bikelane_without_adj_parking(bike_paths),
+            mix_traffic_score,
+            pk_score,
+            no_pk_score,
             method='MIN'
         )
 
