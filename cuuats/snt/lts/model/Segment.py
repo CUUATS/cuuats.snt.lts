@@ -196,6 +196,15 @@ class Segment(object):
 
         return Lts.calculate_score(table, crits)
 
+    def _calculate_landuse_score(self):
+        # method to get landuse score from a dictionary
+        # return c.LANDUSE_DICT.get(self.overall_landuse)
+
+        # return the overall value in database as score
+        if self.overall_landuse == 0:
+            return 1
+        return self.overall_landuse
+
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
         rtl_score = 0
         ltl_score = 0
@@ -239,10 +248,11 @@ class Segment(object):
             cond_score = self._calculate_condition_score(sidewalk)
             buffer_type_score = self._calculate_buffer_type_score(sidewalk)
             buffer_width_score = self._calculate_buffer_width_score(sidewalk)
-
+            landuse_score = self._calculate_landuse_score(sidewalk)
             sidewalk_score = max(cond_score,
                                  buffer_type_score,
-                                 buffer_width_score)
+                                 buffer_width_score,
+                                 landuse_score)
 
             segment_score = min(segment_score, sidewalk_score)
 
@@ -265,6 +275,7 @@ if __name__ == '__main__':
     sidewalks = [(Sidewalk(sidewalk_width=5,
                            sidewalk_score=65,
                            buffer_type='solid_surface',
-                           buffer_width=20))]
+                           buffer_width=20,
+                           overall_landuse=1))]
 
     print(segment.plts_score(sidewalks))

@@ -141,15 +141,15 @@ COLLECTOR_CROSSING_TABLE = [[1, 1],
 
 # Arterial unsignalized intersection crossing - 2 lanes
 ARTERIAL_CROSSING_TWO_LANES_TABLE = [[2, 2, 3],
-                               [2, 3, 3],
-                               [3, 3, 4],
-                               [3, 4, 4]]
+                                     [2, 3, 3],
+                                     [3, 3, 4],
+                                     [3, 4, 4]]
 
 # Arterial unsignalized intersection crossing - 3 lanes
 ARTERIAL_CROSSING_THREE_LANES_TABLE = [[3, 3, 4],
-                               [3, 3, 4],
-                               [3, 4, 4],
-                               [4, 4, 4]]
+                                       [3, 3, 4],
+                                       [3, 4, 4],
+                                       [4, 4, 4]]
 
 # Land Use
 LANDUSE_DICT = {"residential": 1,
