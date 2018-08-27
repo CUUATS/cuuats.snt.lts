@@ -122,10 +122,16 @@ BUFFER_TYEP_SPEED_SCALE = pd.IntervalIndex.from_arrays(
 
 
 # Total Buffer Width
-BUFFER_WIDTH_TABLE = [[2, 2, 1, 1, 1],
-                      [3, 2, 2, 1, 1],
-                      [4, 3, 2, 1, 1],
-                      [4, 4, 3, 2, 2]]
+BUFFER_WIDTH_TABLE = pd.DataFrame([[2, 2, 1, 1, 1],
+                                   [3, 2, 2, 1, 1],
+                                   [4, 3, 2, 1, 1],
+                                   [4, 4, 3, 2, 2]])
+BUFFER_WIDTH_LANE_SCALE = pd.IntervalIndex.from_arrays(
+                            [-float('Inf'), 2, 3, 5],
+                            [2, 3, 5, float('Inf')])
+BUFFER_WIDTH_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
+                            [-float('Inf'), 4.9, 9.9, 14.9, 24.9],
+                            [4.9, 9.9, 14.9, 24.9, float('Inf')])
 
 # Collector and local unsignalized intersection crossing
 COLLECTOR_CROSSING_TABLE = [[1, 1],

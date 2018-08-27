@@ -183,6 +183,17 @@ class Segment(object):
 
         return Lts.calculate_score(table, crits)
 
+    def _calculate_buffer_width_score(self, sidewalk):
+        total_lanes = self.total_lanes
+        buffer_width = sidewalk.buffer_width
+        width_scale = c.BUFFER_WIDTH_WIDTH_SCALE
+        lane_scale = c.BUFFER_WIDTH_LANE_SCALE
+        table = c.BUFFER_WIDTH_TABLE
+        crits = ([total_lanes, lane_scale],
+                 [buffer_width, width_scale])
+
+        return Lts.calculate_score(table, crits)
+
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
         rtl_score = 0
         ltl_score = 0
@@ -221,18 +232,18 @@ class Segment(object):
         )
 
     def plts_score(self, sidewalks=None):
-        no_sidewalk_score = 0
-        cond_score = 0
-        segment_score = 0
+        segment_score = float('Inf')
         for sidewalk in sidewalks:
             cond_score = self._calculate_condition_score(sidewalk)
             buffer_type_score = self._calculate_buffer_type_score(sidewalk)
+            buffer_width_score = self._calculate_buffer_width_score(sidewalk)
 
             sidewalk_score = max(cond_score,
-                                 buffer_type_score)
+                                 buffer_type_score,
+                                 buffer_width_score)
 
             segment_score = min(segment_score, sidewalk_score)
-            
+
         return segment_score
 
 
@@ -241,7 +252,8 @@ if __name__ == '__main__':
                       parking_lane_width=5,
                       aadt=None,
                       functional_class=None,
-                      posted_speed=None)
+                      posted_speed=35,
+                      total_lanes=6)
     approaches = [Approach(lane_configuration=None,
                            right_turn_lane_length=None,
                            bike_lane_approach=None)]
@@ -249,6 +261,8 @@ if __name__ == '__main__':
     print(segment.blts_score(approaches, bike_paths))
 
     sidewalks = [(Sidewalk(sidewalk_width=5,
-                           sidewalk_score=65))]
+                           sidewalk_score=65,
+                           buffer_type='solid_surface',
+                           buffer_width=20))]
 
     print(segment.plts_score(sidewalks))
