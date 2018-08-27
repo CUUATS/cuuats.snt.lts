@@ -65,7 +65,8 @@ class SegmentTest(unittest.TestCase):
         segment.parking_lane_width = None
         bike_path = BikePath(width=8)
         self.assertEqual(
-            segment._calculate_bikelane_with_adj_parking(bike_path), 99)
+            segment._calculate_bikelane_with_adj_parking(bike_path),
+            float('Inf'))
 
     def test_calculate_bikelane_without_adj_parking(self):
         segment = Segment()

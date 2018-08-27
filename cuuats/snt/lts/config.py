@@ -3,10 +3,10 @@ import pandas as pd
 # BLTS - SEGMENT SCORING TABLE
 # Bike Lane with Adjacent Parking Lane Criteria Scorintg Table
 # Score condition maybe flipped from documentation
-BL_ADJ_PK_TABLE_ONE_LANE = [[3, 2, 1],
-                            [3, 2, 1],
-                            [3, 3, 2],
-                            [4, 4, 2]]
+BL_ADJ_PK_TABLE_ONE_LANE = pd.DataFrame([[3, 2, 1],
+                                         [3, 2, 1],
+                                         [3, 3, 2],
+                                         [4, 4, 2]])
 BL_ADJ_PK_AADT_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 1000, 3000, 30000],
                     [1000, 3000, 30000, float('Inf')])
@@ -15,18 +15,18 @@ BL_ADJ_PK_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                     [13, 14.5, float('Inf')])
 
 
-BL_ADJ_PK_TABLE_TWO_LANES = [[3, 2],
-                             [3, 2],
-                             [3, 3],
-                             [4, 3]]
+BL_ADJ_PK_TABLE_TWO_LANES = pd.DataFrame([[3, 2],
+                                          [3, 2],
+                                          [3, 3],
+                                          [4, 3]])
 BL_ADJ_PK_TWO_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 14.5],
                     [14.5, float('Inf')])
 
 # Bike Lane without Adjacent Parking Lane Criteria Scoring Table
-BL_NO_ADJ_PK_TABLE_ONE_LANE = [[2, 1, 1],
-                               [3, 3, 2],
-                               [4, 4, 3]]
+BL_NO_ADJ_PK_TABLE_ONE_LANE = pd.DataFrame([[2, 1, 1],
+                                            [3, 3, 2],
+                                            [4, 4, 3]])
 BL_NO_ADJ_PK_AADT_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 3000, 30000],
                     [3000, 30000, float('Inf')])
@@ -35,17 +35,17 @@ BL_NO_ADJ_PK_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                     [5.5, 7, float('Inf')])
 
 
-BL_NO_ADJ_PK_TABLE_TWO_LANES = [[3, 1],
-                                [3, 2],
-                                [4, 3]]
+BL_NO_ADJ_PK_TABLE_TWO_LANES = pd.DataFrame([[3, 1],
+                                             [3, 2],
+                                             [4, 3]])
 BL_NO_ADJ_PK_TWO_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 6.9],
                     [6.9, float('Inf')])
 
 # Urban/Suburban Mixed Traffic Criteria Scoring Table
-MIXED_TRAF_TABLE = [[1, 2, 3, 4],
-                    [2, 3, 4, 4],
-                    [3, 4, 4, 4]]
+MIXED_TRAF_TABLE = pd.DataFrame([[1, 2, 3, 4],
+                                 [2, 3, 4, 4],
+                                 [3, 4, 4, 4]])
 # Scale for Mix Traffic
 URBAN_FIX_TRAFFIC_AADT_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 1000, 3000],
@@ -59,15 +59,15 @@ RTL_CRIT_TABLE = [2, 3, 3, 4]
 
 
 # Left Turn Lane Criteria Scoring Table
-LTL_DUAL_SHARED_TABLE = [4, 4, 4]
+LTL_DUAL_SHARED_TABLE = pd.Series([4, 4, 4])
 LTL_DUAL_SHARED_SPEED_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 25, 30],
                     [25, 30, float('Inf')])
 
 
-LTL_CRIT_TABLE = [[2, 2, 3],
-                  [2, 3, 4],
-                  [3, 4, 4]]
+LTL_CRIT_TABLE = pd.DataFrame([[2, 2, 3],
+                               [2, 3, 4],
+                               [3, 4, 4]])
 LTL_CRIT_SPEED_SCALE = pd.IntervalIndex.from_arrays(
                     [-float('Inf'), 25, 30],
                     [25, 30, float('Inf')])
@@ -93,10 +93,10 @@ CROSSING_HAS_MED_TABLE = [[1, 1, 2],
 
 # PLTS - SIDEWALK SCORING TABLE
 # Scoring table for Sidewalk Condition
-SW_COND_TABLE = [[4, 4, 4, 4],
-                 [4, 3, 3, 3],
-                 [4, 3, 2, 2],
-                 [3, 2, 1, 1]]
+SW_COND_TABLE = pd.DataFrame([[4, 4, 4, 4],
+                              [4, 3, 3, 3],
+                              [4, 3, 2, 2],
+                              [3, 2, 1, 1]])
 SW_COND_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                       [-float('Inf'), 3.9, 5, 6],
                       [3.9, 5, 6, float('Inf')])
@@ -106,11 +106,11 @@ SW_COND_COND_SCALE = pd.IntervalIndex.from_arrays(
 
 
 # Physical Buffer Type
-BUFFER_TYPE_TABLE = [[2, 3, 3, 4],
-                     [2, 2, 2, 2],
-                     [1, 2, 2, 2],
-                     [1, 1, 1, 2],
-                     [1, 1, 1, 2]]
+BUFFER_TYPE_TABLE = pd.DataFrame([[2, 3, 3, 4],
+                                  [2, 2, 2, 2],
+                                  [1, 2, 2, 2],
+                                  [1, 1, 1, 2],
+                                  [1, 1, 1, 2]])
 BUFFER_TYPE_TYPE_SCALE = pd.Index(['no_buffer',
                                    'solid_surface',
                                    'landscaped',

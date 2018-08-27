@@ -36,11 +36,10 @@ class Segment(object):
         """
         aadt = self.aadt
         lpd = Lts.remove_none(self.lanes_per_direction)
-        mix_traffic_score = c.MIXED_TRAF_TABLE
+        table = c.MIXED_TRAF_TABLE
         aadt_scale = c.URBAN_FIX_TRAFFIC_AADT_SCALE
         lane_scale = c.URBAN_FIX_TRAFFIC_LANE_SCALE
 
-        table = pd.DataFrame(mix_traffic_score)
         crits = ([aadt, aadt_scale],
                  [lpd, lane_scale])
         return Lts.calculate_score(table, crits)
@@ -49,37 +48,35 @@ class Segment(object):
         parking_lane_width = self.parking_lane_width
         lpd = self.lanes_per_direction
         aadt = self.aadt
-        bl_adj_pk_score_one_lane = c.BL_ADJ_PK_TABLE_ONE_LANE
-        bl_adj_pk_score_two_lanes = c.BL_ADJ_PK_TABLE_TWO_LANES
+        one_lane_table = c.BL_ADJ_PK_TABLE_ONE_LANE
+        multi_lane_table = c.BL_ADJ_PK_TABLE_TWO_LANES
         aadt_scale = c.BL_ADJ_PK_AADT_SCALE
         width_scale = c.BL_ADJ_PK_WIDTH_SCALE
         width_scale_two_lanes = c.BL_ADJ_PK_TWO_WIDTH_SCALE
         width = bike_path.width
 
-        score = 99
+        score = float('Inf')
         # if there is no bike lane width or no bike lane
         if parking_lane_width is None or width is None:
             return score
 
         # No marked lanes or 1 lpd
         elif lpd is None or lpd == 1:
-            table = pd.DataFrame(bl_adj_pk_score_one_lane)
             crits = ([aadt, aadt_scale],
                      [width + parking_lane_width, width_scale])
-            return Lts.calculate_score(table, crits)
+            return Lts.calculate_score(one_lane_table, crits)
         # 2 lpd or greater
         else:
-            table = pd.DataFrame(bl_adj_pk_score_two_lanes)
             crits = ([aadt, aadt_scale],
                      [width + parking_lane_width, width_scale_two_lanes])
-            return Lts.calculate_score(table, crits)
+            return Lts.calculate_score(multi_lane_table, crits)
 
     def _calculate_bikelane_without_adj_parking(self, bike_path):
         parking_lane_width = self.parking_lane_width
         lpd = self.lanes_per_direction
         aadt = self.aadt
-        bl_wo_adj_pk_score_one_lane = c.BL_NO_ADJ_PK_TABLE_ONE_LANE
-        bl_wo_adj_pk_score_two_lanes = c.BL_NO_ADJ_PK_TABLE_TWO_LANES
+        one_lane_table = c.BL_NO_ADJ_PK_TABLE_ONE_LANE
+        multi_lane_table = c.BL_NO_ADJ_PK_TABLE_TWO_LANES
         aadt_scale = c.BL_NO_ADJ_PK_AADT_SCALE
         width_scale_one_lane = c.BL_NO_ADJ_PK_WIDTH_SCALE
         width_scale_two_lane = c.BL_NO_ADJ_PK_TWO_WIDTH_SCALE
@@ -90,16 +87,14 @@ class Segment(object):
             return score
         # no marked lane or 1 lpd
         elif lpd is None or lpd == 1:
-            table = pd.DataFrame(bl_wo_adj_pk_score_one_lane)
             crits = ([aadt, aadt_scale],
                      [width, width_scale_one_lane])
-            return Lts.calculate_score(table, crits)
+            return Lts.calculate_score(one_lane_table, crits)
         # 2 lps or greater
         else:
-            table = pd.DataFrame(bl_wo_adj_pk_score_two_lanes)
             crits = ([aadt, aadt_scale],
                      [width, width_scale_two_lane])
-            return Lts.calculate_score(table, crits)
+            return Lts.calculate_score(multi_lane_table, crits)
 
     def _calculate_right_turn_lane(self, approach):
         lane_config = approach.lane_configuration
@@ -133,8 +128,8 @@ class Segment(object):
         functional_class = self.functional_class
         K = "K"  # dual shared
         L = "L"  # exclusive left turn lane
-        dual_shared_score = c.LTL_DUAL_SHARED_TABLE
-        ltl_score = c.LTL_CRIT_TABLE
+        dual_share_table = c.LTL_DUAL_SHARED_TABLE
+        ltl_table = c.LTL_CRIT_TABLE
         lane_crossed = Lts.calculate_ltl_crossed(lane_config)
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
@@ -142,20 +137,18 @@ class Segment(object):
         if lane_config is None or functional_class == "C":
             return 0
         if L in lane_config or K in lane_config:
-            table = pd.Series(dual_shared_score)
             crit = [(speed, speed_scale)]
-            return Lts.calculate_score(table, crit)
+            return Lts.calculate_score(dual_share_table, crit)
         else:
-            table = pd.DataFrame(ltl_score)
             crit = [(speed, speed_scale),
                     (lane_crossed, lane_crossed_scale)]
 
-            return Lts.calculate_score(table, crit)
+            return Lts.calculate_score(ltl_table, crit)
 
     def _calculate_condition_score(self, sidewalk):
         width = sidewalk.sidewalk_width
         cond = sidewalk.sidewalk_score
-        sidewalk_score = c.SW_COND_TABLE
+        table = c.SW_COND_TABLE
         width_scale = c.SW_COND_WIDTH_SCALE
         cond_scale = c.SW_COND_COND_SCALE
         no_sidewalk_score = 4
@@ -164,7 +157,6 @@ class Segment(object):
         if sidewalk.sidewalk_width is None:
             return no_sidewalk_score
 
-        table = pd.DataFrame(sidewalk_score)
         crits = ([width, width_scale],
                  [cond, cond_scale])
 
@@ -175,11 +167,10 @@ class Segment(object):
         if buffer_type is None:
             buffer_type = 'no_buffer'
         speed = self.posted_speed
-        buffer_type_score = c.BUFFER_TYPE_TABLE
+        table = c.BUFFER_TYPE_TABLE
         buffer_scale = c.BUFFER_TYPE_TYPE_SCALE
         speed_scale = c.BUFFER_TYEP_SPEED_SCALE
 
-        table = pd.DataFrame(buffer_type_score)
         crits = ([buffer_type, buffer_scale],
                  [speed, speed_scale])
 
