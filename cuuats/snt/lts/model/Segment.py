@@ -172,6 +172,8 @@ class Segment(object):
 
     def _calculate_buffer_type_score(self, sidewalk):
         buffer_type = sidewalk.buffer_type
+        if buffer_type is None:
+            buffer_type = 'no_buffer'
         speed = self.posted_speed
         buffer_type_score = c.BUFFER_TYPE_TABLE
         buffer_scale = c.BUFFER_TYPE_TYPE_SCALE
