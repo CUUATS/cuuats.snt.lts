@@ -139,6 +139,43 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(
             segment._calculate_right_turn_lane(approach), 4)
 
+    def test_left_turn_lane(self):
+        segment = Segment(functional_class=4,
+                          posted_speed=25)
+        approach = Approach(lane_configuration="XXLT")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 0)
+
+        segment = Segment(functional_class=3,
+                          posted_speed=25)
+        approach = Approach(lane_configuration="XXT")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 2)
+
+        segment = Segment(functional_class=3,
+                          posted_speed=30)
+        approach = Approach(lane_configuration="XXTT")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 3)
+
+        segment = Segment(functional_class=3,
+                          posted_speed=30)
+        approach = Approach(lane_configuration="XXTTR")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 4)
+
+        segment = Segment(functional_class=3,
+                          posted_speed=35)
+        approach = Approach(lane_configuration="XXTTR")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 4)
+
+        segment = Segment(functional_class=3,
+                          posted_speed=25)
+        approach = Approach(lane_configuration="XXLT")
+        self.assertEqual(
+            segment._calculate_left_turn_lane(approach), 4)
+
 
 if __name__ == '__main__':
     unittest.main()

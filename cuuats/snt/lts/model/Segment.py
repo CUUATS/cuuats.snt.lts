@@ -138,7 +138,7 @@ class Segment(object):
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
-        if lane_config is None or functional_class is None:
+        if lane_config is None or functional_class == "C":
             return 0
         if L in lane_config or K in lane_config:
             table = pd.Series(dual_shared_score)
