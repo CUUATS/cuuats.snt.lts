@@ -2,20 +2,18 @@
 import unittest
 from cuuats.snt.lts.model.Segment import Segment
 from cuuats.snt.lts.model.BikePath import BikePath
-from cuuats.snt.lts import config as c
-import pandas as pd
-from cuuats.snt.lts.lts_postgis import Lts
+from cuuats.snt.lts.model.Approach import Approach
+# from cuuats.snt.lts import config as c
+# import pandas as pd
+# from cuuats.snt.lts.lts_postgis import Lts
 
 
 class SegmentTest(unittest.TestCase):
     def test_categorize_functional_class(self):
         segment = Segment()
-        segment.functional_class = None
-        self.assertEqual(segment._categorize_functional_class(), 'C')
-        segment.functional_class = 4
-        self.assertEqual(segment._categorize_functional_class(), 'C')
-        segment.functional_class = 1
-        self.assertEqual(segment._categorize_functional_class(), 'A')
+        self.assertEqual(segment._categorize_functional_class(None), 'C')
+        self.assertEqual(segment._categorize_functional_class(4), 'C')
+        self.assertEqual(segment._categorize_functional_class(1), 'A')
 
     def test_calculate_mix_traffic(self):
         segment = Segment()
@@ -61,6 +59,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path), 4)
 
+        segment.lanes_per_direction = 1
+        segment.aadt = 35000
+        segment.parking_lane_width = None
+        bike_path = BikePath(width=8)
+        self.assertEqual(
+            segment._calculate_bikelane_with_adj_parking(bike_path), 99)
+
     def test_calculate_bikelane_without_adj_parking(self):
         segment = Segment()
         segment.lanes_per_direction = 1
@@ -90,6 +95,49 @@ class SegmentTest(unittest.TestCase):
         bike_path = BikePath(width=7)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 2)
+
+        segment.lanes_per_direction = 3
+        segment.aadt = 7000
+        segment.parking_lane_width = 5
+        bike_path = BikePath(width=7)
+        self.assertEqual(
+            segment._calculate_bikelane_without_adj_parking(bike_path), 99)
+
+    def test_right_turn_lane(self):
+        segment = Segment(functional_class=4)
+        approach = Approach(lane_configuration="XXTR",
+                            right_turn_lane_length=50,
+                            bike_lane_approach='Straight')
+        self.assertEqual(
+            segment._calculate_right_turn_lane(approach), 0)
+
+        segment = Segment(functional_class=3)
+        approach = Approach(lane_configuration="XXTR",
+                            right_turn_lane_length=150,
+                            bike_lane_approach='Straight')
+        self.assertEqual(
+            segment._calculate_right_turn_lane(approach), 2)
+
+        segment = Segment(functional_class=1)
+        approach = Approach(lane_configuration="XXTTR",
+                            right_turn_lane_length=151,
+                            bike_lane_approach='Straight')
+        self.assertEqual(
+            segment._calculate_right_turn_lane(approach), 3)
+
+        segment = Segment(functional_class=1)
+        approach = Approach(lane_configuration="XXTTR",
+                            right_turn_lane_length=151,
+                            bike_lane_approach='Left')
+        self.assertEqual(
+            segment._calculate_right_turn_lane(approach), 3)
+
+        segment = Segment(functional_class=1)
+        approach = Approach(lane_configuration="XXTTQ",
+                            right_turn_lane_length=151,
+                            bike_lane_approach=None)
+        self.assertEqual(
+            segment._calculate_right_turn_lane(approach), 4)
 
 
 if __name__ == '__main__':

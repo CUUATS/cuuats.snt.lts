@@ -11,15 +11,17 @@ class Segment(object):
         self.lanes_per_direction = kwargs.get('lanes_per_direction')
         self.parking_lane_width = kwargs.get('parking_lane_width')
         self.aadt = int(Lts.remove_none(kwargs.get('aadt')))
-        self.functional_class = kwargs.get('functional_class')
+        self.functional_class = self._categorize_functional_class(
+                                    Lts.remove_none(
+                                        kwargs.get('functional_class')))
         self.posted_speed = Lts.remove_none(kwargs.get('posted_speed'))
         self.total_lanes = kwargs.get('total_lanes')
         self.marked_center_lane = kwargs.get('marked_center_lane')
 
-    def _categorize_functional_class(self):
-        if self.functional_class is None:
+    def _categorize_functional_class(self, functional_class):
+        if functional_class is None:
             return "C"
-        if self.functional_class >= 4:
+        if functional_class >= 4:
             return "C"
         else:
             return "A"
@@ -102,14 +104,14 @@ class Segment(object):
         lane_config = approach.lane_configuration
         rtl_length = approach.right_turn_lane_length
         bike_lane_approach = approach.bike_lane_approach
+        functional_class = self.functional_class
         rtl_score = c.RTL_CRIT_TABLE
         straight = "Straight"
         R = "R"  # right turn lane
         Q = "Q"  # dual shared right turn
 
         score = 0
-        if lane_config is None or \
-           self.functional_class is None:
+        if lane_config is None or functional_class == "C":
             return score
 
         if R in lane_config:
