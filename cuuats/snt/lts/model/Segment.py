@@ -4,6 +4,7 @@ import pandas as pd
 from cuuats.snt.lts.lts_postgis import Lts
 from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts.model.BikePath import BikePath
+from cuuats.snt.lts.model.Sidewalk import Sidewalk
 
 
 class Segment(object):
@@ -151,6 +152,19 @@ class Segment(object):
 
             return Lts.calculate_score(table, crit)
 
+    def _calculate_condition_score(self, sidewalk):
+        width = sidewalk.sidewalk_width
+        cond = sidewalk.sidewalk_score
+        sidewalk_score = c.SW_COND_TABLE
+        width_scale = c.SW_COND_WIDTH_SCALE
+        cond_scale = c.SW_COND_COND_SCALE
+
+        table = pd.DataFrame(sidewalk_score)
+        crits = ([width, width_scale],
+                 [cond, cond_scale])
+
+        return Lts.calculate_score(table, crits)
+
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
         rtl_score = 0
         ltl_score = 0
@@ -188,6 +202,24 @@ class Segment(object):
             method='MAX'
         )
 
+    def plts_score(self, sidewalks=None):
+        no_sidewalk_score = 0
+        cond_score = 0
+        for sidewalk in sidewalks:
+            if sidewalk.sidewalk_width is None:
+                continue
+
+            cond_score = max(cond_score,
+                             self._calculate_condition_score(sidewalk))
+
+        sidewalk_score = Lts.aggregate_score(
+            cond_score,
+            9,
+            method="MAX"
+        )
+
+        return sidewalk_score
+
 
 if __name__ == '__main__':
     segment = Segment(lanes_per_direction=None,
@@ -200,3 +232,8 @@ if __name__ == '__main__':
                            bike_lane_approach=None)]
     bike_paths = [BikePath(width=1)]
     print(segment.blts_score(approaches, bike_paths))
+
+    sidewalks = [(Sidewalk(sidewalk_width=5,
+                           sidewalk_score=65))]
+
+    print(segment.plts_score(sidewalks))

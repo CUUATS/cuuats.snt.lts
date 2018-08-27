@@ -3,6 +3,7 @@ import unittest
 from cuuats.snt.lts.model.Segment import Segment
 from cuuats.snt.lts.model.BikePath import BikePath
 from cuuats.snt.lts.model.Approach import Approach
+from cuuats.snt.lts.model.Sidewalk import Sidewalk
 # from cuuats.snt.lts import config as c
 # import pandas as pd
 # from cuuats.snt.lts.lts_postgis import Lts
@@ -175,6 +176,24 @@ class SegmentTest(unittest.TestCase):
         approach = Approach(lane_configuration="XXLT")
         self.assertEqual(
             segment._calculate_left_turn_lane(approach), 4)
+
+    def test_sidewalk_cond(self):
+        segment = Segment()
+        sidewalk = Sidewalk(sidewalk_width=7,
+                            sidewalk_score=80)
+        self.assertEqual(segment._calculate_condition_score(sidewalk), 1)
+
+        sidewalk = Sidewalk(sidewalk_width=6,
+                            sidewalk_score=65)
+        self.assertEqual(segment._calculate_condition_score(sidewalk), 2)
+
+        sidewalk = Sidewalk(sidewalk_width=5,
+                            sidewalk_score=55)
+        self.assertEqual(segment._calculate_condition_score(sidewalk), 3)
+
+        sidewalk = Sidewalk(sidewalk_width=4,
+                            sidewalk_score=69)
+        self.assertEqual(segment._calculate_condition_score(sidewalk), 3)
 
 
 if __name__ == '__main__':

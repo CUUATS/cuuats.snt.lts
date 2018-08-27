@@ -2,6 +2,7 @@ import pandas as pd
 
 # BLTS - SEGMENT SCORING TABLE
 # Bike Lane with Adjacent Parking Lane Criteria Scorintg Table
+# Score condition maybe flipped from documentation
 BL_ADJ_PK_TABLE_ONE_LANE = [[3, 2, 1],
                             [3, 2, 1],
                             [3, 3, 2],
@@ -93,9 +94,15 @@ CROSSING_HAS_MED_TABLE = [[1, 1, 2],
 # PLTS - SIDEWALK SCORING TABLE
 # Scoring table for Sidewalk Condition
 SW_COND_TABLE = [[4, 4, 4, 4],
-                 [3, 3, 3, 4],
-                 [2, 2, 3, 4],
-                 [1, 1, 2, 3]]
+                 [4, 3, 3, 3],
+                 [4, 3, 2, 2],
+                 [3, 2, 1, 1]]
+SW_COND_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
+                      [-float('Inf'), 3.9, 5, 6],
+                      [3.9, 5, 6, float('Inf')])
+SW_COND_COND_SCALE = pd.IntervalIndex.from_arrays(
+                     [-float('Inf'), 50, 60, 70],
+                     [50, 60, 70, float('Inf')])
 
 
 # Physical Buffer Type
