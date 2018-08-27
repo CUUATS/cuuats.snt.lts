@@ -1,6 +1,5 @@
 # Segment Class for LTS Assessment
 from cuuats.snt.lts import config as c
-import pandas as pd
 from cuuats.snt.lts.lts_postgis import Lts
 from cuuats.snt.lts.model.Approach import Approach
 from cuuats.snt.lts.model.BikePath import BikePath
@@ -9,7 +8,8 @@ from cuuats.snt.lts.model.Sidewalk import Sidewalk
 
 class Segment(object):
     def __init__(self, **kwargs):
-        self.lanes_per_direction = kwargs.get('lanes_per_direction')
+        self.lanes_per_direction = Lts.remove_none(
+                                    kwargs.get('lanes_per_direction'))
         self.parking_lane_width = kwargs.get('parking_lane_width')
         self.aadt = int(Lts.remove_none(kwargs.get('aadt')))
         self.functional_class = self._categorize_functional_class(
@@ -154,7 +154,7 @@ class Segment(object):
         no_sidewalk_score = 4
 
         # PLTS 4 if there is no sidewalk
-        if sidewalk.sidewalk_width is None:
+        if width is None or cond is None:
             return no_sidewalk_score
 
         crits = ([width, width_scale],
