@@ -16,7 +16,7 @@ class Segment(object):
                                     Lts.remove_none(
                                         kwargs.get('functional_class')))
         self.posted_speed = Lts.remove_none(kwargs.get('posted_speed'))
-        self.total_lanes = kwargs.get('total_lanes')
+        self.total_lanes = Lts.remove_none(kwargs.get('total_lanes'))
         self.marked_center_lane = kwargs.get('marked_center_lane')
 
     def _categorize_functional_class(self, functional_class):

@@ -241,5 +241,14 @@ class SegmentTest(unittest.TestCase):
         sidewalk = Sidewalk(buffer_width=20)
         self.assertEqual(segment._calculate_buffer_width_score(sidewalk), 2)
 
+        segment = Segment(total_lanes=0)
+        sidewalk = Sidewalk(buffer_width=20)
+        self.assertEqual(segment._calculate_buffer_width_score(sidewalk), 1)
+
+        segment = Segment(total_lanes=0)
+        sidewalk = Sidewalk(buffer_width=None)
+        self.assertEqual(segment._calculate_buffer_width_score(sidewalk), 2)
+
+
 if __name__ == '__main__':
     unittest.main()
