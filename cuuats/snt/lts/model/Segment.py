@@ -158,10 +158,28 @@ class Segment(object):
         sidewalk_score = c.SW_COND_TABLE
         width_scale = c.SW_COND_WIDTH_SCALE
         cond_scale = c.SW_COND_COND_SCALE
+        no_sidewalk_score = 4
+
+        # PLTS 4 if there is no sidewalk
+        if sidewalk.sidewalk_width is None:
+            return no_sidewalk_score
 
         table = pd.DataFrame(sidewalk_score)
         crits = ([width, width_scale],
                  [cond, cond_scale])
+
+        return Lts.calculate_score(table, crits)
+
+    def _calculate_buffer_type_score(self, sidewalk):
+        buffer_type = sidewalk.buffer_type
+        speed = self.posted_speed
+        buffer_type_score = c.BUFFER_TYPE_TABLE
+        buffer_scale = c.BUFFER_TYPE_TYPE_SCALE
+        speed_scale = c.BUFFER_TYEP_SPEED_SCALE
+
+        table = pd.DataFrame(buffer_type_score)
+        crits = ([buffer_type, buffer_scale],
+                 [speed, speed_scale])
 
         return Lts.calculate_score(table, crits)
 
@@ -205,20 +223,17 @@ class Segment(object):
     def plts_score(self, sidewalks=None):
         no_sidewalk_score = 0
         cond_score = 0
+        segment_score = 0
         for sidewalk in sidewalks:
-            if sidewalk.sidewalk_width is None:
-                continue
+            cond_score = self._calculate_condition_score(sidewalk)
+            buffer_type_score = self._calculate_buffer_type_score(sidewalk)
 
-            cond_score = max(cond_score,
-                             self._calculate_condition_score(sidewalk))
+            sidewalk_score = max(cond_score,
+                                 buffer_type_score)
 
-        sidewalk_score = Lts.aggregate_score(
-            cond_score,
-            9,
-            method="MAX"
-        )
-
-        return sidewalk_score
+            segment_score = min(segment_score, sidewalk_score)
+            
+        return segment_score
 
 
 if __name__ == '__main__':

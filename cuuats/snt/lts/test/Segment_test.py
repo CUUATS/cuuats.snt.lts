@@ -195,6 +195,31 @@ class SegmentTest(unittest.TestCase):
                             sidewalk_score=69)
         self.assertEqual(segment._calculate_condition_score(sidewalk), 3)
 
+        sidewalk = Sidewalk(sidewalk_width=None,
+                            sidewalk_score=None)
+        self.assertEqual(segment._calculate_condition_score(sidewalk), 4)
+
+    def test_sidewalk_buffer_type(self):
+        segment = Segment(posted_speed=25)
+        sidewalk = Sidewalk(buffer_type="no_buffer")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=30)
+        sidewalk = Sidewalk(buffer_type="landscaped")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=35)
+        sidewalk = Sidewalk(buffer_type="landscaped")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=40)
+        sidewalk = Sidewalk(buffer_type="landscaped_with_tree")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=25)
+        sidewalk = Sidewalk(buffer_type="vertical")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

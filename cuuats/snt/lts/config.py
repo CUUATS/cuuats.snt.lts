@@ -109,7 +109,16 @@ SW_COND_COND_SCALE = pd.IntervalIndex.from_arrays(
 BUFFER_TYPE_TABLE = [[2, 3, 3, 4],
                      [2, 2, 2, 2],
                      [1, 2, 2, 2],
+                     [1, 1, 1, 2],
                      [1, 1, 1, 2]]
+BUFFER_TYPE_TYPE_SCALE = pd.Index(['no_buffer',
+                                   'solid_surface',
+                                   'landscaped',
+                                   'landscaped_with_tree',
+                                   'vertical'])
+BUFFER_TYEP_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                            [-float('Inf'), 25, 30, 35],
+                            [25, 30, 35, float('Inf')])
 
 
 # Total Buffer Width
