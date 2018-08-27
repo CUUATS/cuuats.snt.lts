@@ -18,6 +18,7 @@ class Segment(object):
         self.posted_speed = Lts.remove_none(kwargs.get('posted_speed'))
         self.total_lanes = Lts.remove_none(kwargs.get('total_lanes'))
         self.marked_center_lane = kwargs.get('marked_center_lane')
+        self.overall_landuse = kwargs.get('overall_landuse')
 
     def _categorize_functional_class(self, functional_class):
         if functional_class is None:
@@ -239,7 +240,7 @@ class Segment(object):
             cond_score = self._calculate_condition_score(sidewalk)
             buffer_type_score = self._calculate_buffer_type_score(sidewalk)
             buffer_width_score = self._calculate_buffer_width_score(sidewalk)
-            landuse_score = self._calculate_landuse_score(sidewalk)
+            landuse_score = self._calculate_landuse_score()
             sidewalk_score = max(cond_score,
                                  buffer_type_score,
                                  buffer_width_score,
