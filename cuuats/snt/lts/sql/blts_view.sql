@@ -32,20 +32,16 @@ return score
 LANGUAGE 'plpython3u';
 
 -- DROP MATERIALIZED VIEW street.blts_mat_view
+
 CREATE MATERIALIZED VIEW street.blts_mat_view AS
 SELECT s.id,
 		s.name,
 		s.geom,
-		b.bike_width,
-		b.buffer_width,
-		i.lane_configuration,
 		s.idot_aadt,
 		s.posted_speed,
 		s.parking_lane_width,
 		s.lanes_per_direction,
 		s.functional_classification,
-		i.right_turn_length,
-		i.bike_approach_alignment,
  		max(set_blts(idot_aadt,
  				 bicycle_facility_width,
  				 posted_speed,
@@ -65,17 +61,12 @@ LEFT JOIN street.intersection_approach as i
 GROUP BY s.id,
 		s.name,
 		s.geom,
-		b.bike_width,
-		b.buffer_width,
-		i.lane_configuration,
 		s.idot_aadt,
 		s.posted_speed,
 		s.parking_lane_width,
 		s.lanes_per_direction,
-		s.functional_classification,
-		i.right_turn_length,
-		i.bike_approach_alignment;
-
+		s.functional_classification;
+		
 -- REFRESH MATERIALIZED VIEW street.blts_mat_view;
 
 SELECT * FROM street.blts_mat_view;
