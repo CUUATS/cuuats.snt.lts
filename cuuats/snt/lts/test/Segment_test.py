@@ -202,28 +202,40 @@ class SegmentTest(unittest.TestCase):
 
     def test_sidewalk_buffer_type(self):
         segment = Segment(posted_speed=25)
-        sidewalk = Sidewalk(buffer_type="no_buffer")
+        sidewalk = Sidewalk(buffer_type=None)
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
 
         segment = Segment(posted_speed=30)
         sidewalk = Sidewalk(buffer_type="landscaped")
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
 
+        segment = Segment(posted_speed=45)
+        sidewalk = Sidewalk(buffer_type="no buffer")
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 4)
+
         segment = Segment(posted_speed=35)
         sidewalk = Sidewalk(buffer_type="landscaped")
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
 
         segment = Segment(posted_speed=40)
-        sidewalk = Sidewalk(buffer_type="landscaped_with_tree")
+        sidewalk = Sidewalk(buffer_type="landscaped with trees")
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
 
         segment = Segment(posted_speed=25)
-        sidewalk = Sidewalk(buffer_type="vertical")
+        sidewalk = Sidewalk(buffer_type="solid buffer")
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 1)
 
         segment = Segment(posted_speed=None)
         sidewalk = Sidewalk(buffer_type=None)
         self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=30)
+        sidewalk = Sidewalk(buffer_type='solid surface')
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 2)
+
+        segment = Segment(posted_speed=35)
+        sidewalk = Sidewalk(buffer_type='')
+        self.assertEqual(segment._calculate_buffer_type_score(sidewalk), 3)
 
     def test_buffer_width(self):
         segment = Segment(total_lanes=2)
@@ -253,6 +265,14 @@ class SegmentTest(unittest.TestCase):
         segment = Segment(total_lanes=0)
         sidewalk = Sidewalk(buffer_width=None)
         self.assertEqual(segment._calculate_buffer_width_score(sidewalk), 2)
+
+
+class SidewalkTest(unittest.TestCase):
+    def test_convert_buffer_type(self):
+        sidewalk = Sidewalk()
+        self.assertEqual(sidewalk._convert_buffer_type(None), 'no buffer')
+        self.assertEqual(sidewalk._convert_buffer_type(''), 'no buffer')
+        self.assertEqual(sidewalk._convert_buffer_type('a'), 'a')
 
 
 if __name__ == '__main__':

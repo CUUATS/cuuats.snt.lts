@@ -164,9 +164,7 @@ class Segment(object):
         return Lts.calculate_score(table, crits)
 
     def _calculate_buffer_type_score(self, sidewalk):
-        buffer_type = sidewalk.buffer_type
-        if buffer_type is None:
-            buffer_type = 'no_buffer'
+        buffer_type = c.BUFFER_TYPE_DICT.get(sidewalk.buffer_type)
         speed = self.posted_speed
         table = c.BUFFER_TYPE_TABLE
         buffer_scale = c.BUFFER_TYPE_TYPE_SCALE
@@ -193,9 +191,9 @@ class Segment(object):
         # return c.LANDUSE_DICT.get(self.overall_landuse)
 
         # return the overall value in database as score
-        if self.overall_landuse == 0:
+        if self.overall_landuse == '0':
             return 1
-        return self.overall_landuse
+        return int(self.overall_landuse)
 
     def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
         rtl_score = 0
@@ -238,11 +236,11 @@ class Segment(object):
         segment_score = float('Inf')
         for sidewalk in sidewalks:
             cond_score = self._calculate_condition_score(sidewalk)
-            buffer_type_score = self._calculate_buffer_type_score(sidewalk)
+            # buffer_type_score = self._calculate_buffer_type_score(sidewalk)
             buffer_width_score = self._calculate_buffer_width_score(sidewalk)
             landuse_score = self._calculate_landuse_score()
             sidewalk_score = max(cond_score,
-                                 buffer_type_score,
+                                 # buffer_type_score,
                                  buffer_width_score,
                                  landuse_score)
 

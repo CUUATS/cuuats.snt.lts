@@ -111,10 +111,16 @@ BUFFER_TYPE_TABLE = pd.DataFrame([[2, 3, 3, 4],
                                   [1, 2, 2, 2],
                                   [1, 1, 1, 2],
                                   [1, 1, 1, 2]])
-BUFFER_TYPE_TYPE_SCALE = pd.Index(['no_buffer',
-                                   'solid_surface',
+# Bubffer type key translate database category to PLTS, dict key from database
+BUFFER_TYPE_DICT = {'no buffer': 'no buffer',
+                    'solid surface': 'solid surface',
+                    'landscaped': 'landscaped',
+                    'landscaped with trees': 'landscaped with trees',
+                    'solid buffer': 'vertical'}
+BUFFER_TYPE_TYPE_SCALE = pd.Index(['no buffer',
+                                   'solid surface',
                                    'landscaped',
-                                   'landscaped_with_tree',
+                                   'landscaped with trees',
                                    'vertical'])
 BUFFER_TYEP_SPEED_SCALE = pd.IntervalIndex.from_arrays(
                             [-float('Inf'), 25, 30, 35],
