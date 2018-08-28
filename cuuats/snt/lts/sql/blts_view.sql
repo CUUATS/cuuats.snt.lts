@@ -28,12 +28,12 @@ approaches = [Approach(lane_configuration=lane_configuration,
 bike_paths = [BikePath(width=bike_path_width,
 					   path_category=path_category)]
 
-score = segment.blts_score(approaches, bike_paths)
+score = segment.blts_score(approaches, bike_paths, 10000)
 return score
 '
 LANGUAGE 'plpython3u';
 
--- DROP MATERIALIZED VIEW street.blts_mat_view
+DROP MATERIALIZED VIEW street.blts_mat_view
 CREATE MATERIALIZED VIEW street.blts_mat_view AS
 SELECT s.id,
 		s.name,
@@ -71,4 +71,3 @@ GROUP BY s.id,
 		
 -- REFRESH MATERIALIZED VIEW street.blts_mat_view;
 
-SELECT * FROM street.blts_mat_view;
