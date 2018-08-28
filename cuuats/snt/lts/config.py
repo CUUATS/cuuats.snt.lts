@@ -1,6 +1,9 @@
 import pandas as pd
 
 # BLTS - SEGMENT SCORING TABLE
+# Off-Street Trail
+OFF_STREET_TRAIL = {'Off-Street Trail': 'Off-Street Trail'}
+OFF_STREET_TRAIL_SCORE = 1
 # Bike Lane with Adjacent Parking Lane Criteria Scorintg Table
 # Score condition maybe flipped from documentation
 BL_ADJ_PK_TABLE_ONE_LANE = pd.DataFrame([[3, 2, 1],

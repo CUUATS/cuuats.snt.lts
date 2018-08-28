@@ -24,7 +24,7 @@ return score
 '
 LANGUAGE 'plpython3u';
 
-DROP MATERIALIZED VIEW street.plts_mat_view;
+-- DROP MATERIALIZED VIEW street.plts_mat_view;
 CREATE MATERIALIZED VIEW street.plts_mat_view AS
 SELECT s.id,
 		s.name,
@@ -55,7 +55,7 @@ GROUP BY s.id,
 	
 -- update pedestrian.sidewalk_segment set buffer_type = 'landscaped with trees' where buffer_type = 'Landscaped with Trees';
 
--- DROP MATERIALIZED VIEW street.lts_mat_view;
+DROP MATERIALIZED VIEW street.lts_mat_view;
 CREATE MATERIALIZED VIEW street.lts_mat_view AS
 SELECT s.id, s.geom , b.blts, p.plts 
 FROM street.segment as s

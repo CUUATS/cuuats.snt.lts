@@ -28,6 +28,12 @@ class Segment(object):
         else:
             return "A"
 
+    def _find_off_street_trail(self, bike_path):
+        trail = c.OFF_STREET_TRAIL
+        if trail.get(bike_path.path_category) == 'Off-Street Trail':
+            return True
+        return False
+
     def _calculate_mix_traffic(self):
         """
         this function calculate the mix traffic scores based on the specify
@@ -204,6 +210,9 @@ class Segment(object):
         mix_traffic_score = self._calculate_mix_traffic()
 
         for bike_path in bike_paths:
+            if self._find_off_street_trail(bike_path):
+                return c.OFF_STREET_TRAIL_SCORE
+
             pk_score = max(pk_score,
                            self._calculate_bikelane_with_adj_parking(
                             bike_path))

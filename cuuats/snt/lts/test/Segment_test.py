@@ -266,6 +266,14 @@ class SegmentTest(unittest.TestCase):
         sidewalk = Sidewalk(buffer_width=None)
         self.assertEqual(segment._calculate_buffer_width_score(sidewalk), 2)
 
+    def test_off_street_trail(self):
+        segment = Segment()
+        bike_path = BikePath(path_category='Off-Street Trail')
+        self.assertTrue(segment._find_off_street_trail(bike_path))
+
+        bike_path = BikePath(path_category='Other Trail')
+        self.assertFalse(segment._find_off_street_trail(bike_path))
+
 
 class SidewalkTest(unittest.TestCase):
     def test_convert_buffer_type(self):
