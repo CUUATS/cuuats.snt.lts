@@ -264,25 +264,3 @@ class Segment(object):
             segment_score = min(segment_score, sidewalk_score)
 
         return segment_score
-
-
-if __name__ == '__main__':
-    segment = Segment(lanes_per_direction=None,
-                      parking_lane_width=5,
-                      aadt=None,
-                      functional_class=None,
-                      posted_speed=35,
-                      total_lanes=6)
-    approaches = [Approach(lane_configuration=None,
-                           right_turn_lane_length=None,
-                           bike_lane_approach=None)]
-    bike_paths = [BikePath(width=1)]
-    print(segment.blts_score(approaches, bike_paths))
-
-    sidewalks = [(Sidewalk(sidewalk_width=5,
-                           sidewalk_score=65,
-                           buffer_type='solid_surface',
-                           buffer_width=20,
-                           overall_landuse=1))]
-
-    print(segment.plts_score(sidewalks))
