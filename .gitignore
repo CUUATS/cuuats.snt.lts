@@ -104,3 +104,4 @@ ENV/
 
 snt.sql
 view.sql
+gtfs_data/
