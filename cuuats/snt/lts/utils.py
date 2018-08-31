@@ -21,25 +21,6 @@ def calculate_score(score, crits):
     return score
 
 
-def aggregate_score(*scores, **kwargs):
-    """
-    this function aggregate number of scores based on *scores
-    :param self: self
-    :param scores: scores arguments
-    :param kwargs: "MAX" - returns maximum, "MIN" - return minimum
-    :return: int score
-    """
-    score_list = [score for score in scores if score is not 0]
-    method = kwargs.get("method")
-    score = 0
-
-    if method == "MIN":
-        score = min(score_list)
-    elif method == "MAX":
-        score = max(score_list)
-    return score
-
-
 def calculate_ltl_crossed(lane_config):
     """
     this function takes lane configuration string and return the lanecrossed

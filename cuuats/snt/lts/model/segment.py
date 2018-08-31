@@ -223,12 +223,13 @@ class Segment(object):
                               self._calculate_bikelane_without_adj_parking(
                                bike_path))
 
-        segment_score = utils.aggregate_score(
+        segment_components = [
             mix_traffic_score,
             pk_score,
-            no_pk_score,
-            method='MIN'
-        )
+            no_pk_score
+        ]
+
+        segment_score = min([s for s in segment_components if s is not 0])
 
         if self.aadt >= turn_threshold:
             for approach in approaches:
@@ -237,12 +238,13 @@ class Segment(object):
                 ltl_score = max(ltl_score,
                                 self._calculate_left_turn_lane(approach))
 
-        return utils.aggregate_score(
+        score_components = [
             segment_score,
             rtl_score,
             ltl_score,
-            method='MAX'
-        )
+        ]
+
+        return max([s for s in score_components if s is not 0])
 
     def plts_score(self, sidewalks=None):
         segment_score = float('Inf')
