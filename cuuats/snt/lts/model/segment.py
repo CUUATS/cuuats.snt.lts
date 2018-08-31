@@ -1,19 +1,19 @@
 # Segment Class for LTS Assessment
 from cuuats.snt.lts import config as c
-from cuuats.snt.lts.lts_postgis import Lts
+from cuuats.snt.lts import utils
 
 
 class Segment(object):
     def __init__(self, **kwargs):
-        self.lanes_per_direction = Lts.remove_none(
+        self.lanes_per_direction = utils.remove_none(
                                     kwargs.get('lanes_per_direction'))
         self.parking_lane_width = kwargs.get('parking_lane_width')
-        self.aadt = int(Lts.remove_none(kwargs.get('aadt')))
+        self.aadt = int(utils.remove_none(kwargs.get('aadt')))
         self.functional_class = self._categorize_functional_class(
-                                    Lts.remove_none(
+                                    utils.remove_none(
                                         kwargs.get('functional_class')))
-        self.posted_speed = Lts.remove_none(kwargs.get('posted_speed'))
-        self.total_lanes = Lts.remove_none(kwargs.get('total_lanes'))
+        self.posted_speed = utils.remove_none(kwargs.get('posted_speed'))
+        self.total_lanes = utils.remove_none(kwargs.get('total_lanes'))
         self.marked_center_lane = kwargs.get('marked_center_lane')
         self.overall_landuse = kwargs.get('overall_landuse')
 
@@ -39,14 +39,14 @@ class Segment(object):
         :return: np.int64 score
         """
         aadt = self.aadt
-        lpd = Lts.remove_none(self.lanes_per_direction)
+        lpd = utils.remove_none(self.lanes_per_direction)
         table = c.MIXED_TRAF_TABLE
         aadt_scale = c.URBAN_FIX_TRAFFIC_AADT_SCALE
         lane_scale = c.URBAN_FIX_TRAFFIC_LANE_SCALE
 
         crits = ([aadt, aadt_scale],
                  [lpd, lane_scale])
-        return Lts.calculate_score(table, crits)
+        return utils.calculate_score(table, crits)
 
     def _calculate_bikelane_with_adj_parking(self, bike_path):
         parking_lane_width = self.parking_lane_width
@@ -68,12 +68,12 @@ class Segment(object):
         elif lpd is None or lpd == 1:
             crits = ([aadt, aadt_scale],
                      [width + parking_lane_width, width_scale])
-            return Lts.calculate_score(one_lane_table, crits)
+            return utils.calculate_score(one_lane_table, crits)
         # 2 lpd or greater
         else:
             crits = ([aadt, aadt_scale],
                      [width + parking_lane_width, width_scale_two_lanes])
-            return Lts.calculate_score(multi_lane_table, crits)
+            return utils.calculate_score(multi_lane_table, crits)
 
     def _calculate_bikelane_without_adj_parking(self, bike_path):
         parking_lane_width = self.parking_lane_width
@@ -93,12 +93,12 @@ class Segment(object):
         elif lpd is None or lpd == 1:
             crits = ([aadt, aadt_scale],
                      [width, width_scale_one_lane])
-            return Lts.calculate_score(one_lane_table, crits)
+            return utils.calculate_score(one_lane_table, crits)
         # 2 lps or greater
         else:
             crits = ([aadt, aadt_scale],
                      [width, width_scale_two_lane])
-            return Lts.calculate_score(multi_lane_table, crits)
+            return utils.calculate_score(multi_lane_table, crits)
 
     def _calculate_right_turn_lane(self, approach):
         lane_config = approach.lane_configuration
@@ -134,7 +134,7 @@ class Segment(object):
         L = "L"  # exclusive left turn lane
         dual_share_table = c.LTL_DUAL_SHARED_TABLE
         ltl_table = c.LTL_CRIT_TABLE
-        lane_crossed = Lts.calculate_ltl_crossed(lane_config)
+        lane_crossed = utils.calculate_ltl_crossed(lane_config)
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
@@ -142,12 +142,12 @@ class Segment(object):
             return 0
         if L in lane_config or K in lane_config:
             crit = [(speed, speed_scale)]
-            return Lts.calculate_score(dual_share_table, crit)
+            return utils.calculate_score(dual_share_table, crit)
         else:
             crit = [(speed, speed_scale),
                     (lane_crossed, lane_crossed_scale)]
 
-            return Lts.calculate_score(ltl_table, crit)
+            return utils.calculate_score(ltl_table, crit)
 
     def _calculate_condition_score(self, sidewalk):
         width = sidewalk.sidewalk_width
@@ -164,7 +164,7 @@ class Segment(object):
         crits = ([width, width_scale],
                  [cond, cond_scale])
 
-        return Lts.calculate_score(table, crits)
+        return utils.calculate_score(table, crits)
 
     def _calculate_buffer_type_score(self, sidewalk):
         buffer_type = c.BUFFER_TYPE_DICT.get(sidewalk.buffer_type, 'no buffer')
@@ -184,7 +184,7 @@ class Segment(object):
         crits = ([buffer_type, buffer_scale],
                  [speed, speed_scale])
 
-        return Lts.calculate_score(table, crits)
+        return utils.calculate_score(table, crits)
 
     def _calculate_buffer_width_score(self, sidewalk):
         total_lanes = self.total_lanes
@@ -195,7 +195,7 @@ class Segment(object):
         crits = ([total_lanes, lane_scale],
                  [buffer_width, width_scale])
 
-        return Lts.calculate_score(table, crits)
+        return utils.calculate_score(table, crits)
 
     def _calculate_landuse_score(self):
         # method to get landuse score from a dictionary
@@ -225,7 +225,7 @@ class Segment(object):
                               self._calculate_bikelane_without_adj_parking(
                                bike_path))
 
-        segment_score = Lts.aggregate_score(
+        segment_score = utils.aggregate_score(
             mix_traffic_score,
             pk_score,
             no_pk_score,
@@ -239,7 +239,7 @@ class Segment(object):
                 ltl_score = max(ltl_score,
                                 self._calculate_left_turn_lane(approach))
 
-        return Lts.aggregate_score(
+        return utils.aggregate_score(
             segment_score,
             rtl_score,
             ltl_score,
