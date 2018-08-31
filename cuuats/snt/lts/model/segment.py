@@ -99,7 +99,7 @@ class Segment(object):
             return utils.calculate_score(multi_lane_table, crits)
 
     def _calculate_right_turn_lane(self, approach):
-        lane_config = approach.lane_configuration
+        lane_config = approach.lanes.config
         rtl_length = approach.right_turn_lane_length
         bike_lane_approach = approach.bike_lane_approach
         functional_class = self.functional_class
@@ -135,9 +135,9 @@ class Segment(object):
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
-        if approach.lane.config is None or functional_class == "C":
+        if approach.lanes.config is None or functional_class == "C":
             return 0
-        if L in approach.lane.config or K in approach.lane.config:
+        if L in approach.lanes.config or K in approach.lanes.config:
             crit = [(speed, speed_scale)]
             return utils.calculate_score(dual_share_table, crit)
         else:
