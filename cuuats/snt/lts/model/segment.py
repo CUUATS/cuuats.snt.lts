@@ -5,15 +5,13 @@ from cuuats.snt.lts import utils
 
 class Segment(object):
     def __init__(self, **kwargs):
-        self.lanes_per_direction = utils.remove_none(
-                                    kwargs.get('lanes_per_direction'))
+        self.lanes_per_direction = kwargs.get('lanes_per_direction') or 0
         self.parking_lane_width = kwargs.get('parking_lane_width')
-        self.aadt = int(utils.remove_none(kwargs.get('aadt')))
+        self.aadt = int(kwargs.get('aadt') or 0)
         self.functional_class = self._categorize_functional_class(
-                                    utils.remove_none(
-                                        kwargs.get('functional_class')))
-        self.posted_speed = utils.remove_none(kwargs.get('posted_speed'))
-        self.total_lanes = utils.remove_none(kwargs.get('total_lanes'))
+            kwargs.get('functional_class') or 0)
+        self.posted_speed = kwargs.get('posted_speed') or 0
+        self.total_lanes = kwargs.get('total_lanes') or 0
         self.marked_center_lane = kwargs.get('marked_center_lane')
         self.overall_landuse = kwargs.get('overall_landuse')
 
@@ -39,7 +37,7 @@ class Segment(object):
         :return: np.int64 score
         """
         aadt = self.aadt
-        lpd = utils.remove_none(self.lanes_per_direction)
+        lpd = self.lanes_per_direction
         table = c.MIXED_TRAF_TABLE
         aadt_scale = c.URBAN_FIX_TRAFFIC_AADT_SCALE
         lane_scale = c.URBAN_FIX_TRAFFIC_LANE_SCALE

@@ -3,12 +3,6 @@ import pandas as pd
 import numpy as np
 
 
-def remove_none(value):
-    if value is None:
-        value = 0
-    return value
-
-
 def calculate_score(score, crits):
     if (not isinstance(score, pd.DataFrame)) and \
        (not isinstance(score, pd.Series)):

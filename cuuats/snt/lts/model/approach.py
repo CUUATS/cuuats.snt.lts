@@ -1,12 +1,10 @@
 # Approach class for LTS
-from cuuats.snt.lts import utils
 
 
 class Approach(object):
     def __init__(self, **kwargs):
         self.lane_configuration = kwargs.get('lane_configuration')
-        self.right_turn_lane_length = utils.remove_none(
-                                        kwargs.get('right_turn_lane_length'))
+        self.right_turn_lane_length = kwargs.get('right_turn_lane_length') or 0
         self.right_turn_lane_config = kwargs.get('right_turn_lane_config')
         self.bike_lane_approach = kwargs.get('bike_lane_approach')
         self.lanes_crossed = self._calculate_lanes_crossed(
