@@ -125,20 +125,19 @@ class Segment(object):
         return score
 
     def _calculate_left_turn_lane(self, approach):
-        lane_config = approach.lane_configuration
         speed = self.posted_speed
         functional_class = self.functional_class
         K = "K"  # dual shared
         L = "L"  # exclusive left turn lane
         dual_share_table = c.LTL_DUAL_SHARED_TABLE
         ltl_table = c.LTL_CRIT_TABLE
-        lane_crossed = utils.calculate_ltl_crossed(lane_config)
+        lane_crossed = approach.lanes.lanes_crossed
         speed_scale = c.LTL_DUAL_SHARED_SPEED_SCALE
         lane_crossed_scale = c.LTL_CRIT_LANE_CROSSED_SCALE
 
-        if lane_config is None or functional_class == "C":
+        if approach.lane.config is None or functional_class == "C":
             return 0
-        if L in lane_config or K in lane_config:
+        if L in approach.lane.config or K in approach.lane.config:
             crit = [(speed, speed_scale)]
             return utils.calculate_score(dual_share_table, crit)
         else:
