@@ -1,9 +1,6 @@
 # Segment Class for LTS Assessment
 from cuuats.snt.lts import config as c
 from cuuats.snt.lts.lts_postgis import Lts
-from cuuats.snt.lts.model.Approach import Approach
-from cuuats.snt.lts.model.BikePath import BikePath
-from cuuats.snt.lts.model.Sidewalk import Sidewalk
 
 
 class Segment(object):

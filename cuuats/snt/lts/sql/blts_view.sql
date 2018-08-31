@@ -13,9 +13,7 @@ set_blts(idot_aadt int,
 		 path_category text
 		) RETURNS INT AS
 '
-from cuuats.snt.lts.model.Segment import Segment
-from cuuats.snt.lts.model.Approach import Approach
-from cuuats.snt.lts.model.BikePath import BikePath
+from cuuats.snt.lts import Segment, Approach, BikePath
 
 segment = Segment(lanes_per_direction=lanes_per_direction,
 				  parking_lane_width=parking_lane_width,
@@ -68,6 +66,5 @@ GROUP BY s.id,
 		s.parking_lane_width,
 		s.lanes_per_direction,
 		s.functional_classification;
-		
--- REFRESH MATERIALIZED VIEW street.blts_mat_view;
 
+-- REFRESH MATERIALIZED VIEW street.blts_mat_view;
