@@ -1,12 +1,6 @@
 # Unit Test for Segment Class
 import unittest
-from cuuats.snt.lts.model.Segment import Segment
-from cuuats.snt.lts.model.BikePath import BikePath
-from cuuats.snt.lts.model.Approach import Approach
-from cuuats.snt.lts.model.Sidewalk import Sidewalk
-# from cuuats.snt.lts import config as c
-# import pandas as pd
-# from cuuats.snt.lts.lts_postgis import Lts
+from cuuats.snt.lts import Segment, BikePath, Approach, Sidewalk
 
 
 class SegmentTest(unittest.TestCase):
