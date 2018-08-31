@@ -187,7 +187,7 @@ class Segment(object):
         return utils.calculate_score(table, crits)
 
     def _calculate_landuse_score(self):
-        # method to get landuse score from a dictionary
+        # TODO: get landuse score from a dictionary
         # return c.LANDUSE_DICT.get(self.overall_landuse)
 
         # return the overall value in database as score
