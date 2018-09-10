@@ -1,7 +1,9 @@
+CREATE VIEW street.crossing_criteria AS
 WITH approach_angle AS (
   SELECT approach.segment_id,
     approach.intersection_id,
-	segment.posted_speed,
+	  segment.posted_speed,
+    intersection.control_type,
     CASE WHEN approach.lane_configuration IS DISTINCT FROM NULL THEN
       char_length(approach.lane_configuration) ELSE segment.total_lanes END
       AS lanes,
@@ -16,6 +18,8 @@ WITH approach_angle AS (
   FROM street.intersection_approach AS approach
   LEFT JOIN street.segment AS segment
     ON approach.segment_id = segment.segment_id
+  JOIN street.intersection AS intersection
+    ON approach.intersection_id = intersection.id
 ) SELECT seg.segment_id,
   max(crossed.posted_speed) AS posted_speed,
   max(coalesce(crossed.lanes, 0)) AS max_lanes_crossed
