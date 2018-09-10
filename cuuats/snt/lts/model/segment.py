@@ -146,6 +146,30 @@ class Segment(object):
 
             return utils.calculate_score(ltl_table, crit)
 
+    def _calculate_crossing_without_median(self, crossing):
+        speed = crossing.crossing_speed
+        lanes_crossed = crossing.lanes
+        crossing_no_med_table = c.CROSSING_NO_MED_TABLE
+        speed_scale = c.CROSSING_NO_MED_SPEED_SCALE
+        lane_scale = c.CROSSING_NO_MED_LANE_SCALE
+
+        crit = [(speed, speed_scale),
+                (lanes_crossed, lane_scale)]
+
+        return utils.calculate_score(crossing_no_med_table, crit)
+
+    def _calculate_crossing_with_median(self, crossing):
+        speed = crossing.crossing_speed
+        lanes_crossed = crossing.lanes
+        crossing_no_med_table = c.CROSSING_NO_MED_TABLE
+        speed_scale = c.CROSSING_HAS_MED_SPEED_SCALE
+        lane_scale = c.CROSSING_HAS_MED_LANE_SCALE
+
+        crit = [(speed, speed_scale),
+                (lanes_crossed, lane_scale)]
+
+        return utils.calculate_score(crossing_no_med_table, crit)
+
     def _calculate_condition_score(self, sidewalk):
         width = sidewalk.sidewalk_width
         cond = sidewalk.sidewalk_score
@@ -195,7 +219,8 @@ class Segment(object):
             return 1
         return int(self.overall_landuse)
 
-    def blts_score(self, approaches, bike_paths=None, turn_threshold=0):
+    def blts_score(self, approaches, crossings,
+                   bike_paths=None, turn_threshold=0):
         rtl_score = 0
         ltl_score = 0
         pk_score = 0
@@ -223,16 +248,26 @@ class Segment(object):
         segment_score = min([s for s in segment_components if s is not 0])
 
         if self.aadt >= turn_threshold:
+            # turn lane criteria
             for approach in approaches:
                 rtl_score = max(rtl_score,
                                 self._calculate_right_turn_lane(approach))
                 ltl_score = max(ltl_score,
                                 self._calculate_left_turn_lane(approach))
 
+        # crossing criteria
+        for crossing in crossings:
+            if crossing.control_type is None:
+                crossing_score = self._calculate_crossing_without_median(
+                                                        crossing)
+            else:
+                crossing_score = self._calculate_crossing_with_median(crossing)
+
         score_components = [
             segment_score,
             rtl_score,
             ltl_score,
+            crossing_score
         ]
 
         return max([s for s in score_components if s is not 0])

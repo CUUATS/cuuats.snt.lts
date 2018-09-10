@@ -1,6 +1,6 @@
 # Unit Test for Segment Class
 import unittest
-from cuuats.snt.lts import Segment, BikePath, Approach, Sidewalk
+from cuuats.snt.lts import Segment, BikePath, Approach, Sidewalk, Crossing
 
 
 class TestSegment(unittest.TestCase):
@@ -267,6 +267,41 @@ class TestSegment(unittest.TestCase):
 
         bike_path = BikePath(path_category='Other Trail')
         self.assertFalse(segment._find_off_street_trail(bike_path))
+
+    def test_no_median_crossing(self):
+        segment = Segment()
+        crossing = Crossing(crossing_speed=25, lanes=3)
+        self.assertEqual(segment._calculate_crossing_without_median(crossing),
+                         1)
+
+        crossing = Crossing(crossing_speed=30, lanes=4)
+        self.assertEqual(segment._calculate_crossing_without_median(crossing),
+                         2)
+
+        crossing = Crossing(crossing_speed=35, lanes=5)
+        self.assertEqual(segment._calculate_crossing_without_median(crossing),
+                         3)
+
+        crossing = Crossing(crossing_speed=40, lanes=6)
+        self.assertEqual(segment._calculate_crossing_without_median(crossing),
+                         4)
+
+    def test_has_median_crossing(self):
+        segment = Segment()
+        crossing = Crossing(crossing_speed=25, lanes=1)
+        self.assertEqual(segment._calculate_crossing_with_median(crossing), 1)
+
+        crossing = Crossing(crossing_speed=30, lanes=2)
+        self.assertEqual(segment._calculate_crossing_with_median(crossing), 1)
+
+        crossing = Crossing(crossing_speed=35, lanes=3)
+        self.assertEqual(segment._calculate_crossing_with_median(crossing), 3)
+
+        crossing = Crossing(crossing_speed=35, lanes=2)
+        self.assertEqual(segment._calculate_crossing_with_median(crossing), 2)
+
+        crossing = Crossing(crossing_speed=40, lanes=4)
+        self.assertEqual(segment._calculate_crossing_with_median(crossing), 4)
 
 
 if __name__ == '__main__':

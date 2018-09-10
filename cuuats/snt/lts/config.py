@@ -80,19 +80,31 @@ LTL_CRIT_LANE_CROSSED_SCALE = pd.IntervalIndex.from_arrays(
 
 # Unsignalized Intersection Crossing Without a Median Refuge Criteria
 # Scoring Table
-CROSSING_NO_MED_TABLE = [[1, 2, 4],
-                         [1, 2, 4],
-                         [2, 3, 4],
-                         [3, 4, 4]]
+
+CROSSING_NO_MED_TABLE = pd.DataFrame([[1, 2, 4],
+                                      [1, 2, 4],
+                                      [2, 3, 4],
+                                      [3, 4, 4]])
+CROSSING_NO_MED_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 25, 30, 35],
+                                [25, 30, 35, float('Inf')])
+CROSSING_NO_MED_LANE_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 3, 5],
+                                [3, 5, float('Inf')])
 
 
 # Unsignalized Intersection Crossing With a Median Refuge Criteria
 # Scoring Table
-CROSSING_HAS_MED_TABLE = [[1, 1, 2],
-                          [1, 2, 3],
-                          [2, 3, 4],
-                          [3, 4, 4]]
-
+CROSSING_HAS_MED_TABLE = pd.DataFrame([[1, 1, 2],
+                                       [1, 2, 3],
+                                       [2, 3, 4],
+                                       [3, 4, 4]])
+CROSSING_HAS_MED_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 25, 30, 35],
+                                [25, 30, 35, float('Inf')])
+CROSSING_HAS_MED_LANE_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 2, 4],
+                                [2, 4, float('Inf')])
 
 # PLTS - SIDEWALK SCORING TABLE
 # Scoring table for Sidewalk Condition
