@@ -8,8 +8,7 @@ set_plts(score_condition float,
 		 overall_landuse char
 		) RETURNS INT AS
 '
-from cuuats.snt.lts.model.Segment import Segment
-from cuuats.snt.lts.model.Sidewalk import Sidewalk
+from cuuats.snt.lts import Segment, Sidewalk
 	
 segment = Segment(total_lanes=total_lanes,
 				  posted_speed=posted_speed,
@@ -52,7 +51,5 @@ GROUP BY s.id,
 		s.parking_lane_width,
 		s.lanes_per_direction,
 		s.functional_classification;
-	
+
 -- update pedestrian.sidewalk_segment set buffer_type = 'landscaped with trees' where buffer_type = 'Landscaped with Trees';
-
-

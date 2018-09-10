@@ -26,5 +26,9 @@ setup(name='cuuats.snt.lts',
       author_email='klai@ccrpc.org',
       url='https://cuuats.org/',
       packages=find_packages(exclude=['ez_setup']),
-      namespace_packages=['cuuats', 'cuuats.snt']
+      namespace_packages=['cuuats', 'cuuats.snt'],
+      install_requires=[
+        'pandas>=0.23.4',
+        'numpy>=1.15.1'
+      ]
       )

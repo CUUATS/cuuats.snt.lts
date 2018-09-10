@@ -1,15 +1,9 @@
 # Unit Test for Segment Class
 import unittest
-from cuuats.snt.lts.model.Segment import Segment
-from cuuats.snt.lts.model.BikePath import BikePath
-from cuuats.snt.lts.model.Approach import Approach
-from cuuats.snt.lts.model.Sidewalk import Sidewalk
-# from cuuats.snt.lts import config as c
-# import pandas as pd
-# from cuuats.snt.lts.lts_postgis import Lts
+from cuuats.snt.lts import Segment, BikePath, Approach, Sidewalk
 
 
-class SegmentTest(unittest.TestCase):
+class TestSegment(unittest.TestCase):
     def test_categorize_functional_class(self):
         segment = Segment()
         self.assertEqual(segment._categorize_functional_class(None), 'C')
@@ -273,14 +267,6 @@ class SegmentTest(unittest.TestCase):
 
         bike_path = BikePath(path_category='Other Trail')
         self.assertFalse(segment._find_off_street_trail(bike_path))
-
-
-class SidewalkTest(unittest.TestCase):
-    def test_convert_buffer_type(self):
-        sidewalk = Sidewalk()
-        self.assertEqual(sidewalk._convert_buffer_type(None), 'no buffer')
-        self.assertEqual(sidewalk._convert_buffer_type(''), 'no buffer')
-        self.assertEqual(sidewalk._convert_buffer_type('a'), 'a')
 
 
 if __name__ == '__main__':
