@@ -1,6 +1,6 @@
 DROP MATERIALIZED VIEW street.lts_mat_view;
 CREATE MATERIALIZED VIEW street.lts_mat_view AS
-SELECT s.id, s.geom , b.blts, p.plts 
+SELECT s.id, s.geom , b.blts, p.plts
 FROM street.segment as s
 LEFT JOIN street.blts_mat_view as b
 	ON s.id = b.id
@@ -8,11 +8,11 @@ LEFT JOIN street.plts_mat_view as p
 	ON s.id = p.id;
 
 CREATE MATERIALIZED VIEW street.lts_mat_view AS
-SELECT b1.id, b1.blts, b2.plts FROM 
-	(SELECT s.id,
+SELECT b1.id, b1.blts, b2.plts FROM
+	(SELECT s.id
 			max(set_blts(idot_aadt,
 					 bicycle_facility_width,
-					 posted_speed,
+					 s.posted_speed,
 					 parking_lane_width,
 					 lanes_per_direction,
 					 functional_classification,
@@ -27,6 +27,8 @@ SELECT b1.id, b1.blts, b2.plts FROM
 		  pcd_segment_match(s.geom, b.bike_geom, 100)
 	LEFT JOIN street.intersection_approach as i
 		ON s.id = i.segment_id
+	LEFT JOIN street.crossing_criteria as cc
+	 	ON s.id = cc.segment_id
 	GROUP BY s.id) b1
 LEFT JOIN
 	(SELECT s.id,
