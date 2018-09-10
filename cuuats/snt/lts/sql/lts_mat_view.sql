@@ -1,15 +1,7 @@
-DROP MATERIALIZED VIEW street.lts_mat_view;
+-- DROP MATERIALIZED VIEW street.lts_mat_view;
 CREATE MATERIALIZED VIEW street.lts_mat_view AS
-SELECT s.id, s.geom , b.blts, p.plts
-FROM street.segment as s
-LEFT JOIN street.blts_mat_view as b
-	ON s.id = b.id
-LEFT JOIN street.plts_mat_view as p
-	ON s.id = p.id;
-
-CREATE MATERIALIZED VIEW street.lts_mat_view AS
-SELECT b1.id, b1.blts, b2.plts FROM
-	(SELECT s.id
+SELECT b1.segment_id, b1.blts, b2.plts FROM
+	(SELECT s.segment_id,
 			max(set_blts(idot_aadt,
 					 bicycle_facility_width,
 					 s.posted_speed,
@@ -20,18 +12,22 @@ SELECT b1.id, b1.blts, b2.plts FROM
 					 lane_configuration,
 					 right_turn_length,
 					 bike_approach_alignment,
-					 path_category)) as blts
+					 path_category,
+				   cc.posted_speed,
+				   max_lanes_crossed,
+				   control_type,
+				   cc.median_refuge_type)) as blts
 	FROM street.segment AS s
 	LEFT JOIN bicycle.path_singlepart as b
 		ON ST_DWithin(s.geom, b.bike_geom, 100) AND
 		  pcd_segment_match(s.geom, b.bike_geom, 100)
 	LEFT JOIN street.intersection_approach as i
-		ON s.id = i.segment_id
+		ON s.segment_id = i.segment_id
 	LEFT JOIN street.crossing_criteria as cc
-	 	ON s.id = cc.segment_id
-	GROUP BY s.id) b1
+	 	ON s.segment_id = cc.segment_id
+	GROUP BY s.segment_id) b1
 LEFT JOIN
-	(SELECT s.id,
+	(SELECT s.segment_id,
 			max(set_plts(score_condition,
 						 sw_width,
 						 posted_speed,
@@ -43,7 +39,5 @@ LEFT JOIN
 	LEFT JOIN pedestrian.sidewalk_singlepart as w
 		ON ST_DWithin(s.geom, w.sw_geom, 100) AND
 		  pcd_segment_match(s.geom, w.sw_geom, 100)
-	GROUP BY s.id) b2
-ON b1.id = b2.id;
-
-SELECT * FROM street.lts_mat_view LIMIT 5;
+	GROUP BY s.segment_id) b2
+ON b1.segment_id = b2.segment_id;

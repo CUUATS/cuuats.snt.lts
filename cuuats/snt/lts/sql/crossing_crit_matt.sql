@@ -1,9 +1,10 @@
-CREATE VIEW street.crossing_criteria AS
+CREATE OR REPLACE VIEW street.crossing_criteria AS
 WITH approach_angle AS (
   SELECT approach.segment_id,
     approach.intersection_id,
 	  segment.posted_speed,
     intersection.control_type,
+    approach.median_refuge_type,
     CASE WHEN approach.lane_configuration IS DISTINCT FROM NULL THEN
       char_length(approach.lane_configuration) ELSE segment.total_lanes END
       AS lanes,
@@ -21,6 +22,8 @@ WITH approach_angle AS (
   JOIN street.intersection AS intersection
     ON approach.intersection_id = intersection.id
 ) SELECT seg.segment_id,
+  seg.control_type,
+  seg.median_refuge_type,
   max(crossed.posted_speed) AS posted_speed,
   max(coalesce(crossed.lanes, 0)) AS max_lanes_crossed
 FROM approach_angle AS seg
@@ -30,5 +33,5 @@ LEFT JOIN approach_angle AS crossed
     AND (CASE WHEN abs(seg.angle - crossed.angle) > 180
       THEN 360 - abs(seg.angle - crossed.angle)
       ELSE abs(seg.angle - crossed.angle) END) < 135
-GROUP BY seg.segment_id
+GROUP BY seg.segment_id, seg.control_type, seg.median_refuge_type
 ORDER BY seg.segment_id

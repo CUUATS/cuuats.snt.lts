@@ -10,10 +10,14 @@ set_blts(idot_aadt int,
 		 lane_configuration text,
 		 right_turn_length int,
 		 bike_approach_alignment text,
-		 path_category text
+		 path_category text,
+		 crossing_speed int,
+		 lanes_crossed int,
+		 control_type text,
+		 median text
 		) RETURNS INT AS
 '
-from cuuats.snt.lts import Segment, Approach, BikePath
+from cuuats.snt.lts import Segment, Approach, BikePath, Crossing
 
 segment = Segment(lanes_per_direction=lanes_per_direction,
 				  parking_lane_width=parking_lane_width,
@@ -23,10 +27,14 @@ segment = Segment(lanes_per_direction=lanes_per_direction,
 approaches = [Approach(lane_configuration=lane_configuration,
 				     right_turn_length=right_turn_length,
 				     bike_lane_approach=bike_approach_alignment)]
+crossings = [Crossing(crossing_speed=crossing_speed,
+											 lanes_crossed=lanes_crossed,
+										   control_type=control_type,
+										   median=median)]
 bike_paths = [BikePath(width=bike_path_width,
 					   path_category=path_category)]
 
-score = segment.blts_score(approaches, bike_paths, 10000)
+score = segment.blts_score(approaches, crossings, bike_paths, 10000)
 return score
 '
 LANGUAGE 'plpython3u';
