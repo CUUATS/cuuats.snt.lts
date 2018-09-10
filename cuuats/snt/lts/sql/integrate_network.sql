@@ -16,20 +16,6 @@ FROM gtfs.routes r
 GROUP BY r.route_id, r.route_short_name
 HAVING count(t.service_id) > 50;
 
--- for each of the trip in the trip table, find the starting intersection and the end intersection
--- also create a weight for the edge based on 
-SELECT 
-	st.trip_id, 
-	st.stop_id, 
-	st.arrival_time, 
-	st.stop_sequence,
-	int_id start_int, 
-	lag(int_id, 1) OVER (PARTITION BY st.trip_id ORDER BY st.stop_sequence) end_int,
-	arrival_time::interval - lag(arrival_time::interval, 1) OVER (PARTITION BY st.trip_id) weight
-FROM gtfs.stop_times st
-	JOIN gtfs.int_stop i
-		ON st.stop_id = i.stop_id
-ORDER BY st.trip_id
 
 -- use the common routes to find routes that has service greater than 10
 CREATE OR REPLACE VIEW gtfs.common_routes AS
@@ -50,6 +36,17 @@ GROUP BY cr.route_id, t.service_id
 HAVING COUNT(t.service_id) > 10
 ORDER BY cr.route_id;
 
-
--- find the common route and create a line geometry between these intersections
-SELECT * FROM gtfs.common_routes;
+-- for each of the trip in the trip table, find the starting intersection and the end intersection
+-- also create a weight for the edge based on the arrival time between two stops
+SELECT 
+	st.trip_id, 
+	st.stop_id, 
+	st.arrival_time, 
+	st.stop_sequence,
+	int_id start_int, 
+	lag(int_id, 1) OVER (PARTITION BY st.trip_id ORDER BY st.stop_sequence) end_int,
+	arrival_time::interval - lag(arrival_time::interval, 1) OVER (PARTITION BY st.trip_id) weight
+FROM gtfs.stop_times st
+	JOIN gtfs.int_stop i
+		ON st.stop_id = i.stop_id
+ORDER BY st.trip_id

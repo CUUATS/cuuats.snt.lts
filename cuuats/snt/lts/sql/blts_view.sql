@@ -59,7 +59,7 @@ LEFT JOIN bicycle.path_singlepart as b
 	ON ST_DWithin(s.geom, b.bike_geom, 100) AND
 	  pcd_segment_match(s.geom, b.bike_geom, 100)
 LEFT JOIN street.intersection_approach as i
-	ON s.id = i.segment_id
+	ON s.segment_id = i.segment_id
 GROUP BY s.id,
 		s.name,
 		s.geom,
