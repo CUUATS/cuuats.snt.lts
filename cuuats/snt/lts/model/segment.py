@@ -258,10 +258,14 @@ class Segment(object):
         # crossing criteria
         for crossing in crossings:
             if crossing.control_type is None:
-                crossing_score = self._calculate_crossing_without_median(
-                                                        crossing)
+                crossing_score = 1
             else:
-                crossing_score = self._calculate_crossing_with_median(crossing)
+                if crossing.median is None:
+                    crossing_score = self._calculate_crossing_without_median(
+                                                        crossing)
+                else:
+                    crossing_score = self._calculate_crossing_with_median(
+                                                        crossing)
 
         score_components = [
             segment_score,
