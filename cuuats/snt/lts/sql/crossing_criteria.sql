@@ -26,8 +26,8 @@ WITH approach_angle AS (
 ) SELECT seg.segment_id,
   seg.control_type,
   seg.median_refuge_type,
-  max(seg.idot_aadt) AS aadt,
-  min(seg.functional_classification) AS functional_class,
+  max(crossed.idot_aadt) AS aadt,
+  min(crossed.functional_classification) AS functional_class,
   max(crossed.posted_speed) AS posted_speed,
   max(coalesce(crossed.lanes, 0)) AS max_lanes_crossed
 FROM approach_angle AS seg
