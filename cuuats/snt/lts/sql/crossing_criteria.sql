@@ -22,10 +22,10 @@ WITH approach_angle AS (
   LEFT JOIN street.segment AS segment
     ON approach.segment_id = segment.segment_id
   JOIN street.intersection AS intersection
-    ON approach.intersection_id = intersection.id
+    ON approach.intersection_id = intersection.intersection_id
 ) SELECT seg.segment_id,
-  seg.control_type,
-  seg.median_refuge_type,
+  crossed.control_type,
+  crossed.median_refuge_type,
   max(crossed.idot_aadt) AS aadt,
   min(crossed.functional_classification) AS functional_class,
   max(crossed.posted_speed) AS posted_speed,
@@ -37,5 +37,5 @@ LEFT JOIN approach_angle AS crossed
     AND (CASE WHEN abs(seg.angle - crossed.angle) > 180
       THEN 360 - abs(seg.angle - crossed.angle)
       ELSE abs(seg.angle - crossed.angle) END) < 135
-GROUP BY seg.segment_id, seg.control_type, seg.median_refuge_type
+GROUP BY seg.segment_id, crossed.control_type, crossed.median_refuge_type
 ORDER BY seg.segment_id
