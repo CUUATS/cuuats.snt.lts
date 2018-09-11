@@ -5,11 +5,17 @@ set_plts(score_condition float,
 		 buffer_type char,
 		 total_lanes int,
 		 buffer_width int,
-		 overall_landuse char
+		 overall_landuse char,
+		 crossing_speed int,
+		 control_type text,
+		 lanes int,
+		 functional_class int,
+		 aadt int,
+		 median text
 		) RETURNS INT AS
 '
-from cuuats.snt.lts import Segment, Sidewalk
-	
+from cuuats.snt.lts import Segment, Sidewalk, Crossing
+
 segment = Segment(total_lanes=total_lanes,
 				  posted_speed=posted_speed,
 				  overall_landuse=overall_landuse)
@@ -17,8 +23,16 @@ sidewalks = [Sidewalk(sidewalk_width=sidewalk_width,
 					  buffer_type=buffer_type,
 					  buffer_width=buffer_width,
 					  sidewalk_score=score_condition)]
+crossings = [Crossing(
+		crossing_speed=crossing_speed,
+		control_type=control_type,
+		lanes=lanes,
+		median=median,
+		functional_class=functional_class,
+		aadt=aadt
+)]
 
-score = segment.plts_score(sidewalks)
+score = segment.plts_score(crossings, sidewalks)
 return score
 '
 LANGUAGE 'plpython3u';

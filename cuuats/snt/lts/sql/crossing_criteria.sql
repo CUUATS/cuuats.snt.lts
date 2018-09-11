@@ -2,7 +2,9 @@ CREATE OR REPLACE VIEW street.crossing_criteria AS
 WITH approach_angle AS (
   SELECT approach.segment_id,
     approach.intersection_id,
-	  segment.posted_speed,
+	segment.posted_speed,
+    segment.functional_classification,
+    segment.idot_aadt,
     intersection.control_type,
     approach.median_refuge_type,
     CASE WHEN approach.lane_configuration IS DISTINCT FROM NULL THEN
@@ -24,6 +26,8 @@ WITH approach_angle AS (
 ) SELECT seg.segment_id,
   seg.control_type,
   seg.median_refuge_type,
+  max(seg.idot_aadt) AS aadt,
+  min(seg.functional_classification) AS functional_class,
   max(crossed.posted_speed) AS posted_speed,
   max(coalesce(crossed.lanes, 0)) AS max_lanes_crossed
 FROM approach_angle AS seg

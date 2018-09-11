@@ -30,14 +30,22 @@ LEFT JOIN
 	(SELECT s.segment_id,
 			max(set_plts(score_condition,
 						 sw_width,
-						 posted_speed,
+						 s.posted_speed,
 						 buffer_type,
 						 total_lanes,
 						 buffer_width,
-						 overall_land_use)) as plts
+						 overall_land_use,
+					 	 cc.posted_speed,
+					 	 control_type,
+					 	 max_lanes_crossed,
+					 	 functional_class,
+					 	 aadt,
+					 	 median_refuge_type)) as plts
 	FROM street.segment AS s
 	LEFT JOIN pedestrian.sidewalk_singlepart as w
 		ON ST_DWithin(s.geom, w.sw_geom, 100) AND
 		  pcd_segment_match(s.geom, w.sw_geom, 100)
+	LEFT JOIN street.crossing_criteria as cc
+		ON s.segment_id = cc.segment_id
 	GROUP BY s.segment_id) b2
 ON b1.segment_id = b2.segment_id;
