@@ -303,6 +303,60 @@ class TestSegment(unittest.TestCase):
         crossing = Crossing(crossing_speed=40, lanes=4)
         self.assertEqual(segment._calculate_crossing_with_median(crossing), 4)
 
+    def test_collector_crossing(self):
+        segment = Segment()
+        crossing = Crossing(crossing_speed=25, lanes=1, functional_class=4)
+        self.assertEqual(segment._calcualate_collector_crossing_wo_med(
+                crossing), 1)
+
+        crossing = Crossing(crossing_speed=35, lanes=1, functional_class=4)
+        self.assertEqual(segment._calcualate_collector_crossing_wo_med(
+                crossing), 2)
+
+        crossing = Crossing(crossing_speed=30, lanes=2, functional_class=4)
+        self.assertEqual(segment._calcualate_collector_crossing_wo_med(
+                crossing), 2)
+
+        crossing = Crossing(crossing_speed=40, lanes=2, functional_class=4)
+        self.assertEqual(segment._calcualate_collector_crossing_wo_med(
+                crossing), 3)
+
+    def test_arterial_crossing_two_lanes(self):
+        segment = Segment()
+        crossing = Crossing(crossing_speed=25, lanes=2, aadt=4000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_two_lanes(
+                crossing), 2)
+
+        crossing = Crossing(crossing_speed=30, lanes=2, aadt=6000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_two_lanes(
+                crossing), 3)
+
+        crossing = Crossing(crossing_speed=35, lanes=2, aadt=8000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_two_lanes(
+                crossing), 3)
+
+        crossing = Crossing(crossing_speed=40, lanes=2, aadt=10000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_two_lanes(
+                crossing), 4)
+
+    def test_arterial_crossing_three_lanes(self):
+        segment = Segment()
+        crossing = Crossing(crossing_speed=25, lanes=3, aadt=4000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
+                crossing), 3)
+
+        crossing = Crossing(crossing_speed=30, lanes=3, aadt=6000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
+                crossing), 3)
+
+        crossing = Crossing(crossing_speed=35, lanes=3, aadt=10000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
+                crossing), 4)
+
+        crossing = Crossing(crossing_speed=40, lanes=3, aadt=12000)
+        self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
+                crossing), 4)
+
 
 if __name__ == '__main__':
     unittest.main()

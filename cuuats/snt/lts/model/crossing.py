@@ -7,3 +7,5 @@ class Crossing:
         self.control_type = kwargs.get('control_type') or None
         self.lanes = kwargs.get('lanes') or 0
         self.median = kwargs.get('median') or None
+        self.functional_class = kwargs.get('functional_classification') or 7
+        self.aadt = kwargs.get('aadt') or 0

@@ -219,6 +219,42 @@ class Segment(object):
             return 1
         return int(self.overall_landuse)
 
+    def _calcualate_collector_crossing_wo_med(self, crossing):
+        speed = crossing.crossing_speed
+        lanes_crossed = crossing.lanes
+        crossing_table = c.COLLECTOR_CROSSING_TABLE
+        speed_scale = c.COLLECTOR_CROSSING_SPEED_SCALE
+        lane_scale = c.COLLECTOR_CROSSING_LANE_SCALE
+
+        crit = [(speed, speed_scale),
+                (lanes_crossed, lane_scale)]
+
+        return utils.calculate_score(crossing_table, crit)
+
+    def _calculate_art_crossing_wo_med_two_lanes(self, crossing):
+        speed = crossing.crossing_speed
+        lanes_crossed = crossing.aadt
+        crossing_table = c.ARTERIAL_CROSSING_TWO_LANES_TABLE
+        speed_scale = c.ARTERIAL_CROSSING_SPEED_SCALE
+        lane_scale = c.ARTERIAL_CROSSING_TWO_LANES_AADT_SCALE
+
+        crit = [(speed, speed_scale),
+                (lanes_crossed, lane_scale)]
+
+        return utils.calculate_score(crossing_table, crit)
+
+    def _calculate_art_crossing_wo_med_three_lanes(self, crossing):
+        speed = crossing.crossing_speed
+        lanes_crossed = crossing.aadt
+        crossing_table = c.ARTERIAL_CROSSING_THREE_LANES_TABLE
+        speed_scale = c.ARTERIAL_CROSSING_SPEED_SCALE
+        lane_scale = c.ARTERIAL_CROSSING_THREE_LANES_AADT_SCALE
+
+        crit = [(speed, speed_scale),
+                (lanes_crossed, lane_scale)]
+
+        return utils.calculate_score(crossing_table, crit)
+
     def blts_score(self, approaches, crossings,
                    bike_paths=None, turn_threshold=0):
         rtl_score = 0
@@ -276,7 +312,7 @@ class Segment(object):
 
         return max([s for s in score_components if s is not 0])
 
-    def plts_score(self, sidewalks=None):
+    def plts_score(self, crossings, sidewalks=None):
         segment_score = float('Inf')
         for sidewalk in sidewalks:
             cond_score = self._calculate_condition_score(sidewalk)
@@ -290,4 +326,32 @@ class Segment(object):
 
             segment_score = min(segment_score, sidewalk_score)
 
-        return segment_score
+        for crossing in crossings:
+            if crossing.control_type is 'Signalized':
+                crossing_score = 1
+                continue
+            # median criteria - no median
+            if crossing.median is None:
+                # collector crossing
+                if crossing.functional_class >= 4:
+                    crossing_score = \
+                        self._calcualate_collector_crossing_wo_med(
+                            crossing)
+                # arterial crossing
+                else:
+                    if crossing.lanes <= 2:
+                        crossing_score = \
+                            self._calculate_art_crossing_wo_med_two_lanes(
+                                crossing
+                            )
+                    else:
+                        crossing_score = \
+                            self._calculate_art_crossing_wo_med_three_lanes(
+                                crossing
+                            )
+            # median criteria - median present
+            else:
+                raise NotImplementedError(
+                    'Can only have crossing without median')
+
+        return max(segment_score, crossing_score)

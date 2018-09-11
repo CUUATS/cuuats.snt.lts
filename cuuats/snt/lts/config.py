@@ -155,22 +155,37 @@ BUFFER_WIDTH_WIDTH_SCALE = pd.IntervalIndex.from_arrays(
                             [4.9, 9.9, 14.9, 24.9, float('Inf')])
 
 # Collector and local unsignalized intersection crossing
-COLLECTOR_CROSSING_TABLE = [[1, 1],
-                            [1, 2],
-                            [2, 2],
-                            [3, 3]]
+COLLECTOR_CROSSING_TABLE = pd.DataFrame([[1, 1],
+                                         [1, 2],
+                                         [2, 2],
+                                         [3, 3]])
+COLLECTOR_CROSSING_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 25, 30, 35],
+                                [25, 30, 35, float('Inf')])
+COLLECTOR_CROSSING_LANE_SCALE = pd.IntervalIndex.from_arrays(
+                                [-float('Inf'), 1],
+                                [1, float('Inf')])
 
 # Arterial unsignalized intersection crossing - 2 lanes
-ARTERIAL_CROSSING_TWO_LANES_TABLE = [[2, 2, 3],
-                                     [2, 3, 3],
-                                     [3, 3, 4],
-                                     [3, 4, 4]]
+ARTERIAL_CROSSING_TWO_LANES_TABLE = pd.DataFrame([[2, 2, 3],
+                                                  [2, 3, 3],
+                                                  [3, 3, 4],
+                                                  [3, 4, 4]])
+ARTERIAL_CROSSING_SPEED_SCALE = pd.IntervalIndex.from_arrays(
+                                        [-float('Inf'), 25, 30, 35],
+                                        [25, 30, 35, float('Inf')])
+ARTERIAL_CROSSING_TWO_LANES_AADT_SCALE = pd.IntervalIndex.from_arrays(
+                                        [-float('Inf'), 5000, 9000],
+                                        [5000, 9000, float('Inf')])
 
 # Arterial unsignalized intersection crossing - 3 lanes
-ARTERIAL_CROSSING_THREE_LANES_TABLE = [[3, 3, 4],
-                                       [3, 3, 4],
-                                       [3, 4, 4],
-                                       [4, 4, 4]]
+ARTERIAL_CROSSING_THREE_LANES_TABLE = pd.DataFrame([[3, 3, 4],
+                                                   [3, 3, 4],
+                                                   [3, 4, 4],
+                                                   [4, 4, 4]])
+ARTERIAL_CROSSING_THREE_LANES_AADT_SCALE = pd.IntervalIndex.from_arrays(
+                                     [-float('Inf'), 8000, 12000],
+                                     [8000, 12000, float('Inf')])
 
 # Land Use
 LANDUSE_DICT = {"residential": 1,
