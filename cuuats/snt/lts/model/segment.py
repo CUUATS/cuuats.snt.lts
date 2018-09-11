@@ -325,33 +325,35 @@ class Segment(object):
                                  landuse_score)
 
             segment_score = min(segment_score, sidewalk_score)
-
-        for crossing in crossings:
-            if crossing.control_type == 'Signal':
-                crossing_score = 1
-                continue
-            # median criteria - no median
-            if crossing.median is None:
-                # collector crossing
-                if crossing.functional_class >= 4:
-                    crossing_score = \
-                        self._calcualate_collector_crossing_wo_med(
-                            crossing)
-                # arterial crossing
-                else:
-                    if crossing.lanes <= 2:
+            if sidewalk.sidewalk_width is None or \
+               sidewalk.sidewalk_score is None:
+                return sidewalk_score
+            for crossing in crossings:
+                if crossing.control_type == 'Signal':
+                    crossing_score = 1
+                    continue
+                # median criteria - no median
+                if crossing.median is None:
+                    # collector crossing
+                    if crossing.functional_class >= 4:
                         crossing_score = \
-                            self._calculate_art_crossing_wo_med_two_lanes(
-                                crossing
-                            )
+                            self._calcualate_collector_crossing_wo_med(
+                                crossing)
+                    # arterial crossing
                     else:
-                        crossing_score = \
-                            self._calculate_art_crossing_wo_med_three_lanes(
-                                crossing
-                            )
-            # median criteria - median present
-            else:
-                raise NotImplementedError(
-                    'Can only have crossing without median')
+                        if crossing.lanes <= 2:
+                            crossing_score = \
+                                self._calculate_art_crossing_wo_med_two_lanes(
+                                    crossing
+                                )
+                        else:
+                            crossing_score = \
+                                self._calculate_art_crossing_wo_med_three_lanes(
+                                    crossing
+                                )
+                # median criteria - median present
+                else:
+                    raise NotImplementedError(
+                        'Can only have crossing without median')
 
         return max(segment_score, crossing_score)
