@@ -327,7 +327,7 @@ class Segment(object):
             segment_score = min(segment_score, sidewalk_score)
 
         for crossing in crossings:
-            if crossing.control_type is 'Signalized':
+            if crossing.control_type is 'Signal':
                 crossing_score = 1
                 continue
             # median criteria - no median
