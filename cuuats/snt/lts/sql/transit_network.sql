@@ -27,12 +27,12 @@ SELECT s.stop_id,
 FROM gtfs.stops AS s;
 
 -- Create intersection nodes with time between and count
-CREATE MATERIALIZED VIEW gtfs.transit_edge
+CREATE MATERIALIZED VIEW gtfs.transit_edge AS
 SELECT
     edge.start_intersection,
     edge.end_intersection,
-    avg(edge.time_diff),
-    count(edge.seq)
+    avg(edge.time_diff) AS travel_time,
+    count(edge.start_intersection) AS trip_count
 FROM
     (SELECT
     	lag(intersection_id)
@@ -49,4 +49,5 @@ FROM
     JOIN gtfs.int_stop AS int_stop
         ON int_stop.stop_id =  stop_times.stop_id
 ) edge
+WHERE edge.start_intersection <> edge.end_intersection
 GROUP BY edge.start_intersection, edge.end_intersection
