@@ -271,7 +271,7 @@ class Segment(object):
             pk_score = max(pk_score,
                            self._calculate_bikelane_with_adj_parking(
                             bike_path))
-            no_pk_score = max(pk_score,
+            no_pk_score = max(no_pk_score,
                               self._calculate_bikelane_without_adj_parking(
                                bike_path))
 
@@ -309,6 +309,7 @@ class Segment(object):
             ltl_score,
             crossing_score
         ]
+
 
         return max([s for s in score_components if s is not 0])
 

@@ -99,6 +99,13 @@ class TestSegment(unittest.TestCase):
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 99)
 
+        segment.lanes_per_direction = 1
+        segment.aadt = 4400
+        segment.parking_lane_width = None
+        bike_path = BikePath(width=6)
+        self.assertEqual(
+            segment._calculate_bikelane_without_adj_parking(bike_path), 3)
+
     def test_right_turn_lane(self):
         segment = Segment(functional_class=4)
         approach = Approach(lane_configuration="XXTR",
@@ -356,6 +363,38 @@ class TestSegment(unittest.TestCase):
         crossing = Crossing(crossing_speed=40, lanes=3, aadt=12000)
         self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
                 crossing), 4)
+
+    def test_blts(self):
+        segment = Segment(lanes_per_direction=1,
+                          parking_lane_width=None,
+                          aadt=4400,
+                          functional_class=4,
+                          posted_speed=30)
+        approaches = [Approach(lane_configuration='XTR',
+                               right_turn_length=161,
+                               bike_lane_approach='End')]
+        crossings = [Crossing(crossing_speed=30,
+                              lanes_crossed=3,
+                              control_type='AWSC',
+                              median=None)]
+        bike_paths = [BikePath(width=0,
+                               path_category='On-Street Bikeway')]
+
+        score = segment.blts_score(approaches, crossings, bike_paths, 10000)
+        self.assertEqual(score, 3)
+
+        approaches = [Approach(lane_configuration=None,
+                               right_turn_length=None,
+                               bike_lane_approach=None)]
+        crossings = [Crossing(crossing_speed=30,
+                              lanes_crossed=2,
+                              control_type='AWSC',
+                              median=None)]
+        bike_paths = [BikePath(width=0,
+                               path_category='On-Street Bikeway')]
+
+        score = segment.blts_score(approaches, crossings, bike_paths, 10000)
+        self.assertEqual(score, 3)
 
 
 if __name__ == '__main__':
