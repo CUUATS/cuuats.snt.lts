@@ -364,6 +364,7 @@ class TestSegment(unittest.TestCase):
         self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
                 crossing), 4)
 
+
     def test_blts(self):
         segment = Segment(lanes_per_direction=1,
                           parking_lane_width=None,
@@ -395,6 +396,25 @@ class TestSegment(unittest.TestCase):
 
         score = segment.blts_score(approaches, crossings, bike_paths, 10000)
         self.assertEqual(score, 3)
+
+        # test for interstate
+        segment = Segment(lanes_per_direction=1,
+                          parking_lane_width=None,
+                          aadt=4400,
+                          functional_class=1,
+                          posted_speed=30)
+        approaches = [Approach(lane_configuration='XTR',
+                               right_turn_length=161,
+                               bike_lane_approach='End')]
+        crossings = [Crossing(crossing_speed=30,
+                              lanes_crossed=3,
+                              control_type='AWSC',
+                              median=None)]
+        bike_paths = [BikePath(width=0,
+                               path_category='On-Street Bikeway')]
+
+        score = segment.blts_score(approaches, crossings, bike_paths, 10000)
+        self.assertEqual(score, 4)
 
 
 if __name__ == '__main__':

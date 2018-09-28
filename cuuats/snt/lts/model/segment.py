@@ -10,10 +10,16 @@ class Segment(object):
         self.aadt = int(kwargs.get('aadt') or 0)
         self.functional_class = self._categorize_functional_class(
             kwargs.get('functional_class') or 0)
+        self.interstate = self._is_interstate(kwargs.get('functional_class'))
         self.posted_speed = kwargs.get('posted_speed') or 0
         self.total_lanes = kwargs.get('total_lanes') or 0
         self.marked_center_lane = kwargs.get('marked_center_lane')
         self.overall_landuse = kwargs.get('overall_landuse')
+
+    def _is_interstate(self, functional_class):
+        if functional_class == 1:
+            return True
+        return False
 
     def _categorize_functional_class(self, functional_class):
         if functional_class is None:
@@ -257,6 +263,11 @@ class Segment(object):
 
     def blts_score(self, approaches, crossings,
                    bike_paths=None, turn_threshold=0):
+                   
+        # Interstate Score
+        if self.interstate:
+            return 4
+
         rtl_score = 0
         ltl_score = 0
         pk_score = 0
@@ -309,7 +320,6 @@ class Segment(object):
             ltl_score,
             crossing_score
         ]
-
 
         return max([s for s in score_components if s is not 0])
 
