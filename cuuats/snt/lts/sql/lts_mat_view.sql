@@ -1,5 +1,5 @@
 -- DROP MATERIALIZED VIEW street.lts_mat_view;
-CREATE MATERIALIZED VIEW street.lts_mat_view AS
+CREATE MATERIALIZED VIEW street.lts_score AS
 SELECT b1.segment_id, b1.blts, b2.plts FROM
 	(SELECT s.segment_id,
 			max(set_blts(idot_aadt,
