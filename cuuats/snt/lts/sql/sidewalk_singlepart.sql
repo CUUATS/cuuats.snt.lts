@@ -1,6 +1,6 @@
-CREATE MATERIALIZED VIEW pedestrian.sidewalk_singlepart AS
+CREATE OR REPLACE VIEW pedestrian.sidewalk_singlepart AS
 SELECT
-	s.id, 
+	s.id,
 	(st_dump(s.geom)).geom AS sw_geom,
 	path_type as sw_type,
 	width as sw_width,
@@ -9,4 +9,3 @@ SELECT
 	buffer_width,
 	segment_id
 FROM pedestrian.sidewalk_segment as s;
-
