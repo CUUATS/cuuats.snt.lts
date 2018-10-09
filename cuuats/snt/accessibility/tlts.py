@@ -1,7 +1,7 @@
 import pandas as pd
 import pandana as pdna
 import os
-import datetime
+from datetime import timedelta
 
 
 class Tlts(object):
@@ -17,8 +17,9 @@ class Tlts(object):
         stop_times_col = ['trip_id', 'arrival_time', 'stop_id']
         stop_times = pd.read_csv('stop_times.txt')
         stop_times = stop_times[stop_times_col]
-        stop_times.arrival_time.apply(lambda x: datetime.datetime.strptime(x, '%H:%M:%S'))
-        import pdb; pdb.set_trace()
+        stop_times.arrival_time = stop_times.arrival_time.apply(
+            lambda x: timedelta(hours=int(x[0:2]),
+                                minutes=int(x[3:5])))
         self.stop_times = stop_times
 
     def _set_network(self, pandana_network):
@@ -46,6 +47,10 @@ class Tlts(object):
         self.stops.to_file('stops.js', driver='GeoJSON')
 
     def calculate_head_time(self, time_range=['07:00:00', '10:00:00']):
-        start_time = datetime.datetime.strptime(time_range[0], '%H:%M:%S')
-        end_time = datetime.datetime.strptime(time_range[1], '%H:%M:%S')
-        return self.head_time
+        start_time = timedelta(hours=int(time_range[0][0:2]),
+                               minutes=int(time_range[0][3:5]))
+        end_time = timedelta(hours=int(time_range[1][0:2]),
+                             minutes=int(time_range[1][3:5]))
+        stop_times = self.stop_times
+
+        return start_time
