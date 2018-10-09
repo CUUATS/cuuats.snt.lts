@@ -14,7 +14,7 @@ class Tlts(object):
         self._set_routes()
 
     def _set_stop_times(self):
-        stop_times_col = ['trip_id', 'arrival_time', 'stop_id']
+        stop_times_col = ['trip_id', 'arrival_time', 'stop_id', 'stop_sequence']
         stop_times = pd.read_csv('stop_times.txt')
         stop_times = stop_times[stop_times_col]
         stop_times.arrival_time = stop_times.arrival_time.apply(
@@ -44,7 +44,7 @@ class Tlts(object):
         self.routes = pd.read_csv('routes.txt')
 
     def export(self):
-        self.stops.to_file('stops.js', driver='GeoJSON')
+        var = self.stops.to_file('stops.js', driver='GeoJSON')
 
     def calculate_head_time(self, time_range=['07:00:00', '10:00:00']):
         start_time = timedelta(hours=int(time_range[0][0:2]),
@@ -52,5 +52,55 @@ class Tlts(object):
         end_time = timedelta(hours=int(time_range[1][0:2]),
                              minutes=int(time_range[1][3:5]))
         stop_times = self.stop_times
+        cond1 = stop_times['arrival_time'] > start_time
+        cond2 = stop_times['arrival_time'] < end_time
+        peak_trips = stop_times[cond1 & cond2]
+        self.peak_trips = pd.merge(peak_trips, self.trips,
+                                   on='trip_id', how='inner')
+        first_stop = peak_trips.loc[peak_trips['stop_sequence'] == 1]
+        return self.peak_trips
 
-        return start_time
+    def create_transit_network(self):
+        stop_nodes_peak = pd.merge(self.peak_trips, self.stops,
+                                   on='stop_id', how='inner')
+        stop_nodes_peak = stop_nodes_peak.sort_values(
+                                    ['trip_id', 'stop_sequence'])
+        edges = self.network.edges_df
+        stop = self.network.nodes_df.index.max() + 1
+
+        prev_trip = None
+        prev_intersection = None
+        prev_stop = None
+        prev_time = None
+        for row in stop_nodes_peak.iterrows():
+            headway = 10
+            intersection = row[1].node_id
+            arrival_time = row[1].arrival_time
+            trip = row[1].trip_id
+
+            same_trip = prev_trip == trip
+
+            if prev_stop and same_trip:
+                import pdb;pdb.set_trace()
+                # getting off the bus
+                edges = edges.append(pd.DataFrame({'from': [stop],
+                                                   'to': [intersection],
+                                                   'weight': [0]}))
+                # transit time between stop
+                time_diff = (arrival_time - prev_time).seconds / 60.0
+                edges = edges.append(
+                    pd.DataFrame({'from': [prev_stop],
+                                  'to': [stop],
+                                 'weight': [time_diff]}))
+                # getting on the bus
+                edges = edges.append(pd.DataFrame({'from': [prev_intersection],
+                                                   'to': [prev_stop],
+                                                   'weight': [headway]}))
+
+            prev_trip = trip
+            prev_intersection = intersection
+            prev_stop = stop
+            prev_time = arrival_time
+            stop = stop + 1
+
+        self.transit_edges = edges
