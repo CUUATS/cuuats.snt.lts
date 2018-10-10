@@ -41,4 +41,12 @@ SELECT
 FROM street.segment s
 WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
     s.end_intersection_id IS DISTINCT FROM NULL
+UNION
+SELECT
+    s1.end_intersection_id AS from,
+    s1.start_intersection_id AS to,
+    ((ST_Length(geom) / 5280) / 3 * 60 * 60)::numeric  AS weight
+FROM street.segment s1
+WHERE s1.start_intersection_id IS DISTINCT FROM NULL AND
+    s1.end_intersection_id IS DISTINCT FROM NULL
 """

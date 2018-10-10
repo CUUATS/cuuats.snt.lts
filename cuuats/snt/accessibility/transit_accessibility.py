@@ -2,26 +2,9 @@ import pandas as pd
 import pandana as pdna
 import psycopg2
 from env import LOCAL_DB
-from config import POI_SQL
+from config import POI_SQL, PED_TRANSIT_EDGES_SQL, NODES_SQL
 from tlts import Tlts
 
-NODES_SQL = """
-SELECT intersection_id AS id,
-    ST_X(ST_Transform(shape, 4326)) AS x,
-    ST_Y(ST_Transform(shape, 4326)) AS y
-FROM street.intersection
-WHERE is_node = 'Yes'
-"""
-
-PED_TRANSIT_EDGES_SQL = """
-SELECT
-    s.start_intersection_id AS from,
-    s.end_intersection_id AS to,
-    ((ST_Length(geom) / 5280) / 3 * 60 * 60)::numeric  AS weight
-FROM street.segment s
-WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
-    s.end_intersection_id IS DISTINCT FROM NULL
-"""
 
 # connect with database to query the data
 with psycopg2.connect(**LOCAL_DB) as conn:
@@ -35,7 +18,8 @@ network = pdna.Network(
     node_y=nodes.y,
     edge_from=edges["from"],
     edge_to=edges["to"],
-    edge_weights=edges[["weight"]])
+    edge_weights=edges[["weight"]],
+    twoway=False)
 
 network.precompute(3000)
 
