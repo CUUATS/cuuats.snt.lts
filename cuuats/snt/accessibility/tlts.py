@@ -72,6 +72,9 @@ class Tlts(object):
 
         return self.date_peak_trips
 
+    def _calculate_headway(self):
+        #TODO: calculate the headway
+        pass
     def create_transit_network(self):
         stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
@@ -87,7 +90,7 @@ class Tlts(object):
         prev_time = None
         count = 0
         for row in stop_nodes_peak.iterrows():
-            headway = {'route_id': 10}
+            headway = {'route_id': 600}
             intersection = row[1].node_id
             arrival_time = row[1].arrival_time
             trip = row[1].trip_id
@@ -109,13 +112,14 @@ class Tlts(object):
                                               index=[edges.index.max() + 1]))
 
             # transit time between stop
-            if prev_stop:
+            if prev_stop and same_trip:
                 time_diff = (arrival_time - prev_time).seconds
                 edges = edges.append(
                     pd.DataFrame({'from': [prev_stop],
                                   'to': [stop],
                                   'weight': [time_diff]},
                                  index=[edges.index.max() + 1]))
+
 
             # adding stop to transit nodes
             nodes = nodes.append(
@@ -132,9 +136,7 @@ class Tlts(object):
             count = count + 1
 
         edges['weight'] = edges['weight'].replace(0, 0.01)
-        # self.transit_nodes = nodes
-        # self.transit_edges = edgesnear
-        import pdb; pdb.set_trace()
+
         transit_network = pdna.Network(
             node_x=nodes.x,
             node_y=nodes.y,
