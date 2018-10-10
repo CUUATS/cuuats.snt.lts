@@ -142,7 +142,8 @@ class Tlts(object):
             node_y=nodes.y,
             edge_from=edges["from"],
             edge_to=edges["to"],
-            edge_weights=edges[["weight"]]
+            edge_weights=edges[["weight"]],
+            twoway=False
         )
         self.transit_network = transit_network
 

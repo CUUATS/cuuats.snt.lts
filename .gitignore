@@ -105,3 +105,6 @@ ENV/
 snt.sql
 view.sql
 gtfs_data/
+env.py
+*.csv
+*.txt
