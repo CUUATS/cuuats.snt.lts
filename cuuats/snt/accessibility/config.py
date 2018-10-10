@@ -26,6 +26,13 @@ SELECT id,
 FROM vehicle.alternative_fuel_station
 """
 
+TRANSIT_POI_SQL = """
+SELECT id,
+	ST_X(ST_Transform(shape, 4326)) AS x,
+	ST_Y(ST_Transform(shape, 4326)) AS y
+FROM vehicle.alternative_fuel_station
+"""
+
 TRANSIT_NODES_SQL = """
 SELECT intersection_id AS id,
     ST_X(ST_Transform(shape, 4326)) AS X,

@@ -48,9 +48,6 @@ class Tlts(object):
     def _set_routes(self):
         return pd.read_csv('routes.txt')
 
-    def export(self):
-        var = self.stops.to_file('stops.js', driver='GeoJSON')
-
     def filter_trips(self,
                      date,
                      time_range=['07:00:00', '09:00:00']):
@@ -96,22 +93,29 @@ class Tlts(object):
             trip = row[1].trip_id
 
             same_trip = prev_trip == trip
-            if prev_stop and same_trip:
-                # getting off the bus
-                edges = edges.append(pd.DataFrame({'from': [stop],
-                                                   'to': [intersection],
-                                                   'weight': [0]}))
-                # transit time between stop
-                time_diff = (arrival_time - prev_time).seconds / 60.0
+
+            # getting on the bus
+            on_bus = pd.DataFrame({'from': [intersection],
+                                   'to': [stop],
+                                   'weight': [headway.get('route_id')]},
+                                  index=[edges.index.max() + 1])
+            edges = edges.append(on_bus)
+
+
+            # getting off the bus
+            edges = edges.append(pd.DataFrame({'from': [stop],
+                                               'to': [intersection],
+                                               'weight': [0]},
+                                              index=[edges.index.max() + 1]))
+
+            # transit time between stop
+            if prev_stop:
+                time_diff = (arrival_time - prev_time).seconds
                 edges = edges.append(
                     pd.DataFrame({'from': [prev_stop],
                                   'to': [stop],
-                                  'weight': [time_diff]}))
-                # getting on the busW
-                edges = edges.append(
-                    pd.DataFrame({'from': [prev_intersection],
-                                  'to': [prev_stop],
-                                  'weight': [headway.get('route_id')]}))
+                                  'weight': [time_diff]},
+                                 index=[edges.index.max() + 1]))
 
             # adding stop to transit nodes
             nodes = nodes.append(
@@ -128,17 +132,18 @@ class Tlts(object):
             count = count + 1
 
         edges['weight'] = edges['weight'].replace(0, 0.01)
-        self.transit_nodes = nodes
-        self.transit_edges = edges
+        # self.transit_nodes = nodes
+        # self.transit_edges = edgesnear
+        import pdb; pdb.set_trace()
         transit_network = pdna.Network(
-            node_x=self.transit_nodes.x,
-            node_y=self.transit_nodes.y,
-            edge_from=self.transit_edges["from"],
-            edge_to=self.transit_edges["to"],
-            edge_weights=self.transit_edges[["weight"]]
+            node_x=nodes.x,
+            node_y=nodes.y,
+            edge_from=edges["from"],
+            edge_to=edges["to"],
+            edge_weights=edges[["weight"]]
         )
         self.transit_network = transit_network
-        import pdb; pdb.set_trace()
+
 
     def set_poi(self, poi):
         transit_network = self.transit_network
@@ -150,5 +155,5 @@ class Tlts(object):
                                  y_col=poi['y'])
         nearest_poi = transit_network.nearest_pois(distance=3600,
                                                    category="poi",
-                                                   num_pois=10)
+                                                   num_pois=2)
         import pdb; pdb.set_trace()
