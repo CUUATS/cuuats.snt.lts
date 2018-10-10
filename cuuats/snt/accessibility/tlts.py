@@ -8,19 +8,21 @@ class Tlts(object):
     def __init__(self, gtfs_path, pandana_network):
         os.chdir(gtfs_path)
         self._set_network(pandana_network)
-        self._set_stop_times()
-        self._set_stops()
-        self._set_trips()
-        self._set_routes()
+        self.stop_times = self._set_stop_times()
+        self.stops = self._set_stops()
+        self.trips = self._set_trips()
+        self.routes = self._set_routes()
+        self.calendar_dates = self._set_calendar_dates()
 
     def _set_stop_times(self):
-        stop_times_col = ['trip_id', 'arrival_time', 'stop_id', 'stop_sequence']
+        stop_times_col = ['trip_id', 'arrival_time', 'stop_id',
+                          'stop_sequence']
         stop_times = pd.read_csv('stop_times.txt')
         stop_times = stop_times[stop_times_col]
         stop_times.arrival_time = stop_times.arrival_time.apply(
             lambda x: timedelta(hours=int(x[0:2]),
                                 minutes=int(x[3:5])))
-        self.stop_times = stop_times
+        return stop_times
 
     def _set_network(self, pandana_network):
         if isinstance(pandana_network, pdna.Network):
@@ -33,20 +35,25 @@ class Tlts(object):
         x, y = stops.stop_lon, stops.stop_lat
         stops['node_id'] = self.network.get_node_ids(x, y)
         stops_col = ['stop_id', 'node_id', 'stop_lon', 'stop_lat']
-        self.stops = stops[stops_col]
+        return stops[stops_col]
 
     def _set_trips(self):
         trips_col = ['route_id', 'service_id', 'trip_id']
         trips = pd.read_csv('trips.txt')
-        self.trips = trips[trips_col]
+        return trips[trips_col]
+
+    def _set_calendar_dates(self):
+        return pd.read_csv('calendar_dates.txt')
 
     def _set_routes(self):
-        self.routes = pd.read_csv('routes.txt')
+        return pd.read_csv('routes.txt')
 
     def export(self):
         var = self.stops.to_file('stops.js', driver='GeoJSON')
 
-    def calculate_head_time(self, time_range=['07:00:00', '10:00:00']):
+    def filter_trips(self,
+                     date,
+                     time_range=['07:00:00', '09:00:00']):
         start_time = timedelta(hours=int(time_range[0][0:2]),
                                minutes=int(time_range[0][3:5]))
         end_time = timedelta(hours=int(time_range[1][0:2]),
@@ -54,17 +61,18 @@ class Tlts(object):
         stop_times = self.stop_times
         cond1 = stop_times['arrival_time'] > start_time
         cond2 = stop_times['arrival_time'] < end_time
-        peak_trips = stop_times[cond1 & cond2]
-        self.peak_trips = pd.merge(peak_trips, self.trips,
-                                   on='trip_id', how='inner')
-        first_stop = peak_trips.loc[peak_trips['stop_sequence'] == 1]
-        return self.peak_trips
+        peak_stop_times = stop_times[cond1 & cond2]
+        peak_trips = pd.merge(peak_stop_times, self.trips,
+                              on='trip_id', how='inner')
+        unique_date = self.calendar_dates.loc[self.calendar_dates['date'] == date]
+        date_peak_trips = pd.merge(peak_trips, unique_date, on='service_id', how='inner')
+        self.date_peak_trips = date_peak_trips
+        # first_stop = peak_trips.loc[peak_trips['stop_sequence'] == 1]
 
-    def _append_nodes(self):
-        pass
+        return self.date_peak_trips
 
     def create_transit_network(self):
-        stop_nodes_peak = pd.merge(self.peak_trips, self.stops,
+        stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
         stop_nodes_peak = stop_nodes_peak.sort_values(
                                     ['trip_id', 'stop_sequence'])
@@ -78,8 +86,7 @@ class Tlts(object):
         prev_time = None
         count = 0
         for row in stop_nodes_peak.iterrows():
-            if count == 500:
-                break
+
             headway = {'route_id': 10}
             intersection = row[1].node_id
             arrival_time = row[1].arrival_time
@@ -120,7 +127,6 @@ class Tlts(object):
         edges['weight'] = edges['weight'].replace(0, 0.01)
         self.transit_nodes = nodes
         self.transit_edges = edges
-
         transit_network = pdna.Network(
             node_x=self.transit_nodes.x,
             node_y=self.transit_nodes.y,
@@ -141,5 +147,3 @@ class Tlts(object):
         nearest_poi = transit_network.nearest_pois(distance=3600,
                                                    category="poi",
                                                    num_pois=10)
-
-        import pdb; pdb.set_trace()

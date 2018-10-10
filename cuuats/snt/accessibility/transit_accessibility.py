@@ -40,7 +40,7 @@ network = pdna.Network(
 network.precompute(3000)
 
 tlts = Tlts('gtfs_data', network)
-tlts.calculate_head_time(time_range=['07:00:00', '10:00:00'])
+tlts.filter_trips(date=20181016, time_range=['07:00:00', '09:00:00'])
 tlts.create_transit_network()
 tlts.set_poi(poi)
 
