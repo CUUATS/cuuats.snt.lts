@@ -21,7 +21,24 @@ WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
 
 POI_SQL = """
 SELECT id,
-    ST_X(shape) AS x,
-    ST_Y(shape) AS y
-FROM vehicle.car_share_location
+	ST_X(shape) AS x,
+	ST_Y(shape) AS y
+FROM vehicle.alternative_fuel_station
+"""
+
+TRANSIT_NODES_SQL = """
+SELECT intersection_id AS id,
+    ST_Transform(shape, 4326) AS geometry
+FROM street.intersection
+WHERE is_node = 'Yes'
+"""
+
+PED_TRANSIT_EDGES_SQL = """
+SELECT
+    s.start_intersection_id AS from,
+    s.end_intersection_id AS to,
+    ((ST_Length(geom) / 5280) / 3 * 60 * 60)::numeric  AS weight
+FROM street.segment s
+WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
+    s.end_intersection_id IS DISTINCT FROM NULL
 """
