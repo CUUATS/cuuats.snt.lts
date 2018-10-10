@@ -59,13 +59,17 @@ class Tlts(object):
         end_time = timedelta(hours=int(time_range[1][0:2]),
                              minutes=int(time_range[1][3:5]))
         stop_times = self.stop_times
+        calendar_dates = self.calendar_dates
+        trips = self.trips
         cond1 = stop_times['arrival_time'] > start_time
         cond2 = stop_times['arrival_time'] < end_time
+
         peak_stop_times = stop_times[cond1 & cond2]
-        peak_trips = pd.merge(peak_stop_times, self.trips,
+        peak_trips = pd.merge(peak_stop_times, trips,
                               on='trip_id', how='inner')
-        unique_date = self.calendar_dates.loc[self.calendar_dates['date'] == date]
-        date_peak_trips = pd.merge(peak_trips, unique_date, on='service_id', how='inner')
+        unique_date = calendar_dates.loc[calendar_dates['date'] == date]
+        date_peak_trips = pd.merge(peak_trips, unique_date,
+                                   on='service_id', how='inner')
         self.date_peak_trips = date_peak_trips
         # first_stop = peak_trips.loc[peak_trips['stop_sequence'] == 1]
 
@@ -86,7 +90,6 @@ class Tlts(object):
         prev_time = None
         count = 0
         for row in stop_nodes_peak.iterrows():
-
             headway = {'route_id': 10}
             intersection = row[1].node_id
             arrival_time = row[1].arrival_time
@@ -135,6 +138,7 @@ class Tlts(object):
             edge_weights=self.transit_edges[["weight"]]
         )
         self.transit_network = transit_network
+        import pdb; pdb.set_trace()
 
     def set_poi(self, poi):
         transit_network = self.transit_network
@@ -147,3 +151,4 @@ class Tlts(object):
         nearest_poi = transit_network.nearest_pois(distance=3600,
                                                    category="poi",
                                                    num_pois=10)
+        import pdb; pdb.set_trace()

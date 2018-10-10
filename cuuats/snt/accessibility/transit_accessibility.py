@@ -2,13 +2,13 @@ import pandas as pd
 import pandana as pdna
 import psycopg2
 from env import LOCAL_DB
-from config import POI_SQL, PED_TRANSIT_EDGES_SQL, NODES_SQL
+from config import POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL
 from tlts import Tlts
 
 
 # connect with database to query the data
 with psycopg2.connect(**LOCAL_DB) as conn:
-    nodes = pd.read_sql_query(NODES_SQL, conn, index_col='id')
+    nodes = pd.read_sql_query(TRANSIT_NODES_SQL, conn, index_col='id')
     edges = pd.read_sql_query(PED_TRANSIT_EDGES_SQL, conn)
     poi = pd.read_sql_query(POI_SQL, conn)
 
