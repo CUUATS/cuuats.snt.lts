@@ -2,7 +2,7 @@ import pandas as pd
 import pandana as pdna
 import psycopg2
 from env import DB
-from config import TRANSIT_POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL
+from config import TRANSIT_POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL, TRANSIT_INSTITUTION_SQL
 from tlts import Tlts
 
 
@@ -11,6 +11,7 @@ with psycopg2.connect(**DB) as conn:
     nodes = pd.read_sql_query(TRANSIT_NODES_SQL, conn, index_col='id')
     edges = pd.read_sql_query(PED_TRANSIT_EDGES_SQL, conn)
     poi = pd.read_sql_query(TRANSIT_POI_SQL, conn)
+    institution = pd.read_sql_query(TRANSIT_INSTITUTION_SQL, conn)
 
 
 network = pdna.Network(
@@ -26,7 +27,7 @@ network.precompute(3000)
 tlts = Tlts('gtfs_data', network)
 tlts.filter_trips(date=20181016, time_range=['07:00:00', '09:00:00'])
 tlts.create_transit_network()
-tlts.set_poi(poi)
+tlts.set_poi(institution)
 
 
 

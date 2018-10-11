@@ -33,6 +33,13 @@ SELECT id,
 FROM vehicle.alternative_fuel_station
 """
 
+TRANSIT_INSTITUTION_SQL = """
+SELECT id,
+	ST_X(ST_Transform(geom, 4326)) AS x,
+	ST_Y(ST_Transform(geom, 4326)) AS y
+FROM public_facility.institution
+"""
+
 TRANSIT_NODES_SQL = """
 SELECT intersection_id AS id,
     ST_X(ST_Transform(geom, 4326)) AS X,
