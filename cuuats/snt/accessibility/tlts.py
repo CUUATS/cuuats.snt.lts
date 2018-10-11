@@ -68,13 +68,32 @@ class Tlts(object):
         date_peak_trips = pd.merge(peak_trips, unique_date,
                                    on='service_id', how='inner')
         self.date_peak_trips = date_peak_trips
-        # first_stop = peak_trips.loc[peak_trips['stop_sequence'] == 1]
+        first_stop = date_peak_trips.loc[date_peak_trips['stop_sequence'] == 1]
+        groupby_service = first_stop.groupby(first_stop['service_id'])
 
+        max_arrival = groupby_service.max().arrival_time
+        min_arrival = groupby_service.min().arrival_time
+        service_count = groupby_service.count().arrival_time
+        time_diff = (max_arrival - min_arrival)
+
+        headway = {}
+        for item in zip(time_diff.iteritems(), service_count):
+
+            service = item[0][0]
+            time = item[0][1]
+            count = item[1]
+            if time == timedelta():
+                headway[service] = timedelta(seconds=3600).seconds
+            else:
+                headway[service] = (time / (count - 1)).seconds
+
+        self.headway = headway
         return self.date_peak_trips
 
     def _calculate_headway(self):
-        #TODO: calculate the headway
+        # TODO: calculate the headway
         pass
+
     def create_transit_network(self):
         stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
@@ -84,27 +103,27 @@ class Tlts(object):
         stop = self.network.nodes_df.index.max() + 1
         nodes = self.network.nodes_df
 
+        headway = self.headway
         prev_trip = None
-        prev_intersection = None
+        # prev_intersection = None
         prev_stop = None
         prev_time = None
-        count = 0
         for row in stop_nodes_peak.iterrows():
-            headway = {'route_id': 600}
             intersection = row[1].node_id
             arrival_time = row[1].arrival_time
             trip = row[1].trip_id
-
+            service_id = row[1].service_id
             same_trip = prev_trip == trip
 
+            # TODO: Prevent getting on bus at last stop
             # getting on the bus
             on_bus = pd.DataFrame({'from': [intersection],
                                    'to': [stop],
-                                   'weight': [headway.get('route_id')]},
+                                   'weight': [headway.get(service_id, 3600)]},
                                   index=[edges.index.max() + 1])
             edges = edges.append(on_bus)
 
-
+            # TODO: Prevent getting off bus at first stop
             # getting off the bus
             edges = edges.append(pd.DataFrame({'from': [stop],
                                                'to': [intersection],
@@ -120,7 +139,6 @@ class Tlts(object):
                                   'weight': [time_diff]},
                                  index=[edges.index.max() + 1]))
 
-
             # adding stop to transit nodes
             nodes = nodes.append(
                 pd.DataFrame({'x': [row[1].stop_lon],
@@ -129,11 +147,10 @@ class Tlts(object):
             )
 
             prev_trip = trip
-            prev_intersection = intersection
+            # prev_intersection = intersection
             prev_stop = stop
             prev_time = arrival_time
             stop = stop + 1
-            count = count + 1
 
         edges['weight'] = edges['weight'].replace(0, 0.01)
 
