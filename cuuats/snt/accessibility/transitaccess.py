@@ -22,11 +22,14 @@ class TransitAccess(object):
         return self
 
     def save_transit_network(self, filename, path=None):
-        os.chdir(path)
+        if not path:
+            os.chdir(path)
         self.transit_network.save_hdf5('transit_network')
 
-    def load_transit_network(self, transit_network):
-        self.transit_network = transit_network
+    def load_transit_network(self, filename, path=None):
+        if path:
+            os.chdir(path)
+        self.transit_network = pdna.Network.from_hdf5(filename)
         return self
 
     def _set_ped_network(self, ped_network):
@@ -117,8 +120,8 @@ class TransitAccess(object):
         return headway
 
     def _agg_transit_ped(self,
-                        date=20181016,
-                        time_range=['07:00:00', '09:00:00']):
+                         date=20181016,
+                         time_range=['07:00:00', '09:00:00']):
         stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
         stop_nodes_peak = stop_nodes_peak.sort_values(
@@ -188,18 +191,8 @@ class TransitAccess(object):
         )
         self.transit_network = transit_network
 
-    def export_transit_network(self, path=None):
-        if not path:
-            self.transit_network.save_hdf5('transit_network')
-
-    def load_transit_network(cls, path=None):
-        if not path:
-            os.chdir('gtfs_data')
-            self.pdna.Network.from_hdf5('transit_network')
-
     def set_poi(self, poi):
         transit_network = self.transit_network
-        import pdb; pdb.set_trace()
         geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
                                                 transit_network.nodes_df.y)]
         crs = {'init': 'epsg:4326'}
@@ -215,8 +208,6 @@ class TransitAccess(object):
             nearest_poi = transit_network.nearest_pois(distance=3600,
                                                        category=key,
                                                        num_pois=1)
-
-            import pdb; pdb.set_trace()
 
     def to_geojson(self, path=None):
         pass

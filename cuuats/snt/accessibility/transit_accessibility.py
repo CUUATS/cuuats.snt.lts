@@ -2,7 +2,8 @@ import pandas as pd
 import pandana as pdna
 import psycopg2
 from env import DB
-from config import TRANSIT_POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL, TRANSIT_INSTITUTION_SQL
+from config import TRANSIT_POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL, \
+    TRANSIT_INSTITUTION_SQL
 from transitaccess import TransitAccess
 
 
@@ -25,11 +26,13 @@ network = pdna.Network(
 network.precompute(3000)
 
 transitaccess = TransitAccess()
-transitaccess = transitaccess.create_transit_network(
-    'gtfs_data',
-    network
-)
-transitaccess.save_transit_network('transit_network','gtfs_data')
+# transitaccess = transitaccess.create_transit_network(
+#     'gtfs_data',
+#     network
+# )
+# transitaccess.save_transit_network('transit_network')
+transitaccess.load_transit_network('transit_network', 'gtfs_data')
+import pdb; pdb.set_trace()
 
 # create the network object
 # network = pdna.Network(

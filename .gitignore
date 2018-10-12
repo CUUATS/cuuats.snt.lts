@@ -108,3 +108,4 @@ gtfs_data/
 env.py
 *.csv
 *.txt
+*.network
