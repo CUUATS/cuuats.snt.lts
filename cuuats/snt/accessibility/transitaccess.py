@@ -25,6 +25,7 @@ class TransitAccess(object):
         if path:
             os.chdir(path)
         self.transit_network.save_hdf5(filename)
+        return self
 
     def load_transit_network(self, filename, path=None):
         if path:
@@ -42,24 +43,31 @@ class TransitAccess(object):
                                    geometry=geometry)
         geodf = geodf.drop(['x', 'y'], axis=1)
 
-        for key, data in poi.items():
+        for key, param in poi.items():
+            data = param[0]
+            item = param[1]
             # set point of interest to find out the weight to nearest poi
             transit_network.set_pois(category=key,
                                      maxdist=3600,
-                                     maxitems=1,
+                                     maxitems=item,
                                      x_col=data['x'],
                                      y_col=data['y'])
             nearest_poi = transit_network.nearest_pois(distance=3600,
                                                        category=key,
-                                                       num_pois=1)
-            nearest_poi.columns = [key]
-            geodf = pd.merge(geodf, nearest_poi,
-                             left_index=True, right_index=True)
+                                                       num_pois=item)
+            nearest_poi.columns = [str(i) for i in range(1, item + 1)]
+
+            geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
+            geodf = geodf.rename(columns={str(item): key})
 
         self.pois = geodf
+        return self
 
     def to_geojson(self, filename='pois.geojson', path=None):
+        if path:
+            os.chdir(path)
         self.pois.to_file(filename, driver='GeoJSON')
+        return self
 
     def _set_ped_network(self, ped_network):
         if isinstance(ped_network, pdna.Network):

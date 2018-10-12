@@ -32,12 +32,10 @@ transitaccess = TransitAccess()
 # )
 # transitaccess.save_transit_network('transit_network.network')
 transitaccess.load_transit_network('transit_network.network', 'gtfs_data')
-pois = {'car': car,
-        'institution': institution}
+pois = {'car': [car, 1],
+        'institution': [institution, 3]}
 transitaccess.set_pois(pois)
 transitaccess.to_geojson()
-import pdb; pdb.set_trace()
-
 
 #
 # # merge the nodes coordinate with score
