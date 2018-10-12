@@ -22,15 +22,44 @@ class TransitAccess(object):
         return self
 
     def save_transit_network(self, filename, path=None):
-        if not path:
+        if path:
             os.chdir(path)
-        self.transit_network.save_hdf5('transit_network')
+        self.transit_network.save_hdf5(filename)
 
     def load_transit_network(self, filename, path=None):
         if path:
             os.chdir(path)
         self.transit_network = pdna.Network.from_hdf5(filename)
         return self
+
+    def set_pois(self, poi):
+        transit_network = self.transit_network
+        geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
+                                                transit_network.nodes_df.y)]
+        crs = {'init': 'epsg:4326'}
+        geodf = geopd.GeoDataFrame(transit_network.nodes_df,
+                                   crs=crs,
+                                   geometry=geometry)
+        geodf = geodf.drop(['x', 'y'], axis=1)
+
+        for key, data in poi.items():
+            # set point of interest to find out the weight to nearest poi
+            transit_network.set_pois(category=key,
+                                     maxdist=3600,
+                                     maxitems=1,
+                                     x_col=data['x'],
+                                     y_col=data['y'])
+            nearest_poi = transit_network.nearest_pois(distance=3600,
+                                                       category=key,
+                                                       num_pois=1)
+            nearest_poi.columns = [key]
+            geodf = pd.merge(geodf, nearest_poi,
+                             left_index=True, right_index=True)
+
+        self.pois = geodf
+
+    def to_geojson(self, filename='pois.geojson', path=None):
+        self.pois.to_file(filename, driver='GeoJSON')
 
     def _set_ped_network(self, ped_network):
         if isinstance(ped_network, pdna.Network):
@@ -190,24 +219,3 @@ class TransitAccess(object):
             twoway=False
         )
         self.transit_network = transit_network
-
-    def set_poi(self, poi):
-        transit_network = self.transit_network
-        geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
-                                                transit_network.nodes_df.y)]
-        crs = {'init': 'epsg:4326'}
-        geodf = geopd.GeoDataFrame(transit_network.nodes_df, crs, geometry)
-
-        for key, data in poi.items():
-            # set point of interest to find out the weight to nearest poi
-            transit_network.set_pois(category=key,
-                                     maxdist=3600,
-                                     maxitems=1,
-                                     x_col=data['x'],
-                                     y_col=data['y'])
-            nearest_poi = transit_network.nearest_pois(distance=3600,
-                                                       category=key,
-                                                       num_pois=1)
-
-    def to_geojson(self, path=None):
-        pass
