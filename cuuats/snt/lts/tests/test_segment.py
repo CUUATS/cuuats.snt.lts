@@ -37,35 +37,35 @@ class TestSegment(unittest.TestCase):
         segment.lanes_per_direction = 1
         segment.aadt = 900
         segment.parking_lane_width = 5
-        bike_path = BikePath(width=16)
+        bike_path = BikePath(width=192)
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path), 1)
 
         segment.lanes_per_direction = 2
         segment.aadt = 900
         segment.parking_lane_width = 5
-        bike_path = BikePath(width=16)
+        bike_path = BikePath(width=192)
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path), 2)
 
         segment.lanes_per_direction = 2
         segment.aadt = 3000
         segment.parking_lane_width = 5
-        bike_path = BikePath(width=6)
+        bike_path = BikePath(width=72)
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path), 3)
 
         segment.lanes_per_direction = 1
         segment.aadt = 35000
         segment.parking_lane_width = 6
-        bike_path = BikePath(width=8)
+        bike_path = BikePath(width=96)
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path), 4)
 
         segment.lanes_per_direction = 1
         segment.aadt = 35000
         segment.parking_lane_width = None
-        bike_path = BikePath(width=8)
+        bike_path = BikePath(width=96)
         self.assertEqual(
             segment._calculate_bikelane_with_adj_parking(bike_path),
             float('Inf'))
@@ -91,42 +91,42 @@ class TestSegment(unittest.TestCase):
         segment.lanes_per_direction = 1
         segment.aadt = 900
         segment.parking_lane_width = None
-        bike_path = BikePath(width=8)
+        bike_path = BikePath(width=96)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 1)
 
         segment.lanes_per_direction = None
         segment.aadt = 4000
         segment.parking_lane_width = None
-        bike_path = BikePath(width=6)
+        bike_path = BikePath(width=72)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 3)
 
         segment.lanes_per_direction = 2
         segment.aadt = 35000
         segment.parking_lane_width = None
-        bike_path = BikePath(width=8)
+        bike_path = BikePath(width=96)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 3)
 
         segment.lanes_per_direction = 3
         segment.aadt = 7000
         segment.parking_lane_width = None
-        bike_path = BikePath(width=7)
+        bike_path = BikePath(width=84)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 2)
 
         segment.lanes_per_direction = 3
         segment.aadt = 7000
         segment.parking_lane_width = 5
-        bike_path = BikePath(width=7)
+        bike_path = BikePath(width=84)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 99)
 
         segment.lanes_per_direction = 1
         segment.aadt = 4400
         segment.parking_lane_width = None
-        bike_path = BikePath(width=6)
+        bike_path = BikePath(width=72)
         self.assertEqual(
             segment._calculate_bikelane_without_adj_parking(bike_path), 3)
 
