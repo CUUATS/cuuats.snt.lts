@@ -3,7 +3,7 @@ import pandana as pdna
 import psycopg2
 from env import DB
 from config import TRANSIT_POI_SQL, PED_TRANSIT_EDGES_SQL, TRANSIT_NODES_SQL, TRANSIT_INSTITUTION_SQL
-from tlts import Tlts
+from transitaccess import TransitAccess
 
 
 # connect with database to query the data
@@ -24,55 +24,12 @@ network = pdna.Network(
 
 network.precompute(3000)
 
-transitaccess = TransitAccess('gtfs_data', network)
-transitaccess.filter_trips(date=20181016, time_range=['07:00:00', '09:00:00'])
-transitaccess.create_transit_network()
-transitaccess.set_poi(institution)
-
-
-
-# # Create a trasit edge
-# nodes = list(range(99))
-# edges = []
-#
-# trips = [
-#     [
-#         # [nodes, time]
-#         [75, 1],
-#         [76, 3],
-#         [77, 6]
-#     ],
-#     [
-#         [66, 6],
-#         [76, 7],
-#         [88, 8]
-#     ]
-# ]
-#
-# stop = 99
-#
-#
-# for trip in trips:
-#     prev_intersection = None
-#     prev_stop = None
-#     prev_time = None
-#     headway = 10
-#
-#     for (intersection, time) in trip:
-#         nodes.append(stop)
-#
-#         if prev_stop:
-#             edges.append([stop, intersection, 0])
-#             edges.append([prev_stop, stop, time - prev_time])
-#             edges.append([prev_intersection, prev_stop, 10])
-#
-#         prev_intersection = intersection
-#         prev_stop = stop
-#         prev_time = time
-#         stop = stop + 1
-#
-# for row in edges:
-#     print(str(row))
+transitaccess = TransitAccess()
+transitaccess = transitaccess.create_transit_network(
+    'gtfs_data',
+    network
+)
+transitaccess.save_transit_network('transit_network','gtfs_data')
 
 # create the network object
 # network = pdna.Network(

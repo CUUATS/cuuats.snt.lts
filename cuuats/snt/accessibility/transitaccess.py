@@ -1,13 +1,42 @@
 import pandas as pd
 import pandana as pdna
 import os
+import geopandas as geopd
+from shapely.geometry import Point
 from datetime import timedelta
 
 
 class TransitAccess(object):
-    def __init__(self, gtfs_path, pandana_network):
+    def __init__(self):
+        pass
+
+    def create_transit_network(self,
+                               gtfs_path,
+                               ped_network,
+                               date=20181016,
+                               time_range=['07:00:00', '09:00:00']):
+        self.ped_network = self._set_ped_network(ped_network)
+        self._process_gtfs(gtfs_path)
+        self._filter_trips(date, time_range)
+        self._agg_transit_ped()
+        return self
+
+    def save_transit_network(self, filename, path=None):
+        os.chdir(path)
+        self.transit_network.save_hdf5('transit_network')
+
+    def load_transit_network(self, transit_network):
+        self.transit_network = transit_network
+        return self
+
+    def _set_ped_network(self, ped_network):
+        if isinstance(ped_network, pdna.Network):
+            return ped_network
+        else:
+            raise TypeError('ped_network must be a pandana object')
+
+    def _process_gtfs(self, gtfs_path):
         os.chdir(gtfs_path)
-        self._set_network(pandana_network)
         self.stop_times = self._set_stop_times()
         self.stops = self._set_stops()
         self.trips = self._set_trips()
@@ -24,16 +53,10 @@ class TransitAccess(object):
                                 minutes=int(x[3:5])))
         return stop_times
 
-    def _set_network(self, pandana_network):
-        if isinstance(pandana_network, pdna.Network):
-            self.network = pandana_network
-        else:
-            raise TypeError('pandana_network must be a pandana object')
-
     def _set_stops(self):
         stops = pd.read_csv('stops.txt')
         x, y = stops.stop_lon, stops.stop_lat
-        stops['node_id'] = self.network.get_node_ids(x, y)
+        stops['node_id'] = self.ped_network.get_node_ids(x, y)
         stops_col = ['stop_id', 'node_id', 'stop_lon', 'stop_lat']
         return stops[stops_col]
 
@@ -48,9 +71,9 @@ class TransitAccess(object):
     def _set_routes(self):
         return pd.read_csv('routes.txt')
 
-    def filter_trips(self,
-                     date,
-                     time_range=['07:00:00', '09:00:00']):
+    def _filter_trips(self,
+                      date,
+                      time_range=['07:00:00', '09:00:00']):
         date = int(date)
         start_time = timedelta(hours=int(time_range[0][0:2]),
                                minutes=int(time_range[0][3:5]))
@@ -73,7 +96,8 @@ class TransitAccess(object):
         return self.date_peak_trips
 
     def _calculate_headway(self, date_peak_trips):
-        first_stop = date_peak_trips.loc[date_peak_trips['stop_sequence'] == 1]
+        first_stop = date_peak_trips.loc[
+                date_peak_trips['stop_sequence'] == 1]
         groupby_service = first_stop.groupby(first_stop['service_id'])
         max_arrival = groupby_service.max().arrival_time
         min_arrival = groupby_service.min().arrival_time
@@ -90,17 +114,18 @@ class TransitAccess(object):
                 headway[service] = timedelta(seconds=3600).seconds
             else:
                 headway[service] = (time / (count - 1)).seconds
-
         return headway
 
-    def create_transit_network(self):
+    def _agg_transit_ped(self,
+                        date=20181016,
+                        time_range=['07:00:00', '09:00:00']):
         stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
         stop_nodes_peak = stop_nodes_peak.sort_values(
                                     ['trip_id', 'stop_sequence'])
-        edges = self.network.edges_df
-        stop = self.network.nodes_df.index.max() + 1
-        nodes = self.network.nodes_df
+        edges = self.ped_network.edges_df
+        stop = self.ped_network.nodes_df.index.max() + 1
+        nodes = self.ped_network.nodes_df
         headway = self.headway
         prev_trip = None
         prev_intersection = None
@@ -163,15 +188,35 @@ class TransitAccess(object):
         )
         self.transit_network = transit_network
 
+    def export_transit_network(self, path=None):
+        if not path:
+            self.transit_network.save_hdf5('transit_network')
+
+    def load_transit_network(cls, path=None):
+        if not path:
+            os.chdir('gtfs_data')
+            self.pdna.Network.from_hdf5('transit_network')
+
     def set_poi(self, poi):
         transit_network = self.transit_network
-        # set point of interest to find out the weight to nearest poi
-        transit_network.set_pois(category="poi",
-                                 maxdist=3600,
-                                 maxitems=1,
-                                 x_col=poi['x'],
-                                 y_col=poi['y'])
-        nearest_poi = transit_network.nearest_pois(distance=3600,
-                                                   category="poi",
-                                                   num_pois=1)
-        nearest_poi.to_csv('test.csv')
+        import pdb; pdb.set_trace()
+        geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
+                                                transit_network.nodes_df.y)]
+        crs = {'init': 'epsg:4326'}
+        geodf = geopd.GeoDataFrame(transit_network.nodes_df, crs, geometry)
+
+        for key, data in poi.items():
+            # set point of interest to find out the weight to nearest poi
+            transit_network.set_pois(category=key,
+                                     maxdist=3600,
+                                     maxitems=1,
+                                     x_col=data['x'],
+                                     y_col=data['y'])
+            nearest_poi = transit_network.nearest_pois(distance=3600,
+                                                       category=key,
+                                                       num_pois=1)
+
+            import pdb; pdb.set_trace()
+
+    def to_geojson(self, path=None):
+        pass
