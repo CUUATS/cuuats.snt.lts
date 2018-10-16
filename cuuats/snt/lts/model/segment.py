@@ -261,9 +261,17 @@ class Segment(object):
 
         return utils.calculate_score(crossing_table, crit)
 
+    def _vertical_score(self, bike_path, score):
+        if bike_path.buffer_type == c.VERTICAL_TRAIL:
+            if score is float('Inf'):
+                return score
+            elif score > 1:
+                return score - 1
+        return score
+
     def blts_score(self, approaches, crossings,
                    bike_paths=None, turn_threshold=0):
-                   
+
         # Interstate Score
         if self.interstate:
             return 4
@@ -279,12 +287,21 @@ class Segment(object):
             if self._find_off_street_trail(bike_path):
                 return c.OFF_STREET_TRAIL_SCORE
 
-            pk_score = max(pk_score,
-                           self._calculate_bikelane_with_adj_parking(
-                            bike_path))
-            no_pk_score = max(no_pk_score,
-                              self._calculate_bikelane_without_adj_parking(
-                               bike_path))
+            # adds vertical logic
+            p = self._vertical_score(
+                bike_path,
+                self._calculate_bikelane_with_adj_parking(
+                  bike_path)
+            )
+            pk_score = max(pk_score, p)
+
+            # adds vertical logic
+            n = self._vertical_score(
+                bike_path,
+                self._calculate_bikelane_without_adj_parking(
+                    bike_path)
+            )
+            no_pk_score = max(no_pk_score, n)
 
         segment_components = [
             mix_traffic_score,

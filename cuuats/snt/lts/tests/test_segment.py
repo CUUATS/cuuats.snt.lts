@@ -440,6 +440,24 @@ class TestSegment(unittest.TestCase):
         self.assertEqual(segment._calculate_art_crossing_wo_med_three_lanes(
                 crossing), 4)
 
+    def test_vertical_score(self):
+        segment = Segment()
+        bike_path = BikePath(buffer_type='Vertical')
+        score = 3
+        self.assertEqual(segment._vertical_score(bike_path, score), score - 1)
+
+        bike_path = BikePath(buffer_type='Landscaped')
+        score = 3
+        self.assertEqual(segment._vertical_score(bike_path, score), score)
+
+        bike_path = BikePath(buffer_type='Landscaped')
+        score = 1
+        self.assertEqual(segment._vertical_score(bike_path, score), score)
+
+        bike_path = BikePath(buffer_type='Vertical')
+        score = 1
+        self.assertEqual(segment._vertical_score(bike_path, score), score)
+
     def test_blts(self):
         segment = Segment(lanes_per_direction=1,
                           parking_lane_width=None,
