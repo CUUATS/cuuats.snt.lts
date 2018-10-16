@@ -89,6 +89,7 @@ class Segment(object):
         width_scale_one_lane = c.BL_NO_ADJ_PK_WIDTH_SCALE
         width_scale_two_lane = c.BL_NO_ADJ_PK_TWO_WIDTH_SCALE
         width = bike_path.width
+        buffer_width = bike_path.buffer_width
 
         score = 99
         if parking_lane_width is not None or width is None:
@@ -96,12 +97,12 @@ class Segment(object):
         # no marked lane or 1 lpd
         elif lpd is None or lpd == 1:
             crits = ([aadt, aadt_scale],
-                     [width, width_scale_one_lane])
+                     [width + buffer_width, width_scale_one_lane])
             return utils.calculate_score(one_lane_table, crits)
         # 2 lps or greater
         else:
             crits = ([aadt, aadt_scale],
-                     [width, width_scale_two_lane])
+                     [width + buffer_width, width_scale_two_lane])
             return utils.calculate_score(multi_lane_table, crits)
 
     def _calculate_right_turn_lane(self, approach):

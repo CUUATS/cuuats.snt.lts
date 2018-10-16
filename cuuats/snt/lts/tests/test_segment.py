@@ -174,6 +174,30 @@ class TestSegment(unittest.TestCase):
             segment._calculate_bikelane_without_adj_parking(bike_path),
             99)
 
+        segment = Segment(aadt=None)
+        segment.lanes_per_direction = 1
+        segment.parking_lane_width = None
+        bike_path = BikePath(width=50, buffer_width=40)
+        self.assertEqual(
+            segment._calculate_bikelane_without_adj_parking(bike_path),
+            1)
+
+        segment = Segment(aadt=3001)
+        segment.lanes_per_direction = 1
+        segment.parking_lane_width = None
+        bike_path = BikePath(width=50, buffer_width=18)
+        self.assertEqual(
+            segment._calculate_bikelane_without_adj_parking(bike_path),
+            3)
+
+        segment = Segment(aadt=30001)
+        segment.lanes_per_direction = 1
+        segment.parking_lane_width = None
+        bike_path = BikePath(width=50, buffer_width=None)
+        self.assertEqual(
+            segment._calculate_bikelane_without_adj_parking(bike_path),
+            4)
+
         segment = Segment(aadt=6400,
                           lanes_per_direction=1,
                           parking_lane_width=None)

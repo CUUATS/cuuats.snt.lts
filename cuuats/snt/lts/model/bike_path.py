@@ -7,5 +7,5 @@ class BikePath(object):
         self.path_subtype = kwargs.get('path_subtype')
         self.path_category = kwargs.get('path_category')
         self.width = kwargs.get('width')
-        self.buffer_width = kwargs.get('buffer_width')
+        self.buffer_width = kwargs.get('buffer_width') or 0
         self.buffer_type = kwargs.get('buffer_type')
