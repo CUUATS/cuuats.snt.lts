@@ -377,7 +377,7 @@ class Segment(object):
                                 )
                         else:
                             crossing_score = \
-                                self._calculate_art_crossing_wo_med_three_lanes(
+                              self._calculate_art_crossing_wo_med_three_lanes(
                                     crossing
                                 )
                 # median criteria - median present

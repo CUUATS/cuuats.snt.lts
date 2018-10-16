@@ -13,10 +13,12 @@ SELECT b1.segment_id, b1.blts, b2.plts FROM
 					 right_turn_length,
 					 bike_approach_alignment,
 					 path_category,
-				   cc.posted_speed,
-				   max_lanes_crossed,
-				   control_type,
-				   cc.median_refuge_type)) as blts
+				     cc.posted_speed,
+				     max_lanes_crossed,
+				     control_type,
+				     cc.median_refuge_type,
+			         b.buffer_width,
+				 	 b.buffer_type)) as blts
 	FROM street.segment AS s
 	LEFT JOIN bicycle.path_singlepart as b
 		ON ST_DWithin(s.geom, b.bike_geom, 100) AND

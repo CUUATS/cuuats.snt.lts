@@ -14,7 +14,9 @@ set_blts(idot_aadt int,
 		 crossing_speed int,
 		 lanes_crossed int,
 		 control_type text,
-		 median text
+		 median text,
+		 buffer_width int,
+		 buffer_type text
 		) RETURNS INT AS
 '
 from cuuats.snt.lts import Segment, Approach, BikePath, Crossing
@@ -32,47 +34,11 @@ crossings = [Crossing(crossing_speed=crossing_speed,
 										   control_type=control_type,
 										   median=median)]
 bike_paths = [BikePath(width=bike_path_width,
-					   path_category=path_category)]
+					   path_category=path_category,
+				   	   buffer_width=buffer_width
+				   	   buffer_type=buffer_type)]
 
 score = segment.blts_score(approaches, crossings, bike_paths, 10000)
 return score
 '
 LANGUAGE 'plpython3u';
-
-DROP MATERIALIZED VIEW street.blts_mat_view
-CREATE MATERIALIZED VIEW street.blts_mat_view AS
-SELECT s.id,
-		s.name,
-		s.geom,
-		s.idot_aadt,
-		s.posted_speed,
-		s.parking_lane_width,
-		s.lanes_per_direction,
-		s.functional_classification,
- 		max(set_blts(idot_aadt,
- 				 bicycle_facility_width,
- 				 posted_speed,
- 				 parking_lane_width,
- 				 lanes_per_direction,
- 				 functional_classification,
- 				 bike_width,
- 				 lane_configuration,
- 				 right_turn_length,
- 				 bike_approach_alignment,
-				 path_category)) as blts
-FROM street.segment AS s
-LEFT JOIN bicycle.path_singlepart as b
-	ON ST_DWithin(s.geom, b.bike_geom, 100) AND
-	  pcd_segment_match(s.geom, b.bike_geom, 100)
-LEFT JOIN street.intersection_approach as i
-	ON s.segment_id = i.segment_id
-GROUP BY s.id,
-		s.name,
-		s.geom,
-		s.idot_aadt,
-		s.posted_speed,
-		s.parking_lane_width,
-		s.lanes_per_direction,
-		s.functional_classification;
-
--- REFRESH MATERIALIZED VIEW street.blts_mat_view;

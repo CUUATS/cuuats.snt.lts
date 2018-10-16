@@ -533,6 +533,49 @@ class TestSegment(unittest.TestCase):
         score = segment.blts_score(approaches, crossings, bike_paths, 10000)
         self.assertEqual(score, 4)
 
+        # test for vertical buffer
+        segment = Segment(lanes_per_direction=1,
+                          parking_lane_width=None,
+                          aadt=4400,
+                          functional_class=4,
+                          posted_speed=30)
+        approaches = [Approach(lane_configuration=None,
+                               right_turn_length=None,
+                               bike_lane_approach=None)]
+        crossings = [Crossing(crossing_speed=30,
+                              lanes_crossed=2,
+                              control_type='AWSC',
+                              median=None)]
+        bike_paths = [BikePath(width=60,
+                               buffer_width=10,
+                               buffer_type='Vertical',
+                               path_category='On-Street Bikeway')]
+
+        score = segment.blts_score(approaches, crossings, bike_paths, 10000)
+        self.assertEqual(score, 2)
+
+        # test for vertical buffer
+        segment = Segment(lanes_per_direction=1,
+                          parking_lane_width=None,
+                          total_lanes=3,
+                          aadt=8300,
+                          functional_class=3,
+                          posted_speed=25)
+        approaches = [Approach(lane_configuration='XXLTT',
+                               right_turn_length=None,
+                               bike_lane_approach=None)]
+        crossings = [Crossing(crossing_speed=25,
+                              lanes_crossed=3,
+                              control_type='Unsignalized',
+                              median=None)]
+        bike_paths = [BikePath(width=76,
+                               buffer_width=0,
+                               buffer_type='Vertical',
+                               path_category='On-Street Bikeway')]
+
+        score = segment.blts_score(approaches, crossings, bike_paths, 10000)
+        self.assertEqual(score, 2)
+
 
 if __name__ == '__main__':
     unittest.main()
