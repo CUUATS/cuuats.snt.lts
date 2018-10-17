@@ -6,31 +6,58 @@ from shapely.geometry import Point
 from datetime import timedelta
 
 
-class TransitAccess(object):
+class CuuatsAccess(object):
     def __init__(self):
         pass
 
+    def create_bike_network(self, nodes, edges, weight):
+        network = pdna.Network(
+            node_x=nodes.x,
+            node_y=nodes.y,
+            edge_from=edges["from"],
+            edge_to=edges["to"],
+            edge_weights=edges[[weight]],
+            twoway=False)
+        network.precompute(3000)
+        self.bike_network = network
+        return self
+
+    def create_ped_network(self, nodes, edges, weight):
+        network = pdna.Network(
+            node_x=nodes.x,
+            node_y=nodes.y,
+            edge_from=edges["from"],
+            edge_to=edges["to"],
+            edge_weights=edges[[weight]],
+            twoway=False)
+        network.precompute(3000)
+        self.ped_network = network
+        return self
+
     def create_transit_network(self,
                                gtfs_path,
-                               ped_network,
                                date=20181016,
                                time_range=['07:00:00', '09:00:00']):
-        self.ped_network = self._set_ped_network(ped_network)
+        # self.ped_network = self._set_ped_network(ped_network)
         self._process_gtfs(gtfs_path)
         self._filter_trips(date, time_range)
         self._agg_transit_ped()
         return self
 
-    def save_transit_network(self, filename, path=None):
+    def save_networks(self, path=None):
         if path:
             os.chdir(path)
-        self.transit_network.save_hdf5(filename)
+        self.transit_network.save_hdf5('transit_network.hdf5')
+        self.ped_network.save_hdf5('ped_network.hdf5')
+        self.bike_nework.save_hdf5('bike_network.hdf5')
         return self
 
-    def load_transit_network(self, filename, path=None):
+    def load_networks(self, path=None):
         if path:
             os.chdir(path)
-        self.transit_network = pdna.Network.from_hdf5(filename)
+        self.transit_network = pdna.Network.from_hdf5('transit_network.hdf5')
+        self.ped_network = pdna.Network.from_hdf5('ped_network.hdf5')
+        self.bike_network = pdna.Network.from_hdf5('bike_network.hdf5')
         return self
 
     def set_pois(self, poi):

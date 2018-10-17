@@ -11,13 +11,14 @@ with psycopg2.connect(**DB) as conn:
     edges = pd.read_sql_query(EDGES_SQL, conn)
     poi = pd.read_sql_query(POI_SQL, conn)
 
+
 # create the network object
 network = pdna.Network(
     node_x=nodes.x,
     node_y=nodes.y,
     edge_from=edges["from"],
     edge_to=edges["to"],
-    edge_weights=edges[["plts_weight"]])
+    edge_weights=edges[["ped_weight"]])
 
 network.precompute(3000)
 
@@ -43,7 +44,9 @@ poi_ids = network.get_node_ids(x, y)
 network.set(poi_ids)
 y = network.aggregate(distance=7000,
                       type="sum",
-                      decay="linear")
+                      decay="flat")
 
 plts_n = pd.merge(plts_n, pd.DataFrame(y), left_index=True, right_index=True)
 plts_n = plts_n.rename(columns={'0': 'aggregate'})
+
+plts_n.to_csv('~/Git/cuuats.snt.lts/cuuats/snt/accessibility/results/ped_fuel.csv')

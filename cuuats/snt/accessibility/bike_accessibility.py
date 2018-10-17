@@ -1,10 +1,9 @@
 import pandas as pd
 import pandana as pdna
 import psycopg2
-
 from config import NODES_SQL, EDGES_SQL, POI_SQL
 from env import DB
-
+from cuuatsaccess import CuuatsAccess
 
 # connect with database to query the data
 with psycopg2.connect(**DB) as conn:
@@ -44,6 +43,8 @@ poi_ids = network.get_node_ids(x, y)
 network.set(poi_ids)
 y = network.aggregate(distance=15000,
                       type="sum",
-                      decay="linear")
+                      decay="flat")
 
 blts_n = pd.merge(blts_n, pd.DataFrame(y), left_index=True, right_index=True)
+
+blts_n.to_csv('~/Git/cuuats.snt.lts/cuuats/snt/accessibility/results/bike_fuel.csv')
