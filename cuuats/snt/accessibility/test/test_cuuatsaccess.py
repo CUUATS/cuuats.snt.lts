@@ -22,11 +22,16 @@ class TestCuuatsAccess(unittest.TestCase):
                  'to':          [2, 3, 5, 6, 8, 9, 4, 7, 5, 8, 6, 9, 6],
                  'ped_weight':  [1, 2, 3, 1, 4, 3, 2, 2, 2, 2, 2, 4, 2],
                  'bike_weight': [1, 2, 3, 1, 4, 3, 2, 2, 2, 2, 2, 4, 2]}
-    edge_df = pd.DataFrame(edge_data)
 
-    stop_times_data = {'trip_id': ['green', 'green', 'green'],
-                       'arrival_time': ['08:00:00', '08:15:00', '08:30:00'],
-                       'stop_sequence': [1, 2, 3],
+    edge_df = pd.DataFrame(edge_data)
+    new_df = edge_df.rename(columns={'from': 'to', 'to': 'from'})
+    edge_df = pd.concat([edge_df, new_df])
+
+    stop_times_data = {'trip_id': ['green', 'green', 'green',
+                                   'red', 'red', 'red'],
+                       'arrival_time': ['08:00:00', '08:01:00', '08:02:00',
+                                        '08:00:00', '08:01:00', '08:02:00'],
+                       'stop_sequence': [1, 4, 7, 7, 8, 9],
                        'stop_id': ['A', 'B', 'C']}
     stop_times_df = pd.DataFrame(stop_times_data)
 
@@ -34,7 +39,7 @@ class TestCuuatsAccess(unittest.TestCase):
         self.assertTrue(isinstance(self.node_df, pd.DataFrame))
         self.assertTrue(isinstance(self.edge_df, pd.DataFrame))
         self.assertEqual(len(self.node_df), 9)
-        self.assertEqual(len(self.edge_df), 13)
+        self.assertEqual(len(self.edge_df), 26)
 
     def test_create_bike_network(self):
         ca = CuuatsAccess()
@@ -43,8 +48,13 @@ class TestCuuatsAccess(unittest.TestCase):
 
     def test_create_ped_network(self):
         ca = CuuatsAccess()
-        ca.create_bike_network(self.node_df, self.edge_df, 'ped_weight')
-        self.assertTrue(isinstance(ca.bike_network, pdna.Network))
+        ca.create_ped_network(self.node_df, self.edge_df, 'ped_weight')
+        self.assertTrue(isinstance(ca.ped_network, pdna.Network))
+
+    def test_agg_transit_ped(self):
+        ca = CuuatsAccess()
+        ca.create_ped_network(self.node_df, self.edge_df, 'ped_weight')
+        ca.create_transit_network()
 
 if __name__ == '__main__':
     unittest.main()
