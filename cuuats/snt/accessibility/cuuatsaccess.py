@@ -82,7 +82,9 @@ class CuuatsAccess(object):
         transit_network = self.transit_network
         ped_network = self.ped_network
         bike_network = self.bike_network
-        networks = {'transit_network': transit_network}
+        networks = {'transit_network': transit_network,
+                    'ped_network': ped_network,
+                    'bike_network': bike_network}
         geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
                                                 transit_network.nodes_df.y)]
         crs = {'init': 'epsg:4326'}
@@ -93,42 +95,44 @@ class CuuatsAccess(object):
 
         for network_name, network in networks.items():
             prefix = network_name.split('_')[0] + '_'
+            dist = self.max_unit.get(network_name)
             for key, param in self.pois.items():
                 data = param[0]
                 item = param[1]
-                if param[2] == 'nearest':
-                    # set point of interest to find out the weight to nearest poi
-                    transit_network.set_pois(category=key,
-                                             maxdist=self.max_unit.get(network_name),
-                                             maxitems=item,
-                                             x_col=data['x'],
-                                             y_col=data['y'])
-                    nearest_poi = transit_network.nearest_pois(distance=3600,
-                                                               category=key,
-                                                               num_pois=item)
+                method = param[2]
+                if method == 'nearest':
+                    network.set_pois(category=key,
+                                     maxdist=dist,
+                                     maxitems=item,
+                                     x_col=data['x'],
+                                     y_col=data['y'])
+                    nearest_poi = network.nearest_pois(distance=dist,
+                                                       category=key,
+                                                       num_pois=item)
                     nearest_poi.columns = [str(i) for i in range(1, item + 1)]
 
                     geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
                     geodf = geodf.rename(columns={str(item): prefix + key})
-                elif param[2] == 'aggregation':
-                    data['node_ids'] = transit_network.get_node_ids(data.x, data.y)
-                    transit_network.set(data.node_ids,
-                                        variable=data['emp_num'],
-                                        name=key)
-                    df = transit_network.aggregate(3600,
-                                                   type='sum',
-                                                   decay='flat',
-                                                   name=key)
+                elif method == 'aggregation':
+                    data['node_ids'] = network.get_node_ids(data.x,
+                                                            data.y)
+                    network.set(data.node_ids,
+                                variable=data['emp_num'],
+                                name=key)
+                    df = network.aggregate(3600,
+                                           type='sum',
+                                           decay='flat',
+                                           name=key)
                     geodf = pd.concat([geodf, df], axis=1)
                     geodf = geodf.rename(columns={0: prefix + key})
 
-            self.pois_access = geodf
+        self.pois_access = geodf
         return self
 
-    def to_geojson(self, filename='pois.geojson', path=None):
+    def to_geojson(self, filename='pois_access.geojson', path=None):
         if path:
             os.chdir(path)
-        self.pois.to_file(filename, driver='GeoJSON')
+        self.pois_access.to_file(filename, driver='GeoJSON')
         return self
 
     def _set_ped_network(self, ped_network):

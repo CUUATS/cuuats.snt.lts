@@ -34,4 +34,5 @@ cuuatsaccess.set_max_unit({'bike_network': 15000,
                            'ped_network': 7000,
                            'transit_network': 3600})
 cuuatsaccess.calculate_accessibility()
+cuuatsaccess.to_geojson()
 import pdb; pdb.set_trace()
