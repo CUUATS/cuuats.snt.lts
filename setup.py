@@ -29,6 +29,10 @@ setup(name='cuuats.snt.lts',
       namespace_packages=['cuuats', 'cuuats.snt'],
       install_requires=[
         'pandas>=0.23.4',
-        'numpy>=1.15.1'
+        'numpy>=1.15.1',
+        'pandana>=0.4.1',
+        'geopandas>=0.4.0',
+        'fiona>=1.7.13',
+        'shapely>=1.6.4'
       ]
       )
