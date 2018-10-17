@@ -12,6 +12,9 @@ class CuuatsAccess(object):
         self.ped_network = ""
         self.transit_network = ""
         self.pois = {}
+        self.max_unit = {'bike_network': 15000,
+                         'ped_network': 7000,
+                         'transit_network': 3600}
 
     def create_bike_network(self, nodes, edges, weight):
         network = pdna.Network(
@@ -66,12 +69,20 @@ class CuuatsAccess(object):
     def set_pois(self, data, name,
                  method='nearest',
                  nearest_num=1,
-                 agg_field=''):
+                 agg_field='',
+                 max_unit=3600):
         self.pois[name] = [data, nearest_num, method, agg_field]
+        return self
+
+    def set_max_unit(self, max_unit):
+        self.max_unit = max_unit
         return self
 
     def calculate_accessibility(self):
         transit_network = self.transit_network
+        ped_network = self.ped_network
+        bike_network = self.bike_network
+        networks = {'transit_network': transit_network}
         geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
                                                 transit_network.nodes_df.y)]
         crs = {'init': 'epsg:4326'}
@@ -80,36 +91,38 @@ class CuuatsAccess(object):
                                    geometry=geometry)
         geodf = geodf.drop(['x', 'y'], axis=1)
 
-        for key, param in self.pois.items():
-            data = param[0]
-            item = param[1]
-            if param[2] == 'nearest':
-                # set point of interest to find out the weight to nearest poi
-                transit_network.set_pois(category=key,
-                                         maxdist=3600,
-                                         maxitems=item,
-                                         x_col=data['x'],
-                                         y_col=data['y'])
-                nearest_poi = transit_network.nearest_pois(distance=3600,
-                                                           category=key,
-                                                           num_pois=item)
-                nearest_poi.columns = [str(i) for i in range(1, item + 1)]
+        for network_name, network in networks.items():
+            prefix = network_name.split('_')[0] + '_'
+            for key, param in self.pois.items():
+                data = param[0]
+                item = param[1]
+                if param[2] == 'nearest':
+                    # set point of interest to find out the weight to nearest poi
+                    transit_network.set_pois(category=key,
+                                             maxdist=self.max_unit.get(network_name),
+                                             maxitems=item,
+                                             x_col=data['x'],
+                                             y_col=data['y'])
+                    nearest_poi = transit_network.nearest_pois(distance=3600,
+                                                               category=key,
+                                                               num_pois=item)
+                    nearest_poi.columns = [str(i) for i in range(1, item + 1)]
 
-                geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
-                geodf = geodf.rename(columns={str(item): 'transit_' + key})
-            elif param[2] == 'aggregation':
-                data['node_ids'] = transit_network.get_node_ids(data.x, data.y)
-                transit_network.set(data.node_ids,
-                                    variable=data['emp_num'],
-                                    name=key)
-                df = transit_network.aggregate(3600,
-                                               type='sum',
-                                               decay='flat',
-                                               name=key)
-                geodf = pd.concat([geodf, df], axis=1)
-                geodf = geodf.rename(columns={0: 'transit_' + key})
+                    geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
+                    geodf = geodf.rename(columns={str(item): prefix + key})
+                elif param[2] == 'aggregation':
+                    data['node_ids'] = transit_network.get_node_ids(data.x, data.y)
+                    transit_network.set(data.node_ids,
+                                        variable=data['emp_num'],
+                                        name=key)
+                    df = transit_network.aggregate(3600,
+                                                   type='sum',
+                                                   decay='flat',
+                                                   name=key)
+                    geodf = pd.concat([geodf, df], axis=1)
+                    geodf = geodf.rename(columns={0: prefix + key})
 
-        self.pois_access = geodf
+            self.pois_access = geodf
         return self
 
     def to_geojson(self, filename='pois.geojson', path=None):
