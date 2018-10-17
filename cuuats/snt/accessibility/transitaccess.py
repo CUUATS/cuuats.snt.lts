@@ -46,19 +46,31 @@ class TransitAccess(object):
         for key, param in poi.items():
             data = param[0]
             item = param[1]
-            # set point of interest to find out the weight to nearest poi
-            transit_network.set_pois(category=key,
-                                     maxdist=3600,
-                                     maxitems=item,
-                                     x_col=data['x'],
-                                     y_col=data['y'])
-            nearest_poi = transit_network.nearest_pois(distance=3600,
-                                                       category=key,
-                                                       num_pois=item)
-            nearest_poi.columns = [str(i) for i in range(1, item + 1)]
+            if param[2] == 'nearest':
+                # set point of interest to find out the weight to nearest poi
+                transit_network.set_pois(category=key,
+                                         maxdist=3600,
+                                         maxitems=item,
+                                         x_col=data['x'],
+                                         y_col=data['y'])
+                nearest_poi = transit_network.nearest_pois(distance=3600,
+                                                           category=key,
+                                                           num_pois=item)
+                nearest_poi.columns = [str(i) for i in range(1, item + 1)]
 
-            geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
-            geodf = geodf.rename(columns={str(item): key})
+                geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
+                geodf = geodf.rename(columns={str(item): 'transit_' + key})
+            elif param[2] == 'aggregation':
+                data['node_ids'] = transit_network.get_node_ids(data.x, data.y)
+                transit_network.set(data.node_ids,
+                                    variable=data['emp_num'],
+                                    name=key)
+                df = transit_network.aggregate(3600,
+                                               type='sum',
+                                               decay='flat',
+                                               name=key)
+                geodf = pd.concat([geodf, df], axis=1)
+                geodf = geodf.rename(columns={0: 'transit_' + key})
 
         self.pois = geodf
         return self

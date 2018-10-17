@@ -69,3 +69,15 @@ JOIN street.lts_score as lts1
 WHERE s1.start_intersection_id IS DISTINCT FROM NULL AND
     s1.end_intersection_id IS DISTINCT FROM NULL
 """
+
+TRANSIT_JOB_SQL = """
+SELECT duns_num AS id,
+	ST_X(ST_Transform(geom, 4326)) AS x,
+	ST_Y(ST_Transform(geom, 4326)) AS y,
+	CASE WHEN emp_num = 0 THEN 1::float
+	ELSE emp_num::float
+	END
+	AS emp_num
+FROM business."esri_2014
+";
+"""
