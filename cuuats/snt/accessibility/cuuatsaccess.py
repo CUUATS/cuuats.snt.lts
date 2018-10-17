@@ -68,11 +68,9 @@ class CuuatsAccess(object):
                  nearest_num=1,
                  agg_field=''):
         self.pois[name] = [data, nearest_num, method, agg_field]
-        import pdb; pdb.set_trace()
         return self
 
-
-    def calculate_accessibility(self, poi):
+    def calculate_accessibility(self):
         transit_network = self.transit_network
         geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
                                                 transit_network.nodes_df.y)]
@@ -82,7 +80,7 @@ class CuuatsAccess(object):
                                    geometry=geometry)
         geodf = geodf.drop(['x', 'y'], axis=1)
 
-        for key, param in poi.items():
+        for key, param in self.pois.items():
             data = param[0]
             item = param[1]
             if param[2] == 'nearest':
@@ -111,7 +109,7 @@ class CuuatsAccess(object):
                 geodf = pd.concat([geodf, df], axis=1)
                 geodf = geodf.rename(columns={0: 'transit_' + key})
 
-        self.pois = geodf
+        self.pois_access = geodf
         return self
 
     def to_geojson(self, filename='pois.geojson', path=None):
@@ -214,7 +212,9 @@ class CuuatsAccess(object):
                                    on='stop_id', how='inner')
         stop_nodes_peak = stop_nodes_peak.sort_values(
                                     ['trip_id', 'stop_sequence'])
+        # convert into seconds based on 3 miles per hour
         edges = self.ped_network.edges_df
+        edges['weight'] = (edges['ped_weight'] / 5280) / 3 * 60 * 60
         stop = self.ped_network.nodes_df.index.max() + 1
         nodes = self.ped_network.nodes_df
         headway = self.headway
@@ -222,7 +222,6 @@ class CuuatsAccess(object):
         prev_intersection = None
         prev_stop = None
         prev_time = None
-
         for row in stop_nodes_peak.iterrows():
             intersection = row[1].node_id
             arrival_time = row[1].arrival_time
