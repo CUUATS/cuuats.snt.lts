@@ -44,7 +44,6 @@ class CuuatsAccess(object):
                                gtfs_path,
                                date=20181016,
                                time_range=['07:00:00', '09:00:00']):
-        # self.ped_network = self._set_ped_network(ped_network)
         self._process_gtfs(gtfs_path)
         self._filter_trips(date, time_range)
         self._agg_transit_ped()
@@ -66,11 +65,12 @@ class CuuatsAccess(object):
         self.bike_network = pdna.Network.from_hdf5('bike_network.hdf5')
         return self
 
-    def set_pois(self, data, name,
+    def set_pois(self,
+                 data,
+                 name,
                  method='nearest',
                  nearest_num=1,
-                 agg_field='',
-                 max_unit=3600):
+                 agg_field=''):
         self.pois[name] = [data, nearest_num, method, agg_field]
         return self
 
@@ -100,6 +100,7 @@ class CuuatsAccess(object):
                 data = param[0]
                 item = param[1]
                 method = param[2]
+                agg_field = param[3]
                 if method == 'nearest':
                     network.set_pois(category=key,
                                      maxdist=dist,
@@ -117,9 +118,9 @@ class CuuatsAccess(object):
                     data['node_ids'] = network.get_node_ids(data.x,
                                                             data.y)
                     network.set(data.node_ids,
-                                variable=data['emp_num'],
+                                variable=data[agg_field],
                                 name=key)
-                    df = network.aggregate(3600,
+                    df = network.aggregate(dist,
                                            type='sum',
                                            decay='flat',
                                            name=key)
@@ -134,12 +135,6 @@ class CuuatsAccess(object):
             os.chdir(path)
         self.pois_access.to_file(filename, driver='GeoJSON')
         return self
-
-    def _set_ped_network(self, ped_network):
-        if isinstance(ped_network, pdna.Network):
-            return ped_network
-        else:
-            raise TypeError('ped_network must be a pandana object')
 
     def _process_gtfs(self, gtfs_path):
         os.chdir(gtfs_path)
