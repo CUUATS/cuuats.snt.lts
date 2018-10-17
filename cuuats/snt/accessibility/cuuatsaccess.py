@@ -8,7 +8,10 @@ from datetime import timedelta
 
 class CuuatsAccess(object):
     def __init__(self):
-        pass
+        self.bike_network = ""
+        self.ped_network = ""
+        self.transit_network = ""
+        self.pois = {}
 
     def create_bike_network(self, nodes, edges, weight):
         network = pdna.Network(
@@ -49,7 +52,7 @@ class CuuatsAccess(object):
             os.chdir(path)
         self.transit_network.save_hdf5('transit_network.hdf5')
         self.ped_network.save_hdf5('ped_network.hdf5')
-        self.bike_nework.save_hdf5('bike_network.hdf5')
+        self.bike_network.save_hdf5('bike_network.hdf5')
         return self
 
     def load_networks(self, path=None):
@@ -60,7 +63,16 @@ class CuuatsAccess(object):
         self.bike_network = pdna.Network.from_hdf5('bike_network.hdf5')
         return self
 
-    def set_pois(self, poi):
+    def set_pois(self, data, name,
+                 method='nearest',
+                 nearest_num=1,
+                 agg_field=''):
+        self.pois[name] = [data, nearest_num, method, agg_field]
+        import pdb; pdb.set_trace()
+        return self
+
+
+    def calculate_accessibility(self, poi):
         transit_network = self.transit_network
         geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
                                                 transit_network.nodes_df.y)]
