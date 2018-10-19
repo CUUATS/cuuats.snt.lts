@@ -1,7 +1,6 @@
 -- DROP FUNCTION set_blts(int) CASCADE;
 CREATE OR REPLACE FUNCTION
 set_blts(idot_aadt int,
-		 bicycle_facility_width int,
 		 posted_speed int,
 		 parking_lane_width int,
 		 lanes_per_direction int,
@@ -27,18 +26,19 @@ segment = Segment(lanes_per_direction=lanes_per_direction,
 				  functional_class=functional_classification,
 				  posted_speed=posted_speed)
 approaches = [Approach(lane_configuration=lane_configuration,
-				     right_turn_length=right_turn_length,
-				     bike_lane_approach=bike_approach_alignment)]
+				       right_turn_length=right_turn_length,
+				       bike_lane_approach=bike_approach_alignment)]
 crossings = [Crossing(crossing_speed=crossing_speed,
-											 lanes_crossed=lanes_crossed,
-										   control_type=control_type,
-										   median=median)]
+					  lanes_crossed=lanes_crossed,
+					  control_type=control_type,
+					  median=median)]
 bike_paths = [BikePath(width=bike_path_width,
 					   path_category=path_category,
-				   	   buffer_width=buffer_width
+				   	   buffer_width=buffer_width,
 				   	   buffer_type=buffer_type)]
 
 score = segment.blts_score(approaches, crossings, bike_paths, 10000)
 return score
+
 '
 LANGUAGE 'plpython3u';

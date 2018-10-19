@@ -3,7 +3,6 @@ CREATE MATERIALIZED VIEW street.lts_score AS
 SELECT b1.segment_id, b1.blts, b2.plts FROM
 	(SELECT s.segment_id,
 			max(set_blts(idot_aadt,
-					 bicycle_facility_width,
 					 s.posted_speed,
 					 parking_lane_width,
 					 lanes_per_direction,
