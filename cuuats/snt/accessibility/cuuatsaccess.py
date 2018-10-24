@@ -4,6 +4,7 @@ import os
 import geopandas as geopd
 from shapely.geometry import Point
 from datetime import timedelta
+from sklearn import preprocessing
 
 
 class CuuatsAccess(object):
@@ -110,6 +111,7 @@ class CuuatsAccess(object):
                     nearest_poi = network.nearest_pois(distance=dist,
                                                        category=key,
                                                        num_pois=item)
+                    nearest_poi = self._rescale(nearest_poi, reverse=False)
                     nearest_poi.columns = [str(i) for i in range(1, item + 1)]
 
                     geodf = pd.concat([geodf, nearest_poi[str(item)]], axis=1)
@@ -124,9 +126,11 @@ class CuuatsAccess(object):
                                            type='sum',
                                            decay='flat',
                                            name=key)
+                    df = self._rescale(df, reverse=True)
                     geodf = pd.concat([geodf, df], axis=1)
                     geodf = geodf.rename(columns={0: prefix + key})
 
+        geodf = geodf[geodf['geometry'] != Point(0, 0)]
         self.pois_access = geodf
         return self
 
@@ -135,6 +139,18 @@ class CuuatsAccess(object):
             os.chdir(path)
         self.pois_access.to_file(filename, driver='GeoJSON')
         return self
+
+    def _rescale(self, df, reverse=False):
+        if not reverse:
+            min = df.min()
+            max = df.max()
+            df = (1 - (df - min) / (max - min)) * 100
+            return df
+        else:
+            min = df.min()
+            max = df.max()
+            df = (df - min) / (max - min) * 100
+            return df
 
     def _process_gtfs(self, gtfs_path):
         os.chdir(gtfs_path)
@@ -220,6 +236,7 @@ class CuuatsAccess(object):
     def _agg_transit_ped(self,
                          date=20181016,
                          time_range=['07:00:00', '09:00:00']):
+
         stop_nodes_peak = pd.merge(self.date_peak_trips, self.stops,
                                    on='stop_id', how='inner')
         stop_nodes_peak = stop_nodes_peak.sort_values(

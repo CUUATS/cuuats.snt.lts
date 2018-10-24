@@ -11,20 +11,23 @@ with psycopg2.connect(**DB) as conn:
     nodes = pd.read_sql_query(NODES_SQL, conn, index_col='id')
     edges = pd.read_sql_query(EDGES_SQL, conn)
 
-    car = pd.read_sql_query(CAR_SQL, conn)
+    fuel_station = pd.read_sql_query(CAR_SQL, conn)
     institution = pd.read_sql_query(INSTITUTION_SQL, conn)
     job = pd.read_sql_query(JOB_SQL, conn)
 
 cuuatsaccess = CuuatsAccess()
-# cuuatsaccess.create_bike_network(nodes, edges, 'bike_weight')
-# cuuatsaccess.create_ped_network(nodes, edges, 'ped_weight')
-# gtfs_path = 'gtfs_data'
-# cuuatsaccess.create_transit_network(gtfs_path,
-#                                     date=20181016,
-#                                     time_range=['07:00:00', '09:00:00'])
-# cuuatsaccess.save_networks()
-cuuatsaccess.load_networks('gtfs_data')
-cuuatsaccess.set_pois(car, 'car', method='nearest', nearest_num=1)
+cuuatsaccess.create_bike_network(nodes, edges, 'bike_weight')
+cuuatsaccess.create_ped_network(nodes, edges, 'ped_weight')
+gtfs_path = 'gtfs_data'
+cuuatsaccess.create_transit_network(gtfs_path,
+                                    date=20181016,
+                                    time_range=['07:00:00', '09:00:00'])
+cuuatsaccess.save_networks()
+# cuuatsaccess.load_networks('gtfs_data')
+cuuatsaccess.set_pois(fuel_station,
+                      'fuel_station',
+                      method='nearest',
+                      nearest_num=1)
 cuuatsaccess.set_pois(institution,
                       'institution',
                       method='nearest',
