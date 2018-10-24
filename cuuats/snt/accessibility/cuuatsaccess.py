@@ -131,7 +131,7 @@ class CuuatsAccess(object):
                     geodf = geodf.rename(columns={0: prefix + key})
 
         geodf = geodf[geodf['geometry'] != Point(0, 0)]
-        self.pois_access = geodf
+        self.pois_access = self._find_mean(geodf)
         return self
 
     def to_geojson(self, filename='pois_access.geojson', path=None):
@@ -139,6 +139,10 @@ class CuuatsAccess(object):
             os.chdir(path)
         self.pois_access.to_file(filename, driver='GeoJSON')
         return self
+
+    def _find_mean(self, geodf, ignore_col='geometry'):
+        geodf['avg'] = geodf.loc[:, geodf.columns != ignore_col].mean(axis=1)
+        return geodf
 
     def _rescale(self, df, reverse=False):
         if not reverse:
