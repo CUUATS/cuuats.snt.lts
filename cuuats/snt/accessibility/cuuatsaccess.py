@@ -145,16 +145,12 @@ class CuuatsAccess(object):
         return geodf
 
     def _rescale(self, df, reverse=False):
+        min = df.min()
+        max = df.max()
         if not reverse:
-            min = df.min()
-            max = df.max()
-            df = (1 - (df - min) / (max - min)) * 100
-            return df
+            return (1 - (df - min) / (max - min)) * 100
         else:
-            min = df.min()
-            max = df.max()
-            df = (df - min) / (max - min) * 100
-            return df
+            return (df - min) / (max - min) * 100
 
     def _process_gtfs(self, gtfs_path):
         os.chdir(gtfs_path)
