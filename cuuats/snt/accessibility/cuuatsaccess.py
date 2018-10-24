@@ -4,7 +4,6 @@ import os
 import geopandas as geopd
 from shapely.geometry import Point
 from datetime import timedelta
-from sklearn import preprocessing
 
 
 class CuuatsAccess(object):
