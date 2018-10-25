@@ -2,8 +2,12 @@ import pandas as pd
 import pandana as pdna
 import os
 import geopandas as geopd
-from shapely.geometry import Point
+from shapely.geometry import Point, shape
 from datetime import timedelta
+import fiona
+from shapely.ops import transform
+from functools import partial
+import pyproj
 
 
 class CuuatsAccess(object):
@@ -138,6 +142,36 @@ class CuuatsAccess(object):
             os.chdir(path)
         self.pois_access.to_file(filename, driver='GeoJSON')
         return self
+
+    def set_neigborhood(self, path):
+        self.neighborhoods = [pol for pol in fiona.open(path, 'r')]
+        for i in range(0, len(self.neighborhoods)):
+            self.neighborhoods[i]['properties']['score'] = 0
+            self.neighborhoods[i]['properties']['int_count'] = 0
+            self.neighborhoods[i]['properties']['avg'] = 0
+        return self
+
+    def set_intersections(self, path):
+        self.intersections = [point for point in fiona.open(path, 'r')]
+        return self
+
+    def calculate_avg(self):
+        for i, pt in enumerate(self.intersections):
+            point = shape(pt['geometry'])
+            # iterate through polygons
+            for j, poly in enumerate(self.neighborhoods):
+                if point.within(shape(poly['geometry'])):
+                    # sum of attributes values
+                    self.neighborhoods[j]['properties']['score'] = self.neighborhoods[j]['properties']['score'] + self.intersections[i]['properties']['avg']
+                    self.neighborhoods[j]['properties']['int_count'] = self.neighborhoods[j]['properties']['int_count'] + 1
+
+        for i in range(0, len(self.neighborhoods)):
+            print(self.neighborhoods[i]['properties']['score'], self.neighborhoods[i]['properties']['int_count'])
+            if self.neighborhoods[i]['properties']['int_count'] != 0:
+                self.neighborhoods[i]['properties']['avg'] = \
+                    self.neighborhoods[i]['properties']['score'] / self.neighborhoods[i]['properties']['int_count']
+
+
 
     def _find_mean(self, geodf, ignore_col='geometry'):
         geodf['avg'] = geodf.loc[:, geodf.columns != ignore_col].mean(axis=1)

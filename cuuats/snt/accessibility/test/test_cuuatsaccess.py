@@ -31,8 +31,10 @@ class TestCuuatsAccess(unittest.TestCase):
                                    'red', 'red', 'red'],
                        'arrival_time': ['08:00:00', '08:01:00', '08:02:00',
                                         '08:00:00', '08:01:00', '08:02:00'],
+                       'date': [20181016] * 6,
                        'stop_sequence': [1, 4, 7, 7, 8, 9],
-                       'stop_id': ['A', 'B', 'C']}
+                       'stop_id': ['A', 'B', 'C', 'C', 'D', 'E'],
+                       'node_id': [1, 4, 7, 7, 8, 9]}
     stop_times_df = pd.DataFrame(stop_times_data)
 
     def test_dataframe(self):
@@ -54,7 +56,8 @@ class TestCuuatsAccess(unittest.TestCase):
     def test_agg_transit_ped(self):
         ca = CuuatsAccess()
         ca.create_ped_network(self.node_df, self.edge_df, 'ped_weight')
-        ca.create_transit_network()
+        ca._agg_transit_ped()
+
 
 if __name__ == '__main__':
     unittest.main()
