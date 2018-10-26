@@ -4,18 +4,20 @@ from env import DB
 from config import NODES_SQL, EDGES_SQL, EDGES_GEOM_SQL
 from config import CAR_SQL, INSTITUTION_SQL, JOB_SQL
 from cuuatsaccess import CuuatsAccess
-
+import geopandas as geopd
 
 # connect with database to query the data
 with psycopg2.connect(**DB) as conn:
     nodes = pd.read_sql_query(NODES_SQL, conn, index_col='id')
     edges = pd.read_sql_query(EDGES_SQL, conn)
-    edges_geom = pd.read_sql_query(
-        EDGES_GEOM_SQL, conn, index_col='segment_id')
+    edges_geom = geopd.GeoDataFrame.from_postgis(
+        EDGES_GEOM_SQL, conn, geom_col='geom')
 
     fuel_station = pd.read_sql_query(CAR_SQL, conn)
     institution = pd.read_sql_query(INSTITUTION_SQL, conn)
     job = pd.read_sql_query(JOB_SQL, conn)
+
+# edges_geom.index = edges_geom.segment_id
 
 cuuatsaccess = CuuatsAccess()
 # cuuatsaccess.create_bicycle_network(nodes, edges, 'bike_weight')
@@ -40,7 +42,7 @@ cuuatsaccess.set_max_unit({'bicycle_network': 15000,
                            'bus_network': 3600})
 cuuatsaccess.calculate_accessibility()
 cuuatsaccess.join_intersection_segment(edges_geom)
-cuuatsaccess.to_geojson()
+cuuatsaccess.to_geojson('pois_access_segment.geojson')
 
 # cuuatsaccess = CuuatsAccess()
 # cuuatsaccess.set_neigborhood('/home/edmondlai/Desktop/cu_neighborhood.shp')

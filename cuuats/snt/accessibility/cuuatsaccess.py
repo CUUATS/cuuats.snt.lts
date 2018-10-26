@@ -134,11 +134,17 @@ class CuuatsAccess(object):
         self.pois_access = geodf
         return self
 
-    def to_geojson(self, filename='pois_access.geojson', path=None):
+    def to_geojson(self, filename='pois_access.geojson',
+                   path=None,
+                   export_feature='segment'):
         if path:
             os.chdir(path)
-        self.pois_access.to_file(filename, driver='GeoJSON')
-        return self
+        if export_feature == 'segment':
+            self.pois_access_segment.to_file(filename, driver='GeoJSON')
+            return self
+        else:
+            self.pois_access.to_file(filename, driver='GeoJSON')
+            return self
 
     def set_neigborhood(self, path):
         self.neighborhoods = [pol for pol in fiona.open(path, 'r')]
@@ -178,14 +184,18 @@ class CuuatsAccess(object):
         pass
 
     def join_intersection_segment(self, edges_df):
-        f = pd.merge(edges_df, self.pois_access,
+        pois_access = self.pois_access.drop(columns=['geometry'])
+        f = pd.merge(edges_df, pois_access,
                      left_on='from', right_index=True, how='inner')
-        t = pd.merge(edges_df, self.pois_access,
+        t = pd.merge(edges_df, pois_access,
                      left_on='to', right_index=True, how='inner')
         comb = pd.concat([f, t])
-        comb = comb.drop(columns=['geometry_y'])
-        groupby_col = ['segment_id', 'from', 'to', 'geometry_x']
-        self.pois_access_segment = comb.groupby(groupby_col).mean()
+
+        groupby_col = ['segment_id', 'from', 'to']
+        groupby_df = geopd.GeoDataFrame(comb.groupby(groupby_col).mean())
+        final_df = pd.merge(edges_df[['segment_id', 'geom']], groupby_df,
+                            left_on='segment_id', right_on='segment_id', how='inner')
+        self.pois_access_segment = final_df
         return self
 
     def _find_mean(self, geodf, ignore_col='geometry'):

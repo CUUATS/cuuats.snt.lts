@@ -31,10 +31,10 @@ WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
 """
 
 EDGES_GEOM_SQL = """
-SELECT segment_id as segment_id,
+SELECT segment_id,
     start_intersection_id AS from,
     end_intersection_id AS to,
-    geom AS geometry
+    ST_Transform(geom, 4326) as geom
 FROM street.segment
 WHERE start_intersection_id IS DISTINCT FROM NULL AND
     end_intersection_id IS DISTINCT FROM NULL
