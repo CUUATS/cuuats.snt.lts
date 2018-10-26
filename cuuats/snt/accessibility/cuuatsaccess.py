@@ -10,15 +10,15 @@ import json
 
 class CuuatsAccess(object):
     def __init__(self):
-        self.bike_network = ""
-        self.ped_network = ""
-        self.transit_network = ""
+        self.bicycle_network = ""
+        self.pedestrian_network = ""
+        self.bus_network = ""
         self.pois = {}
-        self.max_unit = {'bike_network': 15000,
-                         'ped_network': 7000,
-                         'transit_network': 3600}
+        self.max_unit = {'bicycle_network': 15000,
+                         'pedestrian_network': 7000,
+                         'bus_network': 3600}
 
-    def create_bike_network(self, nodes, edges, weight):
+    def create_bicycle_network(self, nodes, edges, weight):
         network = pdna.Network(
             node_x=nodes.x,
             node_y=nodes.y,
@@ -27,10 +27,10 @@ class CuuatsAccess(object):
             edge_weights=edges[[weight]],
             twoway=False)
         network.precompute(3000)
-        self.bike_network = network
+        self.bicycle_network = network
         return self
 
-    def create_ped_network(self, nodes, edges, weight):
+    def create_pedestrian_network(self, nodes, edges, weight):
         network = pdna.Network(
             node_x=nodes.x,
             node_y=nodes.y,
@@ -39,13 +39,13 @@ class CuuatsAccess(object):
             edge_weights=edges[[weight]],
             twoway=False)
         network.precompute(3000)
-        self.ped_network = network
+        self.pedestrian_network = network
         return self
 
-    def create_transit_network(self,
-                               gtfs_path,
-                               date=20181016,
-                               time_range=['07:00:00', '09:00:00']):
+    def create_bus_network(self,
+                           gtfs_path,
+                           date=20181016,
+                           time_range=['07:00:00', '09:00:00']):
         self._process_gtfs(gtfs_path)
         self._filter_trips(date, time_range)
         self._agg_transit_ped()
@@ -54,17 +54,17 @@ class CuuatsAccess(object):
     def save_networks(self, path=None):
         if path:
             os.chdir(path)
-        self.transit_network.save_hdf5('transit_network.hdf5')
-        self.ped_network.save_hdf5('ped_network.hdf5')
-        self.bike_network.save_hdf5('bike_network.hdf5')
+        self.bus_network.save_hdf5('bus_network.hdf5')
+        self.pedestrian_network.save_hdf5('pedestrian_network.hdf5')
+        self.bicycle_network.save_hdf5('bicycle_network.hdf5')
         return self
 
     def load_networks(self, path=None):
         if path:
             os.chdir(path)
-        self.transit_network = pdna.Network.from_hdf5('transit_network.hdf5')
-        self.ped_network = pdna.Network.from_hdf5('ped_network.hdf5')
-        self.bike_network = pdna.Network.from_hdf5('bike_network.hdf5')
+        self.bus_network = pdna.Network.from_hdf5('bus_network.hdf5')
+        self.pedestrian_network = pdna.Network.from_hdf5('pedestrian_network.hdf5')
+        self.bicycle_network = pdna.Network.from_hdf5('bicycle_network.hdf5')
         return self
 
     def set_pois(self,
@@ -81,20 +81,19 @@ class CuuatsAccess(object):
         return self
 
     def calculate_accessibility(self):
-        transit_network = self.transit_network
-        ped_network = self.ped_network
-        bike_network = self.bike_network
-        networks = {'transit_network': transit_network,
-                    'ped_network': ped_network,
-                    'bike_network': bike_network}
-        geometry = [Point(x, y) for x, y in zip(transit_network.nodes_df.x,
-                                                transit_network.nodes_df.y)]
+        bus_network = self.bus_network
+        pedestrian_network = self.pedestrian_network
+        bicycle_network = self.bicycle_network
+        networks = {'bus_network': bus_network,
+                    'pedestrian_network': pedestrian_network,
+                    'bicycle_network': bicycle_network}
+        geometry = [Point(x, y) for x, y in zip(bus_network.nodes_df.x,
+                                                bus_network.nodes_df.y)]
         crs = {'init': 'epsg:4326'}
-        geodf = geopd.GeoDataFrame(transit_network.nodes_df,
+        geodf = geopd.GeoDataFrame(bus_network.nodes_df,
                                    crs=crs,
                                    geometry=geometry)
         geodf = geodf.drop(['x', 'y'], axis=1)
-
         for network_name, network in networks.items():
             prefix = network_name.split('_')[0] + '_'
             dist = self.max_unit.get(network_name)
@@ -132,7 +131,7 @@ class CuuatsAccess(object):
                     geodf = geodf.rename(columns={0: prefix + key})
 
         geodf = geodf[geodf['geometry'] != Point(0, 0)]
-        self.pois_access = self._find_mean(geodf)
+        self.pois_access = geodf
         return self
 
     def to_geojson(self, filename='pois_access.geojson', path=None):
@@ -169,6 +168,8 @@ class CuuatsAccess(object):
                 self.neighborhoods[i]['properties']['avg'] = \
                     self.neighborhoods[i]['properties']['score'] / self.neighborhoods[i]['properties']['int_count']
 
+        return self
+
     def export_neighborhoods(self, path=None):
         # TODO: Export to GeoJSON
         # json = []
@@ -176,6 +177,16 @@ class CuuatsAccess(object):
         #     json.append(feature)
         pass
 
+    def join_intersection_segment(self, edges_df):
+        f = pd.merge(edges_df, self.pois_access,
+                     left_on='from', right_index=True, how='inner')
+        t = pd.merge(edges_df, self.pois_access,
+                     left_on='to', right_index=True, how='inner')
+        comb = pd.concat([f, t])
+        comb = comb.drop(columns=['geometry_y'])
+        groupby_col = ['segment_id', 'from', 'to', 'geometry_x']
+        self.pois_access_segment = comb.groupby(groupby_col).mean()
+        return self
 
     def _find_mean(self, geodf, ignore_col='geometry'):
         geodf['avg'] = geodf.loc[:, geodf.columns != ignore_col].mean(axis=1)
@@ -210,7 +221,7 @@ class CuuatsAccess(object):
     def _set_stops(self):
         stops = pd.read_csv('stops.txt')
         x, y = stops.stop_lon, stops.stop_lat
-        stops['node_id'] = self.ped_network.get_node_ids(x, y)
+        stops['node_id'] = self.pedestrian_network.get_node_ids(x, y)
         stops_col = ['stop_id', 'node_id', 'stop_lon', 'stop_lat']
         return stops[stops_col]
 
@@ -279,10 +290,10 @@ class CuuatsAccess(object):
         stop_nodes_peak = stop_nodes_peak.sort_values(
                                     ['trip_id', 'stop_sequence'])
         # convert into seconds based on 3 miles per hour
-        edges = self.ped_network.edges_df
+        edges = self.pedestrian_network.edges_df
         edges['weight'] = (edges['ped_weight'] / 5280) / 3 * 60 * 60
-        stop = self.ped_network.nodes_df.index.max() + 1
-        nodes = self.ped_network.nodes_df
+        stop = self.pedestrian_network.nodes_df.index.max() + 1
+        nodes = self.pedestrian_network.nodes_df
         headway = self.headway
         prev_trip = None
         prev_intersection = None
@@ -334,7 +345,7 @@ class CuuatsAccess(object):
 
         edges['weight'] = edges['weight'].replace(0, 0.01)
 
-        transit_network = pdna.Network(
+        bus_network = pdna.Network(
             node_x=nodes.x,
             node_y=nodes.y,
             edge_from=edges["from"],
@@ -342,4 +353,4 @@ class CuuatsAccess(object):
             edge_weights=edges[["weight"]],
             twoway=False
         )
-        self.transit_network = transit_network
+        self.bus_network = bus_network

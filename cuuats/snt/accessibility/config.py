@@ -30,6 +30,16 @@ WHERE s.start_intersection_id IS DISTINCT FROM NULL AND
     s.end_intersection_id IS DISTINCT FROM NULL
 """
 
+EDGES_GEOM_SQL = """
+SELECT segment_id as segment_id,
+    start_intersection_id AS from,
+    end_intersection_id AS to,
+    geom AS geometry
+FROM street.segment
+WHERE start_intersection_id IS DISTINCT FROM NULL AND
+    end_intersection_id IS DISTINCT FROM NULL
+"""
+
 CAR_SQL = """
 SELECT id,
 	ST_X(ST_Transform(shape, 4326)) AS x,
