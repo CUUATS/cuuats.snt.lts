@@ -194,7 +194,11 @@ class CuuatsAccess(object):
         groupby_col = ['segment_id', 'from', 'to']
         groupby_df = geopd.GeoDataFrame(comb.groupby(groupby_col).mean())
         final_df = pd.merge(edges_df[['segment_id', 'geom']], groupby_df,
-                            left_on='segment_id', right_on='segment_id', how='inner')
+                            left_on='segment_id', right_on='segment_id',
+                            how='inner')
+        for column in final_df:
+            if column != 'segment_id' and column != 'geom':
+                final_df[column] = final_df[column].astype('int64')
         self.pois_access_segment = final_df
         return self
 
