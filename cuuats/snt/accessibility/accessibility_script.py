@@ -42,5 +42,5 @@ from cuuatsaccess import CuuatsAccess
 cuuatsaccess = CuuatsAccess()
 cuuatsaccess.set_neigborhood('/home/edmondlai/Desktop/cu_neighborhood.shp')
 cuuatsaccess.set_intersections('/home/edmondlai/Git/cuuats.snt.lts/cuuats/snt/accessibility/gtfs_data/pois_access.geojson')
-cuuatsaccess.calculate_avg()
-cuuatsaccess.export_neighborhoods()
+cuuatsaccess.calculate_neighborhood_avg()
+cuuatsaccess.export_neighborhoods('/home/edmondlai/Desktop/neighborhoods_avg.geojson')

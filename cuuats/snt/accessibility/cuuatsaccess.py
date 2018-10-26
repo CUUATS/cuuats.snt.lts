@@ -5,9 +5,7 @@ import geopandas as geopd
 from shapely.geometry import Point, shape
 from datetime import timedelta
 import fiona
-from shapely.ops import transform
-from functools import partial
-import pyproj
+import json
 
 
 class CuuatsAccess(object):
@@ -155,7 +153,7 @@ class CuuatsAccess(object):
         self.intersections = [point for point in fiona.open(path, 'r')]
         return self
 
-    def calculate_avg(self):
+    def calculate_neighborhood_avg(self):
         for i, pt in enumerate(self.intersections):
             point = shape(pt['geometry'])
             # iterate through polygons
@@ -171,6 +169,12 @@ class CuuatsAccess(object):
                 self.neighborhoods[i]['properties']['avg'] = \
                     self.neighborhoods[i]['properties']['score'] / self.neighborhoods[i]['properties']['int_count']
 
+    def export_neighborhoods(self, path=None):
+        # TODO: Export to GeoJSON
+        # json = []
+        # for feature in self.neighborhoods:
+        #     json.append(feature)
+        pass
 
 
     def _find_mean(self, geodf, ignore_col='geometry'):
