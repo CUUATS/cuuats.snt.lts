@@ -579,33 +579,52 @@ class TestSegment(unittest.TestCase):
     # test on street bike way
     def test_on_street_path(self):
         segment = Segment()
+        bike_paths = BikePath(width=None,
+                              buffer_width=0,
+                              path_category='On-Street Bikeway',
+                              buffer_type='Landscaped with Trees',
+                              path_type='Sharrows')
+        self.assertEqual(segment._calculate_on_street_path_score(bike_paths),
+                         4)
+
+        bike_paths = BikePath(width=76,
+                              buffer_width=0,
+                              path_category='On-Street Bikeway',
+                              buffer_type='Protected',
+                              path_type='Bike Lanes')
+        self.assertEqual(segment._calculate_on_street_path_score(bike_paths),
+                         3)
+
+        bike_paths = BikePath(width=53,
+                              buffer_width=6,
+                              path_category='On-Street Bikeway',
+                              buffer_type='No Applicable',
+                              path_type='Bike Lanes')
+        self.assertEqual(segment._calculate_on_street_path_score(bike_paths),
+                         2)
+
+        bike_paths = BikePath(width=102,
+                              buffer_width=360,
+                              path_category='Off-Street Trail',
+                              buffer_type='Vertical',
+                              path_type='Shared-Use Path')
+        self.assertEqual(segment._calculate_on_street_path_score(bike_paths),
+                         1)
+
+    # test alts
+    def test_alts(self):
+        segment = Segment()
         bike_paths = [BikePath(width=None,
                                buffer_width=0,
                                path_category='On-Street Bikeway',
                                buffer_type='Landscaped with Trees',
-                               path_type='Sharrows')]
-        self.assertEqual(segment.alts_score(bike_paths), 4)
-
-        bike_paths = [BikePath(width=76,
-                               buffer_width=0,
-                               path_category='On-Street Bikeway',
-                               buffer_type='Protected',
-                               path_type='Bike Lanes')]
-        self.assertEqual(segment.alts_score(bike_paths), 3)
-
-        bike_paths = [BikePath(width=53,
-                               buffer_width=6,
-                               path_category='On-Street Bikeway',
-                               buffer_type='No Applicable',
-                               path_type='Bike Lanes')]
-        self.assertEqual(segment.alts_score(bike_paths), 2)
-
-        bike_paths = [BikePath(width=102,
+                               path_type='Sharrows'),
+                      BikePath(width=102,
                                buffer_width=360,
                                path_category='Off-Street Trail',
                                buffer_type='Vertical',
                                path_type='Shared-Use Path')]
-        self.assertEqual(segment.alts_score(bike_paths), 1)
+        self.assertEqual(segment.alts_score(bike_paths), 4)
 
 
 if __name__ == '__main__':

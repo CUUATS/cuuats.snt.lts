@@ -291,8 +291,10 @@ class Segment(object):
 
     def alts_score(self, bike_paths=None):
         segment_score = 1
+        path_score = 1
         for bike_path in bike_paths:
-            path_score = self._calculate_on_street_path_score(bike_path)
+            path_score = max(path_score,
+                             self._calculate_on_street_path_score(bike_path))
 
         return max(segment_score, path_score)
 
