@@ -576,6 +576,18 @@ class TestSegment(unittest.TestCase):
         score = segment.blts_score(approaches, crossings, bike_paths, 10000)
         self.assertEqual(score, 2)
 
+    # test on street bike way
+    def test_on_street_path(self):
+        segment = Segment()
+        bike_paths = [BikePath(width=None,
+                               buffer_width=0,
+                               path_category='On-Street Bikeway',
+                               buffer_type='Landscaped with Trees',
+                               path_type='Sharrows')]
+
+        score = segment.alts_score(bike_paths)
+        self.assertEqual(score, 4)
+
 
 if __name__ == '__main__':
     unittest.main()

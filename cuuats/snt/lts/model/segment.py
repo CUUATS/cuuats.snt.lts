@@ -270,6 +270,32 @@ class Segment(object):
                 return score - 1
         return score
 
+    def _calculate_on_street_path_score(self, bike_path):
+        category = bike_path.path_category
+        buffer_width = bike_path.buffer_width
+        path_type = bike_path.path_type
+
+        on_street = 'On-Street Bikeway'
+        sharrows = 'Sharrows'
+
+        if category != on_street:
+            return c.ON_STREET_FACILITY.get('no_facility')
+
+        if buffer_width > 0:
+            return c.ON_STREET_FACILITY.get('buffered')
+
+        if path_type != sharrows:
+            return c.ON_STREET_FACILITY.get('non_buffered')
+
+        return c.ON_STREET_FACILITY.get('sharrows')
+
+    def alts_score(self, bike_paths=None):
+        segment_score = 1
+        for bike_path in bike_paths:
+            path_score = self._calculate_on_street_path_score(bike_path)
+
+        return max(segment_score, path_score)
+
     def blts_score(self, approaches, crossings,
                    bike_paths=None, turn_threshold=0):
 

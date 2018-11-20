@@ -206,3 +206,10 @@ LANDUSE_DICT = {"residential": 1,
                 "heavy industry": 4,
                 "intermodal facilities": 4,
                 "freeway interchages": 4}
+
+# ALTS - AUTOMOBILE SCORING TABLE AND VARIABLES
+# Scoring tables
+ON_STREET_FACILITY = {"no_facility": 1,
+                      "buffered": 2,
+                      "non_buffered": 3,
+                      "sharrows": 4}

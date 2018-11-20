@@ -1,6 +1,6 @@
 -- DROP MATERIALIZED VIEW street.lts_mat_view;
 CREATE MATERIALIZED VIEW street.lts_score AS
-SELECT b1.segment_id, b1.blts, b2.plts FROM
+SELECT b1.segment_id, b1.blts, b2.plts, b3.alts FROM
 	(SELECT s.segment_id,
 			max(set_blts(idot_aadt,
 					 s.posted_speed,
@@ -49,4 +49,21 @@ LEFT JOIN
 	LEFT JOIN street.crossing_criteria as cc
 		ON s.segment_id = cc.segment_id
 	GROUP BY s.segment_id) b2
-ON b1.segment_id = b2.segment_id;
+ON b1.segment_id = b2.segment_id
+LEFT JOIN
+	(
+	SELECT s.segment_id,
+		max(set_alts(
+				bike_width,
+				path_category,
+				buffer_width,
+				buffer_type,
+				path_type
+		)) as alts
+	FROM street.segment AS s
+	LEFT JOIN bicycle.path_singlepart AS b
+		ON ST_DWithin(s.geom, b.bike_geom, 100) AND
+		  pcd_segment_match(s.geom, b.bike_geom, 100)
+	GROUP BY s.segment_id
+	) b3
+ON b1.segment_id = b3.segment_id
